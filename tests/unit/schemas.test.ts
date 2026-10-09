@@ -17,14 +17,26 @@ describe("Zod Validators", () => {
     expect(() => loginSchema.parse({ email: "invalid", password: "123" })).toThrow();
   });
 
-  it("validates signup matching passwords", () => {
+  it("validates signup matching passwords and accepted terms", () => {
     const valid = {
       name: "Romeo",
       email: "romeo@love.com",
       password: "secretpassword",
       confirmPassword: "secretpassword",
+      acceptTerms: true,
     };
     expect(() => signupSchema.parse(valid)).not.toThrow();
+  });
+
+  it("rejects signup when terms are not accepted", () => {
+    const invalid = {
+      name: "Romeo",
+      email: "romeo@love.com",
+      password: "secretpassword",
+      confirmPassword: "secretpassword",
+      acceptTerms: false,
+    };
+    expect(() => signupSchema.parse(invalid)).toThrow();
   });
 
   it("rejects mismatched passwords on signup", () => {
@@ -33,6 +45,7 @@ describe("Zod Validators", () => {
       email: "romeo@love.com",
       password: "secretpassword",
       confirmPassword: "wrongpassword",
+      acceptTerms: true,
     };
     expect(() => signupSchema.parse(invalid)).toThrow();
   });

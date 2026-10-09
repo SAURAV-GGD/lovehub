@@ -31,6 +31,7 @@ function SignupForm() {
       email: "",
       password: "",
       confirmPassword: "",
+      acceptTerms: false,
     },
   });
 
@@ -132,6 +133,39 @@ function SignupForm() {
                 <p className="text-xs text-red-500">
                   {errors.confirmPassword.message}
                 </p>
+              )}
+            </div>
+
+            <div className="space-y-1 pt-1">
+              <label className="flex items-start gap-2.5 cursor-pointer text-xs text-gray-600 leading-snug">
+                <input
+                  type="checkbox"
+                  {...register("acceptTerms")}
+                  disabled={isLoading}
+                  className="mt-0.5 h-4 w-4 rounded border-gray-300 text-rose-500 focus:ring-rose-400"
+                />
+                <span>
+                  I agree to the{" "}
+                  <Link
+                    href="/terms"
+                    target="_blank"
+                    className="text-rose-500 underline font-medium hover:text-rose-600"
+                  >
+                    Terms of Service
+                  </Link>{" "}
+                  and{" "}
+                  <Link
+                    href="/privacy"
+                    target="_blank"
+                    className="text-rose-500 underline font-medium hover:text-rose-600"
+                  >
+                    Privacy Policy
+                  </Link>
+                  . I confirm that any photos I upload have the express consent of everyone pictured, and LoveHub holds zero liability for user content.
+                </span>
+              </label>
+              {errors.acceptTerms && (
+                <p className="text-xs text-red-500">{errors.acceptTerms.message}</p>
               )}
             </div>
 

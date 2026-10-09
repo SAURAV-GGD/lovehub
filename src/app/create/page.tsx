@@ -12,11 +12,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Heart, ArrowLeft, Wand2, Camera, Music, X, Upload, ArrowRight, Sparkles } from "lucide-react";
+import { Heart, ArrowLeft, Wand2, Camera, Music, X, Upload, ArrowRight, Sparkles, Shield, AlertTriangle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Suspense, useState, useCallback } from "react";
+import { Suspense, useState, useCallback, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import {
   RelationshipType,
@@ -31,6 +31,7 @@ import {
 } from "@/lib/proposal-types";
 import { generateProposalMessage } from "@/lib/ai-generator";
 import { saveProposal, isSlugAvailable, getProposalUrl } from "@/lib/proposal-storage";
+import { trackEvent } from "@/lib/analytics";
 import { toast } from "sonner";
 
 function CreateContent() {
@@ -53,6 +54,40 @@ function CreateContent() {
   const [customSlug, setCustomSlug] = useState("");
   const [slugError, setSlugError] = useState("");
   const [proposalId, setProposalId] = useState<string | null>(null);
+
+  // Policy & Photo Consent Gate
+  const [showPolicyGate, setShowPolicyGate] = useState(false);
+  const [gatePhotosChecked, setGatePhotosChecked] = useState(false);
+  const [gateTermsChecked, setGateTermsChecked] = useState(false);
+  const [finalConsentChecked, setFinalConsentChecked] = useState(false);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("lovehub_policy_consent");
+      if (stored === "agreed") {
+        setShowPolicyGate(false);
+        setFinalConsentChecked(true);
+      } else {
+        setShowPolicyGate(true);
+      }
+    } catch {
+      // Safe fallback
+    }
+  }, []);
+
+  const handleUnlockFeatures = () => {
+    if (!gatePhotosChecked || !gateTermsChecked) {
+      toast.error("Please tick both consent boxes to proceed");
+      return;
+    }
+    try {
+      localStorage.setItem("lovehub_policy_consent", "agreed");
+    } catch {}
+    setShowPolicyGate(false);
+    setFinalConsentChecked(true);
+    trackEvent("policy_consent_agreed", { source: "creator_gate" });
+    toast.success("Consent confirmed. You can now access all proposal creator features!");
+  };
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const remainingSlots = limits.maxPhotos - photos.length;
@@ -164,6 +199,11 @@ function CreateContent() {
   };
 
   const handleSubmit = async () => {
+    if (!finalConsentChecked) {
+      toast.error("Please tick the Privacy Policy and photo consent agreement box before creating your proposal");
+      return;
+    }
+
     if (limits.hasCustomSlug && customSlug && !validateSlug(customSlug)) {
       return;
     }
@@ -474,6 +514,19 @@ function CreateContent() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
+                  {/* Photo Consent & Liability Notice */}
+                  <div className="rounded-xl border border-amber-200 bg-amber-50/90 dark:bg-amber-950/30 dark:border-amber-900/50 p-4 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-3">
+                    <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                    <div className="space-y-1">
+                      <span className="font-semibold block text-amber-950 dark:text-amber-100">
+                        Strict Photo Consent &amp; Liability Notice
+                      </span>
+                      <p className="leading-relaxed text-amber-900/90 dark:text-amber-200/90">
+                        You warrant that you have obtained express legal consent from every person shown in these photographs. LoveHub acts solely as an automated software tool and assumes <strong>zero liability or responsibility</strong> for any user-uploaded media.
+                      </p>
+                    </div>
+                  </div>
+
                   <div
                     {...getRootProps()}
                     className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
@@ -635,6 +688,37 @@ function CreateContent() {
                     </div>
                   </div>
 
+                  {/* Final Consent Checkbox */}
+                  <div className="border border-rose-200 dark:border-rose-900/50 bg-rose-50/70 dark:bg-rose-950/30 rounded-xl p-4 space-y-2">
+                    <label className="flex items-start gap-2.5 cursor-pointer text-xs text-gray-800 dark:text-gray-200 leading-snug">
+                      <input
+                        type="checkbox"
+                        checked={finalConsentChecked}
+                        onChange={(e) => setFinalConsentChecked(e.target.checked)}
+                        className="mt-0.5 h-4 w-4 rounded border-gray-300 text-rose-500 focus:ring-rose-400"
+                      />
+                      <span>
+                        I agree to the{" "}
+                        <Link
+                          href="/privacy"
+                          target="_blank"
+                          className="text-rose-600 dark:text-rose-400 underline font-semibold hover:text-rose-700"
+                        >
+                          Privacy Policy
+                        </Link>{" "}
+                        and{" "}
+                        <Link
+                          href="/terms"
+                          target="_blank"
+                          className="text-rose-600 dark:text-rose-400 underline font-semibold hover:text-rose-700"
+                        >
+                          Terms of Service
+                        </Link>
+                        . I confirm that all uploaded photos have mutual consent and accept full personal responsibility for my proposal content.
+                      </span>
+                    </label>
+                  </div>
+
                   <div className="flex justify-between">
                     <Button variant="outline" onClick={() => setStep(2)}>
                       <ArrowLeft className="w-4 h-4 mr-2" />
@@ -642,7 +726,8 @@ function CreateContent() {
                     </Button>
                     <Button
                       onClick={handleSubmit}
-                      className="bg-primary hover:bg-primary/90"
+                      disabled={!finalConsentChecked}
+                      className="bg-primary hover:bg-primary/90 disabled:opacity-50"
                     >
                       <Heart className="w-4 h-4 mr-2 fill-white" />
                       Create My Proposal
@@ -653,6 +738,95 @@ function CreateContent() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Required Policy & Consent Gate Modal */}
+        {showPolicyGate && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className="bg-white dark:bg-zinc-900 border border-rose-200 dark:border-zinc-800 rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-6 text-left">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-rose-100 dark:bg-rose-950/60 rounded-2xl text-rose-600">
+                  <Shield className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                    Welcome to LoveHub
+                  </h2>
+                  <p className="text-xs text-gray-500">
+                    Required Consent &amp; Privacy Agreement
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 p-4 space-y-2">
+                <div className="flex items-center gap-2 text-amber-900 dark:text-amber-200 font-semibold text-xs">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span>Photo Upload &amp; Mutual Consent Rule</span>
+                </div>
+                <p className="text-xs text-amber-950/80 dark:text-amber-300/90 leading-relaxed">
+                  Before accessing proposal tools, you must confirm that any photo you upload has the express, voluntary consent of all persons depicted. LoveHub assumes zero responsibility or liability for user-submitted media.
+                </p>
+              </div>
+
+              <div className="space-y-3 pt-1">
+                <label className="flex items-start gap-3 cursor-pointer text-xs text-gray-700 dark:text-gray-300 leading-snug">
+                  <input
+                    type="checkbox"
+                    checked={gatePhotosChecked}
+                    onChange={(e) => setGatePhotosChecked(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-gray-300 text-rose-500 focus:ring-rose-400"
+                  />
+                  <span>
+                    <strong>Photo Consent Warranty:</strong> I certify that I will only upload photos of myself and partners who have granted explicit consent. I understand LoveHub accepts no legal or relationship liability for my media.
+                  </span>
+                </label>
+
+                <label className="flex items-start gap-3 cursor-pointer text-xs text-gray-700 dark:text-gray-300 leading-snug">
+                  <input
+                    type="checkbox"
+                    checked={gateTermsChecked}
+                    onChange={(e) => setGateTermsChecked(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-gray-300 text-rose-500 focus:ring-rose-400"
+                  />
+                  <span>
+                    I have read and agree to the{" "}
+                    <Link
+                      href="/privacy"
+                      target="_blank"
+                      className="text-rose-600 dark:text-rose-400 underline font-medium"
+                    >
+                      Privacy Policy
+                    </Link>{" "}
+                    and{" "}
+                    <Link
+                      href="/terms"
+                      target="_blank"
+                      className="text-rose-600 dark:text-rose-400 underline font-medium"
+                    >
+                      Terms of Service
+                    </Link>
+                    .
+                  </span>
+                </label>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                <Button
+                  onClick={handleUnlockFeatures}
+                  disabled={!gatePhotosChecked || !gateTermsChecked}
+                  className="flex-1 bg-rose-500 hover:bg-rose-600 text-white font-medium py-2.5 h-auto rounded-xl shadow-md disabled:opacity-50"
+                >
+                  I Agree &amp; Unlock Proposal Creator
+                </Button>
+                <Link
+                  href="/"
+                  className="text-center sm:text-left inline-flex items-center justify-center px-4 py-2.5 text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                >
+                  Cancel &amp; Return Home
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
