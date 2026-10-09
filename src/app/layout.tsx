@@ -1,12 +1,32 @@
 import type { Metadata } from "next";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
-import VisualEditsMessenger from "../visual-edits/VisualEditsMessenger";
-import ErrorReporter from "@/components/ErrorReporter";
-import Script from "next/script";
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
 export const metadata: Metadata = {
-  title: "LoveHub - Create Magical Proposal Pages",
-  description: "Create a personalized Valentine proposal website for your love. Beautiful themes, AI-generated messages, and magical celebrations.",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "LoveHub - Create Magical Proposal Pages",
+    template: "%s | LoveHub",
+  },
+  description:
+    "Create a personalized Valentine proposal website for your love. Beautiful themes, AI-generated messages, and magical celebrations.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico",
+  },
+  openGraph: {
+    title: "LoveHub - Create Magical Proposal Pages",
+    description:
+      "Create a personalized Valentine proposal website for your love. Beautiful themes, AI-generated messages, and magical celebrations.",
+    siteName: "LoveHub",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
@@ -17,25 +37,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        <Script
-          id="orchids-browser-logs"
-          src="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/scripts/orchids-browser-logs.js"
-          strategy="afterInteractive"
-          data-orchids-project-id="9550c0da-ef73-48db-b32c-adadcd8371af"
-        />
-        <ErrorReporter />
-        <Script
-          src="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/scripts//route-messenger.js"
-          strategy="afterInteractive"
-          data-target-origin="*"
-          data-message-type="ROUTE_CHANGE"
-          data-include-search-params="true"
-          data-only-in-iframe="true"
-          data-debug="true"
-          data-custom-data='{"appName": "YourApp", "version": "1.0.0", "greeting": "hi"}'
-        />
         {children}
-        <VisualEditsMessenger />
+        <Toaster richColors position="top-right" />
       </body>
     </html>
   );

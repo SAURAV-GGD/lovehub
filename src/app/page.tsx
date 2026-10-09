@@ -1,371 +1,462 @@
-"use client";
-
+import Link from "next/link";
+import { constructMetadata } from "@/lib/seo";
+import {
+  WebsiteJsonLd,
+  OrganizationJsonLd,
+  SoftwareAppJsonLd,
+  FaqJsonLd,
+} from "@/components/seo/JsonLd";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Heart, Sparkles, Camera, Music, Link2, Share2, Check, ArrowRight, Wand2, Crown, Star } from "lucide-react";
-import { motion } from "framer-motion";
-import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import {
+  Heart,
+  Sparkles,
+  Wand2,
+  Camera,
+  Music,
+  Share2,
+  CheckCircle2,
+  ArrowRight,
+  ShieldCheck,
+  Star,
+  Flame,
+} from "lucide-react";
 
-const FloatingHearts = () => {
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {[...Array(15)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute text-primary/20"
-          initial={{ 
-            x: Math.random() * 100 + "%", 
-            y: "110%",
-            scale: 0.5 + Math.random() * 0.5
-          }}
-          animate={{ 
-            y: "-10%",
-            x: `${Math.random() * 100}%`
-          }}
-          transition={{
-            duration: 10 + Math.random() * 10,
-            repeat: Infinity,
-            delay: Math.random() * 5,
-            ease: "linear"
-          }}
-        >
-          <Heart className="w-6 h-6 fill-current" />
-        </motion.div>
-      ))}
-    </div>
-  );
-};
+export const metadata = constructMetadata({
+  title: "LoveHub - AI Proposal & Love Letter Website Generator",
+  description:
+    "Design personalized, romantic proposal websites with AI love letters, photo galleries, celebration music, and interactive Yes/No buttons.",
+  canonical: "/",
+});
 
-const pricingPlans = [
+const faqs = [
   {
-    name: "Basic",
-    price: "39",
-    icon: Heart,
-    features: [
-      "3 photos",
-      "Simple message page",
-      "Basic theme"
-    ],
-    popular: false
+    question: "How does the interactive proposal page work?",
+    answer:
+      "Your partner receives a private link. When they open it, they see your customized love letter, photos, and music. When they try to click 'No', the button playfully runs away! When they click 'YES', a joyous confetti celebration explodes.",
   },
   {
-    name: "Romantic",
-    price: "69",
-    icon: Star,
-    features: [
-      "Animated YES/NO buttons",
-      "5 photos",
-      "Background music",
-      "Confetti celebration"
-    ],
-    popular: true
+    question: "Can I customize the proposal text and photos?",
+    answer:
+      "Yes! You can either use our AI romantic assistant to draft a personalized letter in English or Hinglish, or write your own message, along with uploading favorite photos and choosing background music.",
   },
   {
-    name: "Premium",
-    price: "169",
-    icon: Crown,
-    features: [
-      "Memory gallery slideshow",
-      "Beautiful animations",
-      "Custom URL slug",
-      "Premium romantic theme"
-    ],
-    popular: false
-  }
+    question: "How do I share the proposal with my partner?",
+    answer:
+      "Once created, you get a clean, unique link. You can send it directly via WhatsApp, Instagram DM, iMessage, or display it as a surprise QR code.",
+  },
+  {
+    question: "Is my proposal private?",
+    answer:
+      "Absolutely. Only people with your unique link can view your proposal. You also have full control to toggle visibility or delete the page anytime from your dashboard.",
+  },
 ];
 
-const steps = [
-  { icon: Heart, title: "Choose a plan", description: "Select the perfect package for your proposal" },
-  { icon: Sparkles, title: "Make payment", description: "Secure payment via Razorpay or Stripe" },
-  { icon: Wand2, title: "Write your proposal", description: "Write manually or generate with AI" },
-  { icon: Camera, title: "Upload memories", description: "Add your favorite photos together" },
-  { icon: Share2, title: "Share the magic", description: "Get your unique proposal link and share" }
-];
-
-export default function Home() {
+export default function HomePage() {
   return (
-    <div className="min-h-screen romantic-gradient relative overflow-hidden">
-      <FloatingHearts />
-      
+    <div className="min-h-screen bg-white text-gray-900 selection:bg-rose-500 selection:text-white">
+      {/* Structured Data */}
+      <WebsiteJsonLd />
+      <OrganizationJsonLd />
+      <SoftwareAppJsonLd />
+      <FaqJsonLd faqs={faqs} />
+
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 glass">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Heart className="w-8 h-8 text-primary fill-primary animate-pulse-heart" />
-            <span className="text-2xl font-bold text-primary">LoveHub</span>
-          </div>
-          <nav className="hidden md:flex items-center gap-6">
-            <a href="#how-it-works" className="text-foreground/80 hover:text-primary transition-colors">How it Works</a>
-            <a href="#pricing" className="text-foreground/80 hover:text-primary transition-colors">Pricing</a>
-            <Link href="/create">
-              <Button className="bg-primary hover:bg-primary/90 text-white">
-                Create Now
-              </Button>
-            </Link>
+      <header className="sticky top-0 z-50 backdrop-blur-md bg-white/85 border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2">
+            <Heart className="h-7 w-7 text-rose-500 fill-rose-500" />
+            <span className="text-2xl font-black tracking-tight text-gray-900">
+              LoveHub
+            </span>
+          </Link>
+          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
+            <a href="#how-it-works" className="hover:text-rose-500 transition-colors">
+              How It Works
+            </a>
+            <a href="#features" className="hover:text-rose-500 transition-colors">
+              Features
+            </a>
+            <a href="#pricing" className="hover:text-rose-500 transition-colors">
+              Pricing
+            </a>
+            <a href="#faq" className="hover:text-rose-500 transition-colors">
+              FAQ
+            </a>
           </nav>
+          <div className="flex items-center gap-3">
+            <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+              <Link href="/login">Sign In</Link>
+            </Button>
+            <Button asChild size="sm" className="bg-rose-500 hover:bg-rose-600 text-white font-medium shadow-sm">
+              <Link href="/create">
+                Create Proposal <ArrowRight className="ml-1.5 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="min-h-screen flex items-center justify-center pt-20 px-4">
-        <div className="container mx-auto text-center max-w-4xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <div className="inline-flex items-center gap-2 bg-white/50 rounded-full px-4 py-2 mb-6">
-              <Sparkles className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium text-primary">Make Your Love Story Magical</span>
-            </div>
-            
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-foreground mb-6 leading-tight">
-              Create a Magical Proposal Website for Your Love{" "}
-              <span className="text-primary">❤️</span>
-            </h1>
-            
-            <p className="text-lg md:text-xl text-foreground/70 mb-8 max-w-2xl mx-auto">
-              Design a beautiful, personalized proposal page that will make your partner say YES! 
-              With AI-generated messages, stunning themes, and magical celebrations.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+      <section className="relative overflow-hidden pt-16 pb-24 lg:pt-24 lg:pb-32 bg-gradient-to-b from-rose-50/70 via-white to-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-rose-100 text-rose-700 text-xs sm:text-sm font-semibold tracking-wide">
+            <Sparkles className="h-4 w-4" />
+            <span>AI-Powered Valentine & Proposal Builder</span>
+          </div>
+
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-gray-950 max-w-4xl mx-auto leading-[1.12]">
+            Turn Your Love Story Into An{" "}
+            <span className="bg-gradient-to-r from-rose-500 via-pink-500 to-purple-600 bg-clip-text text-transparent">
+              Unforgettable Proposal
+            </span>
+          </h1>
+
+          <p className="max-w-2xl mx-auto text-lg sm:text-xl text-gray-600 leading-relaxed font-normal">
+            Surprise your partner with a custom interactive website. Featuring AI-crafted love letters, photo memories, emotional background music, and a runaway &quot;No&quot; button they can never click!
+          </p>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+            <Button asChild size="lg" className="w-full sm:w-auto h-12 px-8 text-base bg-rose-500 hover:bg-rose-600 text-white font-semibold shadow-lg shadow-rose-500/25 transition-all">
               <Link href="/create">
-                <Button size="lg" className="bg-primary hover:bg-primary/90 text-white text-lg px-8 py-6 rounded-full shadow-lg hover:shadow-xl transition-all">
-                  <Heart className="w-5 h-5 mr-2 fill-white" />
-                  Create My Proposal
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </Button>
+                Build Your Proposal Free <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
-              <a href="#how-it-works">
-                <Button variant="outline" size="lg" className="text-lg px-8 py-6 rounded-full border-primary/30 hover:bg-primary/10">
-                  See How It Works
-                </Button>
-              </a>
-            </div>
-          </motion.div>
-          
-          {/* Preview Image Placeholder */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            className="mt-16"
-          >
-            <div className="bg-white/30 rounded-3xl p-8 backdrop-blur-sm border border-white/50 shadow-2xl max-w-3xl mx-auto">
-              <div className="aspect-video bg-gradient-to-br from-primary/20 via-pink-200/50 to-primary/20 rounded-2xl flex items-center justify-center">
-                <div className="text-center">
-                  <Heart className="w-20 h-20 text-primary fill-primary mx-auto mb-4 animate-pulse-heart" />
-                  <p className="text-primary font-semibold text-xl">Your Magical Proposal Page</p>
-                  <p className="text-foreground/60 text-sm mt-2">Beautifully crafted with love</p>
-                </div>
-              </div>
-            </div>
-          </motion.div>
+            </Button>
+            <Button asChild variant="outline" size="lg" className="w-full sm:w-auto h-12 px-8 text-base border-gray-300 hover:bg-gray-50 font-medium">
+              <a href="#how-it-works">See How It Works</a>
+            </Button>
+          </div>
+
+          <div className="pt-8 flex items-center justify-center gap-6 text-xs sm:text-sm text-gray-500">
+            <span className="flex items-center gap-1.5">
+              <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Instant Share Link
+            </span>
+            <span className="flex items-center gap-1.5">
+              <CheckCircle2 className="h-4 w-4 text-emerald-500" /> 100% Mobile Ready
+            </span>
+            <span className="flex items-center gap-1.5">
+              <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Private & Secure
+            </span>
+          </div>
         </div>
       </section>
 
-      {/* How It Works Section */}
-      <section id="how-it-works" className="py-24 px-4 bg-white/30">
-        <div className="container mx-auto max-w-6xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4">
-              How It Works
+      {/* How It Works */}
+      <section id="how-it-works" className="py-20 bg-slate-50 border-y border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+          <div className="text-center space-y-4 max-w-2xl mx-auto">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
+              Craft Magic in 3 Simple Steps
             </h2>
-            <p className="text-foreground/70 text-lg max-w-2xl mx-auto">
-              Create your perfect proposal page in just 5 simple steps
+            <p className="text-gray-600 text-base">
+              No technical skills required. From idea to heartwarming proposal page in under two minutes.
             </p>
-          </motion.div>
+          </div>
 
-          <div className="grid md:grid-cols-5 gap-6">
-            {steps.map((step, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="relative"
-              >
-                <div className="bg-white rounded-2xl p-6 text-center shadow-lg hover:shadow-xl transition-shadow h-full">
-                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <step.icon className="w-8 h-8 text-primary" />
-                  </div>
-                  <div className="absolute -top-3 -left-3 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-bold text-sm">
-                    {index + 1}
-                  </div>
-                  <h3 className="font-semibold text-foreground mb-2">{step.title}</h3>
-                  <p className="text-sm text-foreground/60">{step.description}</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Card className="bg-white border-gray-200 shadow-sm relative overflow-hidden">
+              <CardHeader className="space-y-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-rose-100 text-rose-600">
+                  <Wand2 className="h-6 w-6" />
                 </div>
-                {index < steps.length - 1 && (
-                  <div className="hidden md:block absolute top-1/2 -right-3 transform -translate-y-1/2">
-                    <ArrowRight className="w-6 h-6 text-primary/40" />
-                  </div>
-                )}
-              </motion.div>
-            ))}
+                <CardTitle className="text-xl font-bold text-gray-900">
+                  1. AI Writes Your Story
+                </CardTitle>
+                <CardDescription className="text-gray-600 leading-relaxed text-sm">
+                  Choose your tone (Filmy, Emotional, Funny, Cute) and language. Our romance AI generates a customized love letter woven with your inside jokes.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="bg-white border-gray-200 shadow-sm relative overflow-hidden">
+              <CardHeader className="space-y-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-rose-100 text-rose-600">
+                  <Camera className="h-6 w-6" />
+                </div>
+                <CardTitle className="text-xl font-bold text-gray-900">
+                  2. Add Memories & Music
+                </CardTitle>
+                <CardDescription className="text-gray-600 leading-relaxed text-sm">
+                  Upload your favorite couple photos, write sweet captions, and pick a melodic romantic piano or guitar background track.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="bg-white border-gray-200 shadow-sm relative overflow-hidden">
+              <CardHeader className="space-y-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-rose-100 text-rose-600">
+                  <Share2 className="h-6 w-6" />
+                </div>
+                <CardTitle className="text-xl font-bold text-gray-900">
+                  3. Share & Celebrate
+                </CardTitle>
+                <CardDescription className="text-gray-600 leading-relaxed text-sm">
+                  Send the private link via WhatsApp or QR code. Watch them try to click &quot;No&quot; while it runs away, followed by an explosion of confetti on &quot;YES&quot;!
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Grid */}
+      <section id="features" className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+          <div className="text-center space-y-4 max-w-2xl mx-auto">
+            <Badge variant="outline" className="text-rose-600 border-rose-200 bg-rose-50/50">
+              Why Couples Love Us
+            </Badge>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
+              Everything You Need for a Yes
+            </h2>
+            <p className="text-gray-600">
+              Every detail is engineered to make your partner feel cherished, loved, and smiling ear to ear.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="p-6 rounded-2xl bg-rose-50/40 border border-rose-100 space-y-3">
+              <div className="h-10 w-10 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center">
+                <Flame className="h-5 w-5" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">Runaway &quot;No&quot; Button</h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                A playful interactive mini-game where the &quot;No&quot; button teleports across the screen whenever their cursor or finger approaches.
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-rose-50/40 border border-rose-100 space-y-3">
+              <div className="h-10 w-10 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center">
+                <Music className="h-5 w-5" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">Romantic Background Melodies</h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                Carefully selected ambient piano, acoustic guitar, and Bollywood-inspired romantic tunes to set the emotional atmosphere.
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-rose-50/40 border border-rose-100 space-y-3">
+              <div className="h-10 w-10 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center">
+                <Camera className="h-5 w-5" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">Photo Memory Slideshow</h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                Showcase your first date, favorite trips, and cozy milestones in an elegant responsive photo carousel.
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-rose-50/40 border border-rose-100 space-y-3">
+              <div className="h-10 w-10 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center">
+                <Wand2 className="h-5 w-5" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">Bilingual AI Romance Engine</h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                Switch seamlessly between English and Hinglish with cinematic Bollywood dialogues or deep heartfelt prose.
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-rose-50/40 border border-rose-100 space-y-3">
+              <div className="h-10 w-10 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center">
+                <ShieldCheck className="h-5 w-5" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">Private & Unguessable Links</h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                Your proposal is secret and protected by unique cryptographic tokens. No search engine indexing without your consent.
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-rose-50/40 border border-rose-100 space-y-3">
+              <div className="h-10 w-10 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center">
+                <Star className="h-5 w-5" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">Full-Screen Celebration</h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                Heart bursts and colorful confetti showers light up the screen the second they hit &quot;YES!&quot;.
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-24 px-4">
-        <div className="container mx-auto max-w-6xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4">
-              Choose Your Perfect Plan
+      <section id="pricing" className="py-20 bg-slate-50 border-t border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+          <div className="text-center space-y-4 max-w-2xl mx-auto">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
+              Simple, Transparent Pricing
             </h2>
-            <p className="text-foreground/70 text-lg max-w-2xl mx-auto">
-              Select the package that makes your proposal unforgettable
+            <p className="text-gray-600 text-base">
+              Start with our free generator or upgrade for audio, animated buttons, and custom URLs.
             </p>
-          </motion.div>
+          </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {pricingPlans.map((plan, index) => (
-              <motion.div
-                key={plan.name}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-              >
-                <Card className={`relative h-full ${plan.popular ? 'border-primary shadow-xl scale-105' : 'border-border'}`}>
-                  {plan.popular && (
-                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                      <span className="bg-primary text-white text-sm font-semibold px-4 py-1 rounded-full">
-                        Most Popular
-                      </span>
-                    </div>
-                  )}
-                  <CardHeader className="text-center pb-2">
-                    <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <plan.icon className={`w-7 h-7 ${plan.popular ? 'text-primary fill-primary' : 'text-primary'}`} />
-                    </div>
-                    <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                    <CardDescription>
-                      <span className="text-4xl font-bold text-foreground">₹{plan.price}</span>
-                      <span className="text-foreground/60"> / proposal</span>
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    <ul className="space-y-3 mb-6">
-                      {plan.features.map((feature, i) => (
-                        <li key={i} className="flex items-center gap-3">
-                          <Check className="w-5 h-5 text-primary flex-shrink-0" />
-                          <span className="text-foreground/80">{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <Link href={`/checkout?plan=${plan.name.toLowerCase()}`}>
-                      <Button 
-                        className={`w-full ${plan.popular ? 'bg-primary hover:bg-primary/90 text-white' : 'bg-primary/10 hover:bg-primary/20 text-primary'}`}
-                        size="lg"
-                      >
-                        Choose {plan.name}
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto items-stretch">
+            {/* Free Plan */}
+            <Card className="flex flex-col justify-between bg-white border-gray-200">
+              <CardHeader className="space-y-2">
+                <CardTitle className="text-xl font-bold text-gray-900">Free</CardTitle>
+                <div className="text-3xl font-extrabold text-gray-900">$0</div>
+                <CardDescription className="text-gray-500 text-sm">
+                  Perfect for a quick, sweet proposal message
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <ul className="space-y-3 text-sm text-gray-600">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Up to 3 photos
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" /> AI letter generation
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Clean proposal link
+                  </li>
+                </ul>
+                <Button asChild variant="outline" className="w-full">
+                  <Link href="/create?plan=basic">Get Started</Link>
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Romantic Plan */}
+            <Card className="flex flex-col justify-between bg-white border-rose-400 shadow-xl relative scale-105 z-10">
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-rose-500 text-white text-xs font-bold tracking-wide">
+                MOST POPULAR
+              </div>
+              <CardHeader className="space-y-2">
+                <CardTitle className="text-xl font-bold text-gray-900">Romantic</CardTitle>
+                <div className="text-3xl font-extrabold text-gray-900">
+                  $9 <span className="text-sm font-normal text-gray-500">/ one-time</span>
+                </div>
+                <CardDescription className="text-gray-500 text-sm">
+                  Interactive celebration with runaway button
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <ul className="space-y-3 text-sm text-gray-600">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-rose-500" /> Up to 5 photos
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-rose-500" /> Runaway &quot;No&quot; button
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-rose-500" /> Background music track
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-rose-500" /> Full-screen confetti
+                  </li>
+                </ul>
+                <Button asChild className="w-full bg-rose-500 hover:bg-rose-600 text-white font-semibold">
+                  <Link href="/create?plan=romantic">Create Romantic Proposal</Link>
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Premium Plan */}
+            <Card className="flex flex-col justify-between bg-white border-gray-200">
+              <CardHeader className="space-y-2">
+                <CardTitle className="text-xl font-bold text-gray-900">Premium Forever</CardTitle>
+                <div className="text-3xl font-extrabold text-gray-900">
+                  $19 <span className="text-sm font-normal text-gray-500">/ one-time</span>
+                </div>
+                <CardDescription className="text-gray-500 text-sm">
+                  Custom link slug and premium memory slideshow
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <ul className="space-y-3 text-sm text-gray-600">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Up to 10 photos
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Custom URL slug
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Memory slideshow
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Priority AI generation
+                  </li>
+                </ul>
+                <Button asChild variant="outline" className="w-full">
+                  <Link href="/create?plan=premium">Get Premium</Link>
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
 
-      {/* Features Highlights */}
-      <section className="py-24 px-4 bg-white/30">
-        <div className="container mx-auto max-w-6xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4">
-              Features That Make It Special
+      {/* FAQ Section */}
+      <section id="faq" className="py-20 bg-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+          <div className="text-center space-y-4">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
+              Frequently Asked Questions
             </h2>
-          </motion.div>
+            <p className="text-gray-600">
+              Have questions? Here are the most common answers.
+            </p>
+          </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { icon: Wand2, title: "AI Message Generator", desc: "Generate heartfelt proposals with AI" },
-              { icon: Camera, title: "Photo Memories", desc: "Upload your favorite moments together" },
-              { icon: Music, title: "Background Music", desc: "Set the perfect romantic mood" },
-              { icon: Sparkles, title: "Celebration Effects", desc: "Confetti & hearts on YES!" },
-              { icon: Link2, title: "Shareable Link", desc: "Easy to share via WhatsApp" },
-              { icon: Heart, title: "Animated YES/NO", desc: "Fun interactive buttons" },
-              { icon: Star, title: "Premium Themes", desc: "Beautiful romantic designs" },
-              { icon: Crown, title: "Custom URL", desc: "Personalize your proposal link" },
-            ].map((feature, index) => (
-              <motion.div
+          <div className="space-y-6">
+            {faqs.map((faq, index) => (
+              <div
                 key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: index * 0.05 }}
-                className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-shadow"
+                className="p-6 rounded-xl bg-slate-50 border border-gray-200/80 space-y-2"
               >
-                <feature.icon className="w-10 h-10 text-primary mb-4" />
-                <h3 className="font-semibold text-foreground mb-2">{feature.title}</h3>
-                <p className="text-sm text-foreground/60">{feature.desc}</p>
-              </motion.div>
+                <h3 className="text-base sm:text-lg font-bold text-gray-900">
+                  {faq.question}
+                </h3>
+                <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+                  {faq.answer}
+                </p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-24 px-4">
-        <div className="container mx-auto max-w-4xl text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            <Heart className="w-16 h-16 text-primary fill-primary mx-auto mb-6 animate-pulse-heart" />
-            <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-6">
-              Ready to Make Your Love Story Unforgettable?
-            </h2>
-            <p className="text-foreground/70 text-lg mb-8 max-w-2xl mx-auto">
-              Create a magical proposal page that your partner will remember forever. 
-              Start now and make them say YES!
-            </p>
-            <Link href="/create">
-              <Button size="lg" className="bg-primary hover:bg-primary/90 text-white text-lg px-10 py-6 rounded-full shadow-lg hover:shadow-xl transition-all">
-                <Heart className="w-5 h-5 mr-2 fill-white" />
-                Create My Proposal Now
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-            </Link>
-          </motion.div>
+      {/* Final CTA */}
+      <section className="py-20 bg-gradient-to-r from-rose-500 to-pink-600 text-white text-center">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+          <Heart className="h-12 w-12 mx-auto fill-white/90 animate-bounce" />
+          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
+            Ready to Create Something Beautiful?
+          </h2>
+          <p className="text-rose-100 text-lg max-w-xl mx-auto">
+            Give your partner a moment they will remember for the rest of their lives.
+          </p>
+          <div className="pt-2">
+            <Button asChild size="lg" className="h-12 px-8 bg-white text-rose-600 hover:bg-rose-50 font-bold shadow-xl">
+              <Link href="/create">
+                Start Creating Free <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
+          </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-8 px-4 bg-white/50 border-t border-primary/10">
-        <div className="container mx-auto max-w-6xl">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <Heart className="w-6 h-6 text-primary fill-primary" />
-              <span className="text-xl font-bold text-primary">LoveHub</span>
-            </div>
-            <p className="text-foreground/60 text-sm">
-              Made with ❤️ for lovers everywhere
-            </p>
+      <footer className="border-t border-gray-100 bg-white py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-6 text-sm text-gray-500">
+          <div className="flex items-center gap-2">
+            <Heart className="h-5 w-5 text-rose-500 fill-rose-500" />
+            <span className="font-bold text-gray-900">LoveHub</span>
+            <span>&copy; {new Date().getFullYear()} All rights reserved.</span>
+          </div>
+          <div className="flex items-center gap-6">
+            <Link href="/privacy" className="hover:text-rose-600 transition-colors">
+              Privacy Policy
+            </Link>
+            <Link href="/terms" className="hover:text-rose-600 transition-colors">
+              Terms of Service
+            </Link>
+            <Link href="/login" className="hover:text-rose-600 transition-colors">
+              Sign In
+            </Link>
           </div>
         </div>
       </footer>

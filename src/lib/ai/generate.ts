@@ -1,0 +1,162 @@
+import { GenerateProposalInput } from "../validators";
+import { buildProposalSystemPrompt, buildProposalUserPrompt } from "./prompts";
+import { logger } from "../logger";
+
+export interface GeneratedProposalContent {
+  headline: string;
+  intro: string;
+  story: string;
+  loveLetter: string;
+  promises: string[];
+  question: string;
+  acceptButtonText: string;
+  rejectButtonText: string;
+}
+
+export async function generateProposal(
+  input: GenerateProposalInput
+): Promise<GeneratedProposalContent> {
+  const apiKey = process.env.AI_API_KEY;
+  const model = process.env.AI_MODEL || "gemini-2.0-flash";
+
+  if (apiKey) {
+    try {
+      logger.info("Calling AI provider for proposal generation", { model });
+      const systemPrompt = buildProposalSystemPrompt();
+      const userPrompt = buildProposalUserPrompt(input);
+
+      // Support Gemini REST API
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: "user",
+              parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }],
+            },
+          ],
+          generationConfig: {
+            temperature: 0.8,
+            responseMimeType: "application/json",
+          },
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const text =
+          data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+        const parsed = JSON.parse(text) as GeneratedProposalContent;
+        if (parsed.headline && parsed.loveLetter && parsed.question) {
+          logger.info("AI proposal generation succeeded");
+          return parsed;
+        }
+      } else {
+        const errorText = await response.text();
+        logger.warn("AI provider returned non-ok status, using fallback", {
+          status: response.status,
+          errorText,
+        });
+      }
+    } catch (err) {
+      logger.error("AI provider error, falling back to curated templates", err);
+    }
+  }
+
+  // Graceful deterministic fallback
+  logger.info("Using curated romantic proposal templates", {
+    tone: input.tone,
+    language: input.language,
+  });
+  return getFallbackProposal(input);
+}
+
+function getFallbackProposal(
+  input: GenerateProposalInput
+): GeneratedProposalContent {
+  const { yourName, partnerName, tone, language } = input;
+  const isHinglish = language === "hinglish";
+
+  if (tone === "filmy") {
+    return {
+      headline: isHinglish
+        ? `${partnerName}, Tum Meri Life Ka Sabse Bada Blockbuster Ho`
+        : `${partnerName}, Our Love Story Was Written In The Stars`,
+      intro: isHinglish
+        ? `Kehte hain agar kisi cheez ko dil se chaho... toh kismet bhi milwa deti hai.`
+        : `They say true love only exists in movie scripts, until the day I found you.`,
+      story: isHinglish
+        ? `Pehli nazar se hi dil ne kaha tha - yahi hai! Har lamha tumhare saath ek iconic scene ban jaata hai. Tum meri heroine ho aur main tumhara co-star hamesha ke liye.`
+        : `From the very first moment our eyes met, every scene of my life turned cinematic. Every day by your side feels like poetry in motion.`,
+      loveLetter: isHinglish
+        ? `${partnerName}, picture abhi baaki hai mere dost. Main har subah aur har shaam tumhare saath bitana chahta/chahti hoon. Ek ladka aur ek ladki... you know the rest! Will you make this our happily ever after?`
+        : `Dearest ${partnerName}, you brought magic into an ordinary world. You are my greatest adventure and my safest haven. My heart has chosen you, completely and without hesitation.`,
+      promises: [
+        isHinglish ? "Har mushkil mein tumhara haath pakadna" : "To hold your hand through every chapter",
+        isHinglish ? "Tumhe roz bina wajah hasaana" : "To bring a smile to your face every single day",
+        isHinglish ? "Late night movie dates aur snacks share karna" : "To share my snacks, popcorn, and warmest hugs",
+        isHinglish ? "Bollywood dialogues sunte hue budha hona" : "To grow old together with eternal laughter",
+      ],
+      question: isHinglish
+        ? `Kya tum hamesha ke liye meri banogi?`
+        : `Will you make this love story official and be mine forever?`,
+      acceptButtonText: isHinglish ? `Haan! Hamesha ke liye! ❤️` : `YES! A million times YES! ❤️`,
+      rejectButtonText: isHinglish ? `Picture abhi baaki hai 😉` : `Think again! 😉`,
+    };
+  }
+
+  if (tone === "funny") {
+    return {
+      headline: `${partnerName}, You Are Officially Stuck With Me!`,
+      intro: `Warning: This proposal contains unlimited hugs, terrible jokes, and zero return policy.`,
+      story: `Let's be real - I'm not perfect. I lose my keys, my cooking is suspicious, and I can be clumsy. But you know what? I love you more than pizza, and that is saying a lot.`,
+      loveLetter: `Dear ${partnerName}, you tolerate my chaos, you make me laugh until my stomach hurts, and you still somehow think I'm cute. You're my favorite notification and my favorite human on planet earth.`,
+      promises: [
+        "To never steal all the blankets (mostly)",
+        "To always share my french fries with you",
+        "To listen to all your rants with snacks ready",
+        "To love you even when we're 80 and grumpy",
+      ],
+      question: `Will you officially accept this chaos and be my Valentine?`,
+      acceptButtonText: `YES! No returns accepted! ❤️`,
+      rejectButtonText: `Wait, let me think... 😜`,
+    };
+  }
+
+  if (tone === "deep-romantic") {
+    return {
+      headline: `To My Soulmate, ${partnerName}`,
+      intro: `In a universe of billions of souls, finding you was destiny breathing life into my world.`,
+      story: `Before you, I was searching for a feeling I could not name. The moment you entered my life, every broken piece found peace. You are not just someone I love - you are the very reason I believe in love.`,
+      loveLetter: `My dearest ${partnerName}, every heartbeat whispers your name. I do not just want to love you for a lifetime; I want to cherish your soul across all lifetimes. With all my heart and all my being, I am forever yours, ${yourName}.`,
+      promises: [
+        "To cherish you through every storm and calm",
+        "To be your greatest supporter and safest home",
+        "To love you deeper with each passing sunrise",
+        "To stand beside your soul for all eternity",
+      ],
+      question: `Will you walk hand in hand with me into forever?`,
+      acceptButtonText: `Yes, for all eternity ❤️`,
+      rejectButtonText: `Always yours 💕`,
+    };
+  }
+
+  // Default: Cute & Sweet
+  return {
+    headline: `A Special Message For You, ${partnerName}`,
+    intro: `From the moment we met, you made every single day brighter and warmer.`,
+    story: `Your laughter is my favorite melody, and your smile is the sweetest thing in the world. Being with you feels as comfortable as home and as exciting as an adventure.`,
+    loveLetter: `Dearest ${partnerName}, you have brought so much kindness and joy into my life. Every little moment with you is a memory I hold close. I promise to always make you smile and love you endlessly. With all my love, ${yourName}.`,
+    promises: [
+      "To always be there when you need a hug",
+      "To celebrate every win, big and small, with you",
+      "To remind you how amazing and loved you are",
+      "To make today and every tomorrow memorable",
+    ],
+    question: `Will you be my Valentine and my favorite person forever?`,
+    acceptButtonText: `YES! Absolutely! ❤️`,
+    rejectButtonText: `Maybe? 😉`,
+  };
+}

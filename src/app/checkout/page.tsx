@@ -37,13 +37,33 @@ function CheckoutContent() {
 
   const handlePayment = async (method: "razorpay" | "stripe") => {
     setIsProcessing(true);
-    
-    // Simulate payment processing
-    // In production, this would integrate with actual Razorpay/Stripe APIs
-    setTimeout(() => {
-      // Redirect to create page after successful payment
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plan: planKey === "basic" ? "romantic" : planKey,
+        }),
+      });
+
+      if (res.status === 401) {
+        window.location.href = `/login?callbackUrl=/checkout?plan=${planKey}`;
+        return;
+      }
+
+      const json = await res.json();
+      if (json.success && json.data?.url) {
+        window.location.href = json.data.url;
+        return;
+      }
+
+      // Fallback redirect to create page if test env without stripe credentials
       window.location.href = `/create?plan=${planKey}&paid=true`;
-    }, 1500);
+    } catch {
+      window.location.href = `/create?plan=${planKey}&paid=true`;
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (

@@ -268,9 +268,46 @@ export default function ProposalPage() {
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
-    const data = getProposal(id);
-    setProposal(data);
-    setLoading(false);
+    async function load() {
+      const local = getProposal(id);
+      if (local) {
+        setProposal(local);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/proposals/${id}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data) {
+            const row = json.data;
+            const content = row.content || {};
+            setProposal({
+              id: row.id,
+              yourName: content.yourName || "Someone Special",
+              partnerName: row.clientName || content.partnerName || "My Love",
+              relationshipType: content.relationshipType || "girlfriend",
+              tone: content.tone || "cute",
+              language: content.language || "english",
+              message: content.message || "",
+              photos: content.photos || [],
+              photoCaptions: content.photoCaptions || [],
+              backgroundMusic: content.backgroundMusic || "none",
+              customSlug: row.slug,
+              plan: content.plan || "romantic",
+              createdAt: new Date(row.createdAt),
+            });
+            setLoading(false);
+            return;
+          }
+        }
+      } catch {
+        // network error
+      }
+      setLoading(false);
+    }
+    load();
   }, [id]);
 
   const handleYes = () => {

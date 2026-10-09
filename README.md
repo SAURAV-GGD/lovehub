@@ -1,36 +1,91 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LoveHub - AI Proposal & Love Letter Website Generator
 
-## Getting Started
+LoveHub is a production-grade web application that empowers users to create personalized, interactive proposal and love letter websites for their partners. It features server-side AI-generated messages (supporting English and Hinglish across multiple tones), photo memory galleries, ambient music players, and an interactive celebration screen with a runaway "No" button.
 
-First, run the development server:
+---
+
+## 🛠 Tech Stack
+
+- **Framework**: [Next.js 15](https://nextjs.org) (App Router, Server Components)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS, PostCSS
+- **Database & ORM**: PostgreSQL with [Drizzle ORM](https://orm.drizzle.team)
+- **Authentication**: [better-auth](https://better-auth.com) (Email/Password & Social OAuth)
+- **Payments**: [Stripe](https://stripe.com) Checkout & Webhooks
+- **Validation**: [Zod](https://zod.dev)
+- **Testing**: [Vitest](https://vitest.dev)
+- **Animations**: Framer Motion
+
+---
+
+## 🚀 Getting Started
+
+### 1. Prerequisites
+- Node.js 20+ installed
+- PostgreSQL database (Neon, Supabase, or local instance)
+
+### 2. Environment Setup
+Copy the example environment file:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Configure your `.env.local` keys:
+- `DATABASE_URL`: PostgreSQL connection string
+- `BETTER_AUTH_SECRET`: Secret key (minimum 32 characters)
+- `BETTER_AUTH_URL`: e.g. `http://localhost:3000`
+- `NEXT_PUBLIC_SITE_URL`: Base URL of your website
+- `AI_API_KEY`: Google Gemini API key (optional; system includes rich fallback templates)
+- `STRIPE_SECRET_KEY`: Stripe secret key (optional for checkout)
+- `STRIPE_WEBHOOK_SECRET`: Stripe webhook signing secret
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. Install Dependencies
+```bash
+npm install
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 4. Database Migrations
+Generate and apply migrations to your database:
 
-## Learn More
+```bash
+npm run db:generate
+npm run db:migrate
+```
 
-To learn more about Next.js, take a look at the following resources:
+### 5. Start Development Server
+```bash
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 🧪 Available Scripts
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Command | Description |
+|---|---|
+| `npm run dev` | Starts local Next.js development server |
+| `npm run build` | Builds optimized production bundle |
+| `npm run start` | Starts production server |
+| `npm run lint` | Runs ESLint 9 checks |
+| `npm run typecheck` | Validates TypeScript types (`tsc --noEmit`) |
+| `npm test` | Runs unit tests using Vitest |
+| `npm run db:generate` | Generates Drizzle SQL migrations from schema |
+| `npm run db:migrate` | Applies pending database migrations |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 🔒 Security & Privacy
+
+- **Security Headers**: Configured in `next.config.ts` (`X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`).
+- **Input Validation**: All client and API payloads are validated with strict Zod schemas.
+- **Idempotent Webhooks**: All payment webhooks check `webhook_events` prior to execution.
+- **Bot Allow-list**: `robots.txt` welcomes AI crawlers for indexable content while disallowing sensitive private dashboards and checkout paths.
+
+---
+
+## 📄 License
+
+MIT License. Designed with ❤️ for lovers everywhere.

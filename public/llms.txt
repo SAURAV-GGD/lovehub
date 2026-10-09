@@ -1,0 +1,26 @@
+# LoveHub
+
+> AI-Powered Proposal & Love Letter Website Generator
+
+LoveHub is a modern web application that enables users to create personalized, interactive proposal and anniversary websites for their partners.
+
+## Core Features
+- AI Proposal Generation: Server-side generation supporting multiple tones (Cute, Emotional, Filmy, Funny, Deep Romantic) in English and Hinglish.
+- Interactive Proposal Pages: Responsive, celebration-ready web experiences with animated runaway "No" button, floating hearts, confetti bursts, and optional background music.
+- Photo Memories: High-resolution photo upload slots with romantic captions.
+- Custom Link Sharing: Instant unique proposal URLs shareable directly via WhatsApp, SMS, or QR code.
+- User Accounts: Secure email/password and Google OAuth authentication with private dashboards.
+
+## Important URLs
+- Homepage: /
+- Proposal Builder: /create
+- User Dashboard: /dashboard
+- Pricing & Plans: /checkout
+- Login / Sign Up: /login, /signup
+
+## Technical Stack
+- Framework: Next.js (App Router, Server Components)
+- Language: TypeScript
+- Database: PostgreSQL (Drizzle ORM)
+- Authentication: better-auth
+- Payments: Stripe

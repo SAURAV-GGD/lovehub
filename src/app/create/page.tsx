@@ -31,6 +31,7 @@ import {
 } from "@/lib/proposal-types";
 import { generateProposalMessage } from "@/lib/ai-generator";
 import { saveProposal, isSlugAvailable, getProposalUrl } from "@/lib/proposal-storage";
+import { toast } from "sonner";
 
 function CreateContent() {
   const searchParams = useSearchParams();
@@ -91,24 +92,54 @@ function CreateContent() {
 
   const handleGenerateMessage = async () => {
     if (!yourName || !partnerName) {
+      toast.error("Please enter both your name and your partner's name first");
       return;
     }
 
     setIsGenerating(true);
-    
-    // Simulate AI delay for better UX
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    const generatedMessage = generateProposalMessage({
-      yourName,
-      partnerName,
-      relationshipType,
-      tone,
-      language,
-    });
-    
-    setMessage(generatedMessage);
-    setIsGenerating(false);
+    try {
+      const res = await fetch("/api/proposals/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          yourName,
+          partnerName,
+          relationshipType,
+          tone,
+          language,
+        }),
+      });
+
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.data?.loveLetter) {
+          setMessage(json.data.loveLetter);
+          toast.success("AI generated your message!");
+          setIsGenerating(false);
+          return;
+        }
+      }
+
+      const generatedMessage = generateProposalMessage({
+        yourName,
+        partnerName,
+        relationshipType,
+        tone,
+        language,
+      });
+      setMessage(generatedMessage);
+    } catch {
+      const generatedMessage = generateProposalMessage({
+        yourName,
+        partnerName,
+        relationshipType,
+        tone,
+        language,
+      });
+      setMessage(generatedMessage);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const validateSlug = (slug: string) => {
@@ -132,12 +163,12 @@ function CreateContent() {
     return true;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (limits.hasCustomSlug && customSlug && !validateSlug(customSlug)) {
       return;
     }
 
-    const id = saveProposal({
+    const proposalData = {
       yourName,
       partnerName,
       relationshipType,
@@ -149,7 +180,27 @@ function CreateContent() {
       backgroundMusic: limits.hasMusic ? backgroundMusic : "none",
       customSlug: limits.hasCustomSlug ? customSlug : undefined,
       plan: planKey,
-    });
+    };
+
+    const id = saveProposal(proposalData);
+
+    try {
+      await fetch("/api/proposals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: `Proposal for ${partnerName}`,
+          clientName: partnerName,
+          input: { yourName, partnerName, relationshipType, tone, language },
+          content: proposalData,
+          status: "final",
+          isPublic: true,
+          slug: customSlug || id,
+        }),
+      });
+    } catch {
+      // Local fallback preserves proposal
+    }
 
     setProposalId(id);
     setStep(4);
