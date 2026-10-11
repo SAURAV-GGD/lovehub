@@ -18,7 +18,22 @@ export function saveProposal(data: Omit<ProposalData, "id" | "createdAt">): stri
   proposals.push(newProposal);
   
   if (typeof window !== "undefined") {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(proposals));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(proposals));
+    } catch {
+      // LocalStorage quota exceeded: try saving only the newest proposal
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify([newProposal]));
+      } catch {
+        // Still exceeded: save lighter copy without heavy raw photos
+        try {
+          const lightProposal = { ...newProposal, photos: [] };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify([lightProposal]));
+        } catch {
+          // Never throw, allow seamless progression
+        }
+      }
+    }
   }
   
   return newProposal.id;

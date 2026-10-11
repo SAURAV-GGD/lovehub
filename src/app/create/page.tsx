@@ -59,6 +59,8 @@ function CreateContent() {
   const [customSlug, setCustomSlug] = useState("");
   const [slugError, setSlugError] = useState("");
   const [proposalId, setProposalId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCompressingPhotos, setIsCompressingPhotos] = useState(false);
 
   // Policy & Photo Consent Gate
   const [showPolicyGate, setShowPolicyGate] = useState(false);
@@ -94,18 +96,60 @@ function CreateContent() {
     toast.success("Consent confirmed. You can now access all proposal creator features!");
   };
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    const remainingSlots = limits.maxPhotos - photos.length;
-    const filesToProcess = acceptedFiles.slice(0, remainingSlots);
-
-    filesToProcess.forEach((file) => {
+  const compressImageFile = (file: File): Promise<string> => {
+    return new Promise((resolve) => {
       const reader = new FileReader();
-      reader.onload = () => {
-        setPhotos((prev) => [...prev, reader.result as string]);
-        setPhotoCaptions((prev) => [...prev, ""]);
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const maxDim = 1200;
+          let { width, height } = img;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            resolve(e.target?.result as string);
+            return;
+          }
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL("image/jpeg", 0.78));
+        };
+        img.onerror = () => resolve(e.target?.result as string);
+        img.src = e.target?.result as string;
       };
+      reader.onerror = () => resolve("");
       reader.readAsDataURL(file);
     });
+  };
+
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    const remainingSlots = limits.maxPhotos - photos.length;
+    const filesToProcess = acceptedFiles.slice(0, remainingSlots);
+    if (filesToProcess.length === 0) return;
+
+    setIsCompressingPhotos(true);
+    try {
+      const compressedList = await Promise.all(
+        filesToProcess.map((file) => compressImageFile(file))
+      );
+      const valid = compressedList.filter((item) => Boolean(item));
+      setPhotos((prev) => [...prev, ...valid]);
+      setPhotoCaptions((prev) => [...prev, ...valid.map(() => "")]);
+    } catch {
+      toast.error("Could not process some photos");
+    } finally {
+      setIsCompressingPhotos(false);
+    }
   }, [photos.length, limits.maxPhotos]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -213,57 +257,71 @@ function CreateContent() {
       return;
     }
 
-    const finalMusicValue = limits.hasMusic
-      ? musicSelection.type === "none"
-        ? "none"
-        : musicSelection.type === "preset"
-        ? musicSelection.presetId || "romantic-piano"
-        : musicSelection.type
-      : "none";
-
-    const proposalData = {
-      yourName,
-      partnerName,
-      relationshipType,
-      tone,
-      language,
-      message,
-      photos,
-      photoCaptions,
-      backgroundMusic: finalMusicValue,
-      customSlug: limits.hasCustomSlug ? customSlug : undefined,
-      plan: planKey,
-      customConfig: {
-        musicType: musicSelection.type,
-        youtubeUrl: musicSelection.youtubeUrl,
-        youtubeVideoId: musicSelection.youtubeVideoId,
-        customMusicUrl: musicSelection.customAudioUrl,
-        musicTitle: musicSelection.musicTitle,
-      },
-    };
-
-    const id = saveProposal(proposalData);
-
+    setIsSubmitting(true);
     try {
-      await fetch("/api/proposals", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: `Proposal for ${partnerName}`,
-          clientName: partnerName,
-          input: { yourName, partnerName, relationshipType, tone, language },
-          content: proposalData,
-          status: "final",
-          isPublic: true,
-          slug: customSlug || id,
-        }),
-      });
-    } catch {
-      // Local fallback preserves proposal
-    }
+      const finalMusicValue = limits.hasMusic
+        ? musicSelection.type === "none"
+          ? "none"
+          : musicSelection.type === "preset"
+          ? musicSelection.presetId || "romantic-piano"
+          : musicSelection.type
+        : "none";
 
-    setProposalId(id);
-    setStep(4);
+      const proposalData = {
+        yourName,
+        partnerName,
+        relationshipType,
+        tone,
+        language,
+        message,
+        photos,
+        photoCaptions,
+        backgroundMusic: finalMusicValue,
+        customSlug: limits.hasCustomSlug ? customSlug : undefined,
+        plan: planKey,
+        customConfig: {
+          musicType: musicSelection.type,
+          youtubeUrl: musicSelection.youtubeUrl,
+          youtubeVideoId: musicSelection.youtubeVideoId,
+          customMusicUrl: musicSelection.customAudioUrl,
+          musicTitle: musicSelection.musicTitle,
+        },
+      };
+
+      const id = saveProposal(proposalData);
+
+      try {
+        const res = await fetch("/api/proposals", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: `Proposal for ${partnerName}`,
+            clientName: partnerName,
+            input: { yourName, partnerName, relationshipType, tone, language },
+            content: proposalData,
+            status: "final",
+            isPublic: true,
+            slug: customSlug || id,
+          }),
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          console.warn("Server proposal save info:", errData);
+        }
+      } catch (networkErr) {
+        console.warn("Could not sync to server, local copy preserved:", networkErr);
+      }
+
+      setProposalId(id);
+      setStep(4);
+      toast.success("Proposal created successfully!");
+    } catch (err) {
+      console.error("Proposal creation error:", err);
+      toast.error("An error occurred while creating your proposal. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const canProceedStep1 = yourName && partnerName && message;
@@ -748,11 +806,20 @@ function CreateContent() {
                     </Button>
                     <Button
                       onClick={handleSubmit}
-                      disabled={!finalConsentChecked}
-                      className="bg-primary hover:bg-primary/90 disabled:opacity-50"
+                      disabled={!finalConsentChecked || isSubmitting}
+                      className="bg-primary hover:bg-primary/90 disabled:opacity-50 min-w-[190px]"
                     >
-                      <Heart className="w-4 h-4 mr-2 fill-white" />
-                      Create My Proposal
+                      {isSubmitting ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                          Creating surprise...
+                        </>
+                      ) : (
+                        <>
+                          <Heart className="w-4 h-4 mr-2 fill-white" />
+                          Create My Proposal
+                        </>
+                      )}
                     </Button>
                   </div>
                 </CardContent>
