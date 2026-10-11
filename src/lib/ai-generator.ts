@@ -12,7 +12,15 @@ interface GenerateProposalParams {
   language: LanguageType;
 }
 
-const toneStyles: Record<ToneType, { english: string; hinglish: string }[]> = {
+type LocalizedTemplates = {
+  english: string;
+  hinglish: string;
+  spanish?: string;
+  french?: string;
+  hindi?: string;
+};
+
+const toneStyles: Record<ToneType, LocalizedTemplates[]> = {
   cute: [
     {
       english: `${"{partnerName}"}, from the moment I met you, my heart knew it had found its home. Every smile you share, every laugh we have together, makes my world brighter. You are my sunshine on cloudy days, my peace in chaos. I promise to cherish every moment with you, to make you smile every day, and to love you endlessly. Will you be mine forever? With all my heart, ${"{yourName}"}.`,
@@ -62,17 +70,25 @@ const toneStyles: Record<ToneType, { english: string; hinglish: string }[]> = {
       english: `${"{partnerName}"}, they say love is just a feeling, but what I feel for you transcends every definition. You have become the air I breathe, the light I see, the hope I hold. In your eyes, I found a home my soul had been searching for across lifetimes. I offer you not just my heart, but my entire being. Will you accept this love that knows no bounds, no end, no conditions? In this life and every life after, ${"{yourName}"}.`,
       hinglish: `${"{partnerName}"}, log kehte hain pyaar ek ehsaas hai, par tumhare liye jo main feel karti/karta hoon wo us se bahut zyada hai. Tum meri saans ban gayi/gaye ho, meri roshni, meri umeed. Tumhari aankhon mein maine wo ghar dhoondh liya jo meri rooh kayi janmon se dhoondh rahi thi. Main tumhe sirf dil nahi, apna poora wajood deti/deta hoon. Ye behadh pyaar accept karoge? Is janam aur har janam mein, ${"{yourName}"}.`
     }
+  ],
+  "poetic-vip": [
+    {
+      english: `${"{partnerName}"}, if love were written in poetry across the celestial sphere, your name would be its sweetest refrain. Every moment beside you feels consecrated with beauty, grace, and eternity. You are my greatest inspiration and my forever home. Will you walk hand-in-hand with me into infinity? With devotion that defies time, ${"{yourName}"}.`,
+      hinglish: `${"{partnerName}"}, agar mohabbat koi shero-shayari hoti, toh tum uska sabse haseen misra hoti. Tumhare saath har lamha ek khwaab jaisa lagta hai jo sach ho gaya ho. Meri zindagi ki har subah aur har shaam sirf tumhare naam hai. Hamesha ke liye mere banoge? Poori rooh se tumhara, ${"{yourName}"}.`
+    }
   ]
 };
 
 export function generateProposalMessage(params: GenerateProposalParams): string {
   const { yourName, partnerName, tone, language } = params;
   
-  const templates = toneStyles[tone];
+  const templates = toneStyles[tone] || toneStyles["deep-romantic"];
   const randomIndex = Math.floor(Math.random() * templates.length);
   const template = templates[randomIndex];
   
-  const message = template[language]
+  const rawText = template[language as "english" | "hinglish"] || template.english;
+  
+  const message = rawText
     .replace(/\{yourName\}/g, yourName)
     .replace(/\{partnerName\}/g, partnerName);
   

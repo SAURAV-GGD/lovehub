@@ -7,6 +7,22 @@ const authRoutes = ["/login", "/signup"];
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // 1. Admin Route Protection
+  const adminCookie = request.cookies.get("lovehub_admin_session")?.value;
+
+  if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
+    if (!adminCookie) {
+      const adminLoginUrl = new URL("/admin/login", request.url);
+      adminLoginUrl.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(adminLoginUrl);
+    }
+  }
+
+  if (pathname === "/admin/login" && adminCookie) {
+    return NextResponse.redirect(new URL("/admin", request.url));
+  }
+
+  // 2. Client User Route Protection
   const sessionToken =
     request.cookies.get("better-auth.session_token")?.value ||
     request.cookies.get("__Secure-better-auth.session_token")?.value;
@@ -31,6 +47,7 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    "/admin/:path*",
     "/dashboard/:path*",
     "/checkout/:path*",
     "/login",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Heart, Volume2, VolumeX, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -204,54 +204,160 @@ const PhotoSlideshow = ({
   );
 };
 
-// NO button that runs away
-const RunawayNoButton = ({ onClick }: { onClick: () => void }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
+// NO button that runs away dynamically across full phone and desktop screen
+const RUNAWAY_PHRASES = [
+  "No",
+  "Wait, what? 🏃",
+  "Nope! Too slow! 💨",
+  "Are you sure? 🥺",
+  "Catch me if you can! 🏃‍♀️",
+  "Wrong button! 😂",
+  "Hint: Click YES! ❤️",
+  "Still trying? 😏",
+  "You can't escape my love! 💍",
+  "Just press YES! 💖",
+];
+
+const RunawayNoButton = ({ 
+  onClick, 
+  onDodge 
+}: { 
+  onClick?: () => void; 
+  onDodge?: (count: number) => void; 
+}) => {
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [escaped, setEscaped] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [isRunning, setIsRunning] = useState(false);
+  const [dodgeCount, setDodgeCount] = useState(0);
+  const [isDodging, setIsDodging] = useState(false);
 
-  const handleMouseEnter = () => {
-    if (!containerRef.current) return;
-    
-    setIsRunning(true);
-    const container = containerRef.current.parentElement;
-    if (!container) return;
+  const dodge = useCallback((e?: React.SyntheticEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
 
-    const containerRect = container.getBoundingClientRect();
-    const buttonWidth = 100;
-    const buttonHeight = 50;
+    if (typeof navigator !== "undefined" && navigator.vibrate) {
+      navigator.vibrate(30);
+    }
+
+    const vw = typeof window !== "undefined" ? window.innerWidth : 400;
+    const vh = typeof window !== "undefined" ? window.innerHeight : 800;
     
-    const maxX = containerRect.width - buttonWidth - 20;
-    const maxY = containerRect.height - buttonHeight - 20;
-    
-    const newX = Math.random() * maxX;
-    const newY = Math.random() * maxY;
-    
-    setPosition({ x: newX, y: newY });
-    
-    setTimeout(() => setIsRunning(false), 300);
-  };
+    // Accommodate button bounds
+    const buttonWidth = buttonRef.current?.offsetWidth || 140;
+    const buttonHeight = buttonRef.current?.offsetHeight || 52;
+    const padding = 20;
+
+    const minX = padding;
+    const maxX = Math.max(padding, vw - buttonWidth - padding);
+    const minY = padding + 60; // Leave space under top bar
+    const maxY = Math.max(minY + 20, vh - buttonHeight - padding);
+
+    // Current coordinates in viewport window
+    let curX = position.x;
+    let curY = position.y;
+    if (!escaped && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      curX = rect.left;
+      curY = rect.top;
+    }
+
+    // Minimum jump distance across the screen (at least 38% of viewport)
+    const minJumpDistance = Math.min(vw, vh) * 0.38;
+
+    let targetX = curX;
+    let targetY = curY;
+    let attempts = 0;
+
+    while (attempts < 15) {
+      const candidateX = minX + Math.random() * (maxX - minX);
+      const candidateY = minY + Math.random() * (maxY - minY);
+      const dist = Math.hypot(candidateX - curX, candidateY - curY);
+
+      if (dist >= minJumpDistance) {
+        targetX = candidateX;
+        targetY = candidateY;
+        break;
+      }
+      attempts++;
+    }
+
+    // Fallback: pick opposite quadrant if random selection didn't exceed minJumpDistance
+    if (targetX === curX && targetY === curY) {
+      targetX = curX > vw / 2 ? minX + 24 : maxX - 24;
+      targetY = curY > vh / 2 ? minY + 24 : maxY - 24;
+    }
+
+    setIsDodging(true);
+    setEscaped(true);
+    setPosition({ x: targetX, y: targetY });
+
+    setDodgeCount((prev) => {
+      const next = prev + 1;
+      onDodge?.(next);
+      return next;
+    });
+
+    setTimeout(() => {
+      setIsDodging(false);
+    }, 280);
+  }, [escaped, position.x, position.y, onDodge]);
+
+  const label = RUNAWAY_PHRASES[Math.min(dodgeCount, RUNAWAY_PHRASES.length - 1)];
 
   return (
-    <div ref={containerRef}>
+    <>
+      {/* Invisible placeholder when escaped to maintain layout stability */}
+      {escaped && (
+        <div 
+          className="inline-block w-28 h-12 pointer-events-none opacity-0 select-none" 
+          aria-hidden="true" 
+        />
+      )}
+
       <motion.div
-        animate={{ x: position.x, y: position.y }}
-        transition={{ type: "spring", stiffness: 500, damping: 30 }}
-        className="inline-block"
+        animate={escaped ? { x: position.x, y: position.y } : { x: 0, y: 0 }}
+        transition={{ 
+          type: "spring", 
+          stiffness: 420, 
+          damping: 24, 
+          mass: 0.7 
+        }}
+        style={
+          escaped
+            ? {
+                position: "fixed",
+                left: 0,
+                top: 0,
+                zIndex: 9999,
+                touchAction: "none",
+              }
+            : {
+                display: "inline-block",
+              }
+        }
       >
-        <Button
-          variant="outline"
-          size="lg"
-          onMouseEnter={handleMouseEnter}
-          onClick={onClick}
-          className={`text-lg px-8 py-6 border-2 border-gray-400 text-gray-600 hover:bg-gray-100 transition-transform ${
-            isRunning ? "scale-90" : "scale-100"
-          }`}
+        <button
+          ref={buttonRef}
+          type="button"
+          onMouseEnter={dodge}
+          onPointerDown={dodge}
+          onTouchStart={dodge}
+          onClick={(e) => {
+            dodge(e);
+            onClick?.();
+          }}
+          className={`px-7 py-3.5 rounded-full text-base font-semibold transition-all select-none shadow-xl cursor-pointer ${
+            escaped
+              ? "bg-rose-50/95 dark:bg-zinc-900/90 text-rose-600 dark:text-rose-300 border-2 border-rose-300 shadow-rose-500/25 backdrop-blur-md"
+              : "bg-white/20 hover:bg-white/30 text-white/90 border-2 border-white/40 backdrop-blur-sm"
+          } ${isDodging ? "scale-90" : "scale-100 hover:scale-105 active:scale-95"}`}
         >
-          No
-        </Button>
+          {label}
+        </button>
       </motion.div>
-    </div>
+    </>
   );
 };
 
@@ -265,6 +371,7 @@ export default function ProposalPage() {
   const [saidYes, setSaidYes] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
+  const [dodgeCount, setDodgeCount] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
@@ -295,8 +402,10 @@ export default function ProposalPage() {
               photoCaptions: content.photoCaptions || [],
               backgroundMusic: content.backgroundMusic || "none",
               customSlug: row.slug,
-              plan: content.plan || "romantic",
+              plan: content.plan || row.plan || "romantic",
               createdAt: new Date(row.createdAt),
+              customConfig: content.customConfig,
+              createdByAdmin: content.createdByAdmin || row.createdByAdmin,
             });
             setLoading(false);
             return;
@@ -362,7 +471,7 @@ export default function ProposalPage() {
     );
   }
 
-  const limits = planLimits[proposal.plan];
+  const limits = planLimits[proposal.plan] || planLimits.custom || planLimits.premium;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-900 via-red-900 to-pink-800 relative overflow-hidden">
@@ -414,6 +523,11 @@ export default function ProposalPage() {
               </motion.div>
 
               {/* Names */}
+              {proposal.customConfig?.vipBadge && (
+                <div className="mb-4 inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-400/20 border border-amber-400/40 text-amber-200 text-xs font-semibold shadow-lg">
+                  <span>✨</span> {proposal.customConfig.vipBadge}
+                </div>
+              )}
               <motion.h1
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -489,17 +603,24 @@ export default function ProposalPage() {
                 <p className="text-white/70 mb-6 text-lg">Will you be mine forever?</p>
                 
                 <div className="flex items-center justify-center gap-8 relative">
-                  <Button
-                    size="lg"
-                    onClick={handleYes}
-                    className="text-xl px-10 py-7 bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                  <motion.div
+                    animate={{
+                      scale: 1 + Math.min(dodgeCount * 0.08, 0.45),
+                    }}
+                    transition={{ type: "spring", stiffness: 350, damping: 20 }}
                   >
-                    <Heart className="w-5 h-5 mr-2 fill-white" />
-                    Yes!
-                  </Button>
+                    <Button
+                      size="lg"
+                      onClick={handleYes}
+                      className="text-xl px-10 py-7 bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white shadow-xl hover:shadow-2xl transition-all shadow-rose-500/30"
+                    >
+                      <Heart className="w-5 h-5 mr-2 fill-white animate-pulse" />
+                      Yes!
+                    </Button>
+                  </motion.div>
                   
                   {limits.hasAnimatedButtons ? (
-                    <RunawayNoButton onClick={handleNo} />
+                    <RunawayNoButton onClick={handleNo} onDodge={setDodgeCount} />
                   ) : (
                     <Button
                       variant="outline"

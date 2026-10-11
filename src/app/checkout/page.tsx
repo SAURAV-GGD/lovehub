@@ -35,7 +35,7 @@ function CheckoutContent() {
   const plan = plans[planKey] || plans.romantic;
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const handlePayment = async (method: "razorpay" | "stripe") => {
+  const handlePayment = async (method: string = "cashfree") => {
     setIsProcessing(true);
     try {
       const res = await fetch("/api/checkout", {
@@ -57,7 +57,6 @@ function CheckoutContent() {
         return;
       }
 
-      // Fallback redirect to create page if test env without stripe credentials
       window.location.href = `/create?plan=${planKey}&paid=true`;
     } catch {
       window.location.href = `/create?plan=${planKey}&paid=true`;
@@ -177,19 +176,19 @@ function CheckoutContent() {
                   <span className="text-lg font-bold">₹{plan.price}</span>
                 </Button>
 
-                {/* Stripe Option */}
+                {/* Cashfree Payment Option */}
                 <Button
-                  className="w-full h-auto py-4 bg-[#635bff] hover:bg-[#4f46e5] text-white flex items-center justify-between"
-                  onClick={() => handlePayment("stripe")}
+                  className="w-full h-auto py-4 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white flex items-center justify-between"
+                  onClick={() => handlePayment("cashfree")}
                   disabled={isProcessing}
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-white rounded flex items-center justify-center">
-                      <CreditCard className="w-6 h-6 text-[#635bff]" />
+                      <CreditCard className="w-6 h-6 text-emerald-700" />
                     </div>
                     <div className="text-left">
-                      <p className="font-semibold">Pay with Stripe</p>
-                      <p className="text-xs opacity-80">Credit/Debit Cards</p>
+                      <p className="font-semibold">Pay with Cashfree</p>
+                      <p className="text-xs opacity-90">UPI, Cards, Netbanking &amp; Wallets</p>
                     </div>
                   </div>
                   <span className="text-lg font-bold">₹{plan.price}</span>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { constructMetadata } from "@/lib/seo";
+import InteractiveFloatingHearts from "@/components/InteractiveFloatingHearts";
 import {
   WebsiteJsonLd,
   OrganizationJsonLd,
@@ -55,7 +56,10 @@ const faqs = [
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-white text-gray-900 selection:bg-rose-500 selection:text-white">
+    <div className="relative min-h-screen bg-white text-gray-900 selection:bg-rose-500 selection:text-white">
+      {/* Translucent baby-pink floating hearts with touch-to-burst interaction */}
+      <InteractiveFloatingHearts />
+
       {/* Structured Data */}
       <WebsiteJsonLd />
       <OrganizationJsonLd />
@@ -456,6 +460,12 @@ export default function HomePage() {
             </Link>
             <Link href="/login" className="hover:text-rose-600 transition-colors">
               Sign In
+            </Link>
+            <Link
+              href="/admin/login"
+              className="hover:text-rose-600 font-semibold text-slate-700 hover:underline flex items-center gap-1 transition-colors"
+            >
+              Admin Portal
             </Link>
           </div>
         </div>

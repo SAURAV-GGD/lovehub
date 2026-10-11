@@ -11,7 +11,7 @@ LoveHub is a production-grade web application that empowers users to create pers
 - **Styling**: Tailwind CSS, PostCSS
 - **Database & ORM**: PostgreSQL with [Drizzle ORM](https://orm.drizzle.team)
 - **Authentication**: [better-auth](https://better-auth.com) (Email/Password & Social OAuth)
-- **Payments**: [Stripe](https://stripe.com) Checkout & Webhooks
+- **Payments**: Cashfree Payment Gateway (in progress)
 - **Validation**: [Zod](https://zod.dev)
 - **Testing**: [Vitest](https://vitest.dev)
 - **Animations**: Framer Motion
@@ -37,8 +37,8 @@ Configure your `.env.local` keys:
 - `BETTER_AUTH_URL`: e.g. `http://localhost:3000`
 - `NEXT_PUBLIC_SITE_URL`: Base URL of your website
 - `AI_API_KEY`: Google Gemini API key (optional; system includes rich fallback templates)
-- `STRIPE_SECRET_KEY`: Stripe secret key (optional for checkout)
-- `STRIPE_WEBHOOK_SECRET`: Stripe webhook signing secret
+- `CASHFREE_APP_ID`: Cashfree App ID (optional)
+- `CASHFREE_SECRET_KEY`: Cashfree Secret Key (optional)
 
 ### 3. Install Dependencies
 ```bash

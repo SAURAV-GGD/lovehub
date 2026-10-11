@@ -5,7 +5,7 @@ This guide gives you exact, step-by-step instructions for everything you need to
 2. Getting your Google Gemini Flash AI API Key
 3. Pointing your Hostinger domain (`lovehub.in`) to Vercel (DNS settings)
 4. Adding Environment Variables into Vercel
-5. Configuring Stripe Payments (optional/test mode)
+5. Configuring Cashfree Payments (To be set up later)
 6. Post-Launch Verification
 
 ---
@@ -18,7 +18,7 @@ This guide gives you exact, step-by-step instructions for everything you need to
 | **Hostinger** ([hostinger.in](https://hostinger.in)) | Domain Registrar (`lovehub.in`) | You already have the domain |
 | **Google AI Studio** ([aistudio.google.com](https://aistudio.google.com)) | Gemini Flash AI API Key | Yes (Free tier with generous limits) |
 | **Neon** ([neon.tech](https://neon.tech)) | Serverless PostgreSQL Database | Yes (Free tier forever) |
-| **Stripe** ([stripe.com](https://stripe.com)) | Card Payments & Webhooks | Free in test mode |
+| **Cashfree** ([cashfree.com](https://cashfree.com)) | Indian & International Payments | To be configured later |
 
 ---
 
@@ -123,10 +123,9 @@ Go to **Settings** → **Environment Variables**. Add each of the following vari
 | `BETTER_AUTH_SECRET` | Generate a 32+ character random string (see below) | Secret for signing auth tokens |
 | `BETTER_AUTH_URL` | `https://lovehub.in` | Base URL for auth callbacks |
 | `AI_API_KEY` | `AIzaSy...` (from Google AI Studio in Step 2) | Gemini API Key |
-| `AI_MODEL` | `gemini-2.0-flash` | Fast, high-quality romantic model |
-| `STRIPE_SECRET_KEY` | `sk_test_...` or `sk_live_...` | From Stripe Dashboard (optional for launch) |
-| `STRIPE_WEBHOOK_SECRET` | `whsec_...` | From Stripe Webhooks (optional for launch) |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | `pk_test_...` or `pk_live_...` | From Stripe Dashboard |
+| `AI_MODEL` | `gemini-3.8-flash` | Fast, high-quality romantic model |
+| `CASHFREE_APP_ID` | `...` | From Cashfree Dashboard (To be configured later) |
+| `CASHFREE_SECRET_KEY` | `...` | From Cashfree Dashboard (To be configured later) |
 
 ### How to Generate `BETTER_AUTH_SECRET`:
 You can generate a secure random string using Node.js:
@@ -138,23 +137,12 @@ Copy the 64-character output and paste it as `BETTER_AUTH_SECRET`.
 
 ---
 
-## 💳 Step 5: Setting Up Stripe Payments (When Ready)
+## 💳 Step 5: Cashfree Payments (To be set up later)
 
-If you want to accept real payments for the Romantic ($9) and Premium ($19) tiers:
-
-1. Sign up or log in at **[stripe.com](https://stripe.com)**.
-2. In the top bar, you can start in **Test Mode** (toggle on).
-3. Go to **Developers** → **API keys**:
-   - Copy **Publishable key** (`pk_test_...`) → Set as `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`.
-   - Copy **Secret key** (`sk_test_...`) → Set as `STRIPE_SECRET_KEY`.
-4. Set up the Webhook:
-   - Go to **Developers** → **Webhooks**.
-   - Click **Add endpoint**.
-   - **Endpoint URL**: `https://lovehub.in/api/webhooks/payments`
-   - **Events to listen to**: Select `checkout.session.completed`.
-   - Click **Add endpoint**.
-   - Under "Signing secret", click **Reveal** (`whsec_...`).
-   - Copy and add as `STRIPE_WEBHOOK_SECRET` in Vercel.
+We will configure Cashfree Payment Gateway (supporting UPI, Cards, Netbanking, Wallets) when ready:
+1. Sign up at **[cashfree.com](https://cashfree.com)**.
+2. Obtain Merchant App ID and Secret Key.
+3. Configure webhook endpoint: `https://lovehub.in/api/webhooks/payments`.
 
 ---
 

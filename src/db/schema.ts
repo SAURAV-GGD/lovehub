@@ -19,6 +19,7 @@ export const user = pgTable("user", {
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").notNull().default(false),
   image: text("image"),
+  role: text("role").notNull().default("user"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -76,6 +77,8 @@ export const proposals = pgTable(
       .references(() => user.id, { onDelete: "cascade" }),
     title: text("title").notNull(),
     clientName: text("client_name"),
+    plan: text("plan").notNull().default("romantic"),
+    createdByAdmin: boolean("created_by_admin").notNull().default(false),
     input: jsonb("input").notNull(),
     content: jsonb("content").notNull(),
     status: text("status", { enum: ["draft", "final"] }).notNull().default("draft"),
@@ -99,7 +102,7 @@ export const subscriptions = pgTable("subscriptions", {
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
-  provider: text("provider").notNull().default("stripe"),
+  provider: text("provider").notNull().default("cashfree"),
   providerCustomerId: text("provider_customer_id"),
   plan: text("plan", { enum: ["free", "pro", "premium"] }).notNull().default("free"),
   status: text("status").notNull().default("active"),

@@ -17,7 +17,7 @@ export async function generateProposal(
   input: GenerateProposalInput
 ): Promise<GeneratedProposalContent> {
   const apiKey = process.env.AI_API_KEY;
-  const model = process.env.AI_MODEL || "gemini-2.0-flash";
+  const model = process.env.AI_MODEL || "gemini-3.8-flash";
 
   if (apiKey) {
     try {

@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
 import { checkoutSchema } from "@/lib/validators";
-import { stripe, PLAN_PRICING } from "@/lib/payments";
+import { PLAN_PRICING } from "@/lib/payments";
 import { apiSuccess, apiError, handleApiError } from "@/lib/api-response";
 
 export async function POST(request: NextRequest) {
@@ -24,33 +24,11 @@ export async function POST(request: NextRequest) {
       process.env.NEXT_PUBLIC_SITE_URL ||
       "http://localhost:3000";
 
-    const checkoutSession = await stripe.checkout.sessions.create({
-      mode: "payment",
-      payment_method_types: ["card"],
-      customer_email: session.user.email,
-      line_items: [
-        {
-          price_data: {
-            currency: planConfig.currency,
-            product_data: {
-              name: planConfig.name,
-              description: `Upgrade your proposal with ${planConfig.name} on LoveHub`,
-            },
-            unit_amount: planConfig.amount,
-          },
-          quantity: 1,
-        },
-      ],
-      metadata: {
-        userId: session.user.id,
-        plan: validated.plan,
-        proposalId: validated.proposalId || "",
-      },
-      success_url: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/checkout/cancel`,
-    });
+    // Cashfree Payment Gateway will be hooked up here
+    // For now, allow direct upgrade / redirect to create
+    const redirectUrl = `${origin}/create?plan=${validated.plan}&upgraded=true`;
 
-    return apiSuccess({ url: checkoutSession.url });
+    return apiSuccess({ url: redirectUrl, plan: validated.plan });
   } catch (err) {
     return handleApiError(err);
   }

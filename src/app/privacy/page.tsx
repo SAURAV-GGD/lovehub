@@ -131,7 +131,7 @@ export default function PrivacyPage() {
             </h2>
             <div className="text-sm leading-relaxed space-y-2 text-gray-600">
               <p>
-                In addition to user media and analytics, we collect account details (name, email, hashed password) when you register, and billing metadata processed securely via Stripe. We do <strong>not</strong> sell, rent, or trade your personal data to marketing brokers.
+                In addition to user media and analytics, we collect account details (name, email, hashed password) when you register, and billing metadata processed securely via trusted payment gateways. We do <strong>not</strong> sell, rent, or trade your personal data to marketing brokers.
               </p>
             </div>
           </section>

@@ -1,15 +1,7 @@
-import Stripe from "stripe";
 import { db } from "@/db";
 import { subscriptions, usage, webhookEvents } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { logger } from "./logger";
-
-export const stripe = new Stripe(
-  process.env.STRIPE_SECRET_KEY || "sk_test_placeholder_key_for_build",
-  {
-    apiVersion: "2025-02-24.acacia" as any,
-  }
-);
 
 export const PLAN_LIMITS = {
   free: 3,

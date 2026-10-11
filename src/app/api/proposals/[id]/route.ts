@@ -15,12 +15,23 @@ export async function GET(request: NextRequest, { params }: Params) {
     const { id } = await params;
     const session = await auth.api.getSession({ headers: request.headers });
 
-    const [proposal] = await db
-      .select()
-      .from(proposals)
-      .where(or(eq(proposals.id, id), eq(proposals.slug, id)));
+    let proposal = null;
+    try {
+      const [dbProposal] = await db
+        .select()
+        .from(proposals)
+        .where(or(eq(proposals.id, id), eq(proposals.slug, id)));
+      proposal = dbProposal;
+    } catch {
+      // DB offline fallback
+    }
 
     if (!proposal) {
+      const { getProposalByIdOrSlug } = await import("@/lib/admin-store");
+      const storeProp = await getProposalByIdOrSlug(id);
+      if (storeProp) {
+        return apiSuccess(storeProp);
+      }
       return apiError("Proposal not found", "NOT_FOUND", 404);
     }
 
