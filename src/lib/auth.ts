@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { dash } from "@better-auth/infra";
 import { db } from "@/db";
 import * as schema from "@/db/schema";
 
@@ -13,6 +14,9 @@ export const auth = betterAuth({
       verification: schema.verification,
     },
   }),
+  plugins: [
+    dash(),
+  ],
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false,
