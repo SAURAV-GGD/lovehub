@@ -3,7 +3,7 @@
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Shield,
   Heart,
@@ -17,6 +17,8 @@ import {
   KeyRound,
   Loader2,
   ArrowLeft,
+  Key,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,15 +26,24 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 
+const MASTER_SECURITY_PIN = "7004239911";
+
 function AdminLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/admin";
 
-  const [email, setEmail] = useState("admin@lovehub.com");
-  const [password, setPassword] = useState("LoveHubAdmin2026!");
+  // Form inputs are strictly empty by default so no unauthenticated visitor gets free access
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Master PIN Security State to protect credentials & auto-fill
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [showPinPrompt, setShowPinPrompt] = useState(false);
+  const [pinInput, setPinInput] = useState("");
+  const [pinError, setPinError] = useState("");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,10 +80,32 @@ function AdminLoginForm() {
     }
   };
 
+  const handleVerifyMasterPin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPinError("");
+
+    if (pinInput.trim() === MASTER_SECURITY_PIN) {
+      setIsUnlocked(true);
+      setShowPinPrompt(false);
+      setPinInput("");
+      setEmail("admin@lovehub.com");
+      setPassword("LoveHubAdmin2026!");
+      toast.success("Master Authorization Verified! Credentials revealed and auto-filled.");
+    } else {
+      setPinError("Incorrect Master Security PIN. Access denied.");
+      toast.error("Invalid Master PIN. Credentials remain locked.");
+    }
+  };
+
   const fillDefaultCredentials = () => {
+    if (!isUnlocked) {
+      setShowPinPrompt(true);
+      toast.info("Please enter the Master PIN first to unlock auto-fill.");
+      return;
+    }
     setEmail("admin@lovehub.com");
     setPassword("LoveHubAdmin2026!");
-    toast.info("Default administrator credentials filled");
+    toast.info("Administrator credentials filled.");
   };
 
   return (
@@ -109,38 +142,130 @@ function AdminLoginForm() {
               Admin Gateway
             </CardTitle>
             <CardDescription className="text-slate-400 text-sm">
-              Control center for clients, database records &amp; unlimited proposal generation
+              Control center for clients, database records &amp; unlimited VIP creation
             </CardDescription>
           </CardHeader>
 
           <CardContent className="space-y-5 pt-2">
-            {/* Quick Demo Credentials Info Card */}
-            <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl p-3.5 text-xs text-slate-300 space-y-2">
+            {/* Master-PIN Protected Credentials Security Box */}
+            <div className="bg-slate-800/70 border border-slate-700/80 rounded-2xl p-4 text-xs text-slate-300 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="font-semibold text-rose-400 flex items-center gap-1.5">
-                  <KeyRound className="w-3.5 h-3.5" />
+                  <KeyRound className="w-4 h-4" />
                   Administrator Credentials
                 </span>
-                <button
-                  type="button"
-                  onClick={fillDefaultCredentials}
-                  className="text-xs text-pink-400 hover:text-pink-300 underline font-medium"
+                {isUnlocked ? (
+                  <span className="text-[11px] font-semibold text-emerald-400 flex items-center gap-1 bg-emerald-950/60 border border-emerald-800/60 px-2 py-0.5 rounded-full">
+                    <CheckCircle2 className="w-3 h-3" /> Unlocked
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowPinPrompt(!showPinPrompt);
+                      setPinError("");
+                    }}
+                    className="text-xs text-rose-400 hover:text-rose-300 underline font-medium cursor-pointer"
+                  >
+                    {showPinPrompt ? "Cancel" : "Unlock Credentials"}
+                  </button>
+                )}
+              </div>
+
+              {/* Locked State: Security PIN Challenge */}
+              {!isUnlocked ? (
+                <div className="space-y-3">
+                  <p className="text-[11px] text-slate-400 leading-relaxed">
+                    🔒 Credentials and quick auto-fill are encrypted. Enter the Master Security PIN to view access details.
+                  </p>
+
+                  <AnimatePresence>
+                    {showPinPrompt ? (
+                      <motion.form
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        onSubmit={handleVerifyMasterPin}
+                        className="space-y-2 pt-1"
+                      >
+                        <div className="relative">
+                          <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                          <Input
+                            type="password"
+                            value={pinInput}
+                            onChange={(e) => {
+                              setPinInput(e.target.value);
+                              setPinError("");
+                            }}
+                            placeholder="Enter Master Security PIN"
+                            required
+                            autoFocus
+                            className="pl-8 text-xs bg-slate-950 border-slate-700 text-slate-100 placeholder:text-slate-500 h-9 focus-visible:ring-rose-500"
+                          />
+                        </div>
+
+                        {pinError && (
+                          <div className="flex items-center gap-1 text-[11px] text-red-400">
+                            <AlertCircle className="w-3 h-3 shrink-0" />
+                            <span>{pinError}</span>
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-2">
+                          <Button
+                            type="submit"
+                            size="sm"
+                            className="w-full bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs h-8 cursor-pointer"
+                          >
+                            Verify PIN &amp; Autofill
+                          </Button>
+                        </div>
+                      </motion.form>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowPinPrompt(true)}
+                        className="w-full border-slate-700 hover:bg-slate-700/60 text-slate-300 text-xs h-8 cursor-pointer"
+                      >
+                        <Lock className="w-3 h-3 mr-1.5 text-rose-400" /> Enter Master PIN to Reveal
+                      </Button>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ) : (
+                /* Unlocked State: Reveals credentials and enables quick autofill */
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="space-y-2.5 pt-1"
                 >
-                  Auto Fill
-                </button>
-              </div>
-              <div className="grid grid-cols-2 gap-2 text-[11px] font-mono text-slate-400 bg-slate-900/80 p-2 rounded-lg border border-slate-800">
-                <div>
-                  <span className="text-slate-500 block">User:</span>
-                  <span className="text-slate-200">admin@lovehub.com</span>
-                </div>
-                <div>
-                  <span className="text-slate-500 block">Pass:</span>
-                  <span className="text-slate-200">LoveHubAdmin2026!</span>
-                </div>
-              </div>
+                  <div className="grid grid-cols-2 gap-2 text-[11px] font-mono text-slate-400 bg-slate-950/80 p-2.5 rounded-xl border border-slate-800">
+                    <div>
+                      <span className="text-slate-500 block text-[10px]">User:</span>
+                      <span className="text-slate-200 select-all">admin@lovehub.com</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block text-[10px]">Pass:</span>
+                      <span className="text-slate-200 select-all">LoveHubAdmin2026!</span>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={fillDefaultCredentials}
+                      className="text-xs text-pink-400 hover:text-pink-300 underline font-medium cursor-pointer"
+                    >
+                      Re-apply Auto Fill
+                    </button>
+                  </div>
+                </motion.div>
+              )}
             </div>
 
+            {/* Standard Login Form */}
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-1.5">
                 <Label htmlFor="admin-email" className="text-xs font-semibold text-slate-300">
@@ -178,7 +303,7 @@ function AdminLoginForm() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 cursor-pointer"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
