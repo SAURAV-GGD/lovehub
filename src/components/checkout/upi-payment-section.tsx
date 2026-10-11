@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { markProposalPaid } from "@/lib/proposal-storage";
 
 interface UpiQRResponse {
   orderId: string;
@@ -38,6 +39,7 @@ interface UpiPaymentSectionProps {
   planKey: string;
   planPrice: number;
   planName: string;
+  proposalId?: string;
   onSuccess: (redirectUrl: string) => void;
 }
 
@@ -45,6 +47,7 @@ export function UpiPaymentSection({
   planKey,
   planPrice,
   planName,
+  proposalId,
   onSuccess,
 }: UpiPaymentSectionProps) {
   const [loading, setLoading] = useState(true);
@@ -103,6 +106,10 @@ export function UpiPaymentSection({
   const handleConfirmPayment = async () => {
     setIsVerifying(true);
     try {
+      if (proposalId) {
+        markProposalPaid(proposalId);
+      }
+
       const res = await fetch("/api/checkout/confirm-upi", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -110,21 +117,27 @@ export function UpiPaymentSection({
           plan: planKey,
           orderId: qrData?.orderId,
           utr: utrNumber,
+          proposalId,
         }),
       });
 
       const json = await res.json();
       if (json.success && json.data?.url) {
-        toast.success("Payment confirmed! Unlocking your plan...");
+        toast.success("Payment confirmed! Your proposal is permanently unlocked!");
         onSuccess(json.data.url);
       } else {
-        // Fallback redirect
-        toast.success("Payment submitted! Redirecting to studio...");
-        onSuccess(`/create?plan=${planKey}&upgraded=true`);
+        const targetUrl = proposalId
+          ? `/checkout/success?proposalId=${proposalId}&plan=${planKey}`
+          : `/create?plan=${planKey}&upgraded=true`;
+        toast.success("Payment recorded! Unlocking your permanent link...");
+        onSuccess(targetUrl);
       }
     } catch {
-      toast.success("Payment recorded! Redirecting to studio...");
-      onSuccess(`/create?plan=${planKey}&upgraded=true`);
+      const targetUrl = proposalId
+        ? `/checkout/success?proposalId=${proposalId}&plan=${planKey}`
+        : `/create?plan=${planKey}&upgraded=true`;
+      toast.success("Payment saved! Redirecting...");
+      onSuccess(targetUrl);
     } finally {
       setIsVerifying(false);
     }

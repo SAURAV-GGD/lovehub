@@ -17,6 +17,8 @@ export interface ProposalData {
   customSlug?: string;
   plan: PlanType;
   createdAt: Date;
+  isPaid?: boolean;
+  expiresAt?: number; // timestamp in ms when temporary preview expires (e.g. 4 minutes)
   createdByAdmin?: boolean;
   assignedClientEmail?: string;
   customConfig?: {

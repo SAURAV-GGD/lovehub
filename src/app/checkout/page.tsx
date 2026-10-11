@@ -33,6 +33,7 @@ const plans = {
 function CheckoutContent() {
   const searchParams = useSearchParams();
   const planKey = (searchParams.get("plan") || "romantic") as keyof typeof plans;
+  const proposalId = searchParams.get("proposalId") || searchParams.get("id") || undefined;
   const plan = plans[planKey] || plans.romantic;
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -159,6 +160,7 @@ function CheckoutContent() {
               planKey={planKey}
               planPrice={plan.price}
               planName={plan.name}
+              proposalId={proposalId}
               onSuccess={(url) => {
                 window.location.href = url;
               }}

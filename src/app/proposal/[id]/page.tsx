@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import { Heart, Volume2, VolumeX, ChevronLeft, ChevronRight, Music, Sparkles } from "lucide-react";
+import { Heart, Volume2, VolumeX, ChevronLeft, ChevronRight, Music, Sparkles, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { getProposal } from "@/lib/proposal-storage";
 import { ProposalData, planLimits } from "@/lib/proposal-types";
@@ -210,11 +211,11 @@ const RunawayNoButton = ({
     setEscaped(true);
     setPosition({ x: targetX, y: targetY });
 
-    setDodgeCount((prev) => {
-      const next = prev + 1;
-      onDodge?.(next);
-      return next;
-    });
+    const nextCount = dodgeCount + 1;
+    setDodgeCount(nextCount);
+    if (onDodge) {
+      onDodge(nextCount);
+    }
 
     setTimeout(() => {
       setIsDodging(false);
@@ -291,6 +292,7 @@ export default function ProposalPage() {
   const [isMuted, setIsMuted] = useState(true);
   const [hasInteracted, setHasInteracted] = useState(false);
   const [dodgeCount, setDodgeCount] = useState(0);
+  const [secondsRemaining, setSecondsRemaining] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
@@ -323,6 +325,8 @@ export default function ProposalPage() {
               customSlug: row.slug,
               plan: content.plan || row.plan || "romantic",
               createdAt: new Date(row.createdAt),
+              isPaid: Boolean(content.isPaid || row.status === "final" || row.createdByAdmin),
+              expiresAt: content.expiresAt,
               customConfig: content.customConfig,
               createdByAdmin: content.createdByAdmin || row.createdByAdmin,
             });
@@ -337,6 +341,27 @@ export default function ProposalPage() {
     }
     load();
   }, [id]);
+
+  useEffect(() => {
+    if (!proposal) return;
+    if (proposal.isPaid || proposal.createdByAdmin) {
+      setSecondsRemaining(null);
+      return;
+    }
+
+    const expiresAt =
+      proposal.expiresAt ||
+      new Date(proposal.createdAt).getTime() + 4 * 60 * 1000;
+
+    const updateTimer = () => {
+      const left = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
+      setSecondsRemaining(left);
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [proposal]);
 
   const handleYes = () => {
     setSaidYes(true);
@@ -437,8 +462,114 @@ export default function ProposalPage() {
     );
   }
 
+  // If temporary preview has expired (after 4 minutes) and proposal is unpaid
+  if (proposal && secondsRemaining !== null && secondsRemaining <= 0) {
+    const planPrices: Record<string, number> = {
+      basic: 39,
+      romantic: 69,
+      premium: 169,
+      starter: 39,
+      pro: 69,
+      custom: 169,
+    };
+    const price = planPrices[proposal.plan] || 69;
+
+    return (
+      <div className="min-h-screen romantic-gradient-dark flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="max-w-md w-full bg-black/85 backdrop-blur-2xl border border-white/15 rounded-3xl p-8 text-center text-white shadow-2xl space-y-6"
+        >
+          <div className="w-20 h-20 bg-rose-500/20 border border-rose-500/40 rounded-full flex items-center justify-center mx-auto shadow-inner">
+            <Lock className="w-9 h-9 text-rose-400" />
+          </div>
+
+          <div className="space-y-2">
+            <span className="inline-block px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-semibold">
+              ⏳ 4-Minute Temporary Preview Ended
+            </span>
+            <h1 className="text-2xl sm:text-3xl font-black text-white">
+              Temporary Preview Expired
+            </h1>
+            <p className="text-sm text-white/70 leading-relaxed">
+              This temporary preview link for <strong>{proposal.partnerName}</strong> was active for 4 minutes and has now terminated.
+            </p>
+          </div>
+
+          <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-left space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-white/60">Proposal Plan:</span>
+              <span className="font-semibold text-pink-300 uppercase">{proposal.plan}</span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-white/60">One-Time Activation:</span>
+              <span className="text-lg font-bold text-white">₹{price}</span>
+            </div>
+            <p className="text-[11px] text-white/50 pt-1 border-t border-white/10">
+              Includes permanent web hosting, interactive 3D flipbook memory deck, and WhatsApp share link.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <Link
+              href={`/checkout?plan=${proposal.plan}&proposalId=${proposal.id}`}
+              className="block w-full"
+            >
+              <Button
+                size="lg"
+                className="w-full bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white font-bold text-sm shadow-xl shadow-pink-500/30 h-12 gap-2"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>Pay ₹{price} via UPI &amp; Unlock Permanent Link</span>
+              </Button>
+            </Link>
+
+            <Link href="/" className="inline-block text-xs text-white/50 hover:text-white">
+              Return to LoveHub Home
+            </Link>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-900 via-red-900 to-pink-800 relative overflow-hidden">
+      {/* Floating Temporary Preview Banner (4 min countdown) */}
+      {secondsRemaining !== null && secondsRemaining > 0 && (
+        <div className="fixed top-0 inset-x-0 z-50 bg-black/85 backdrop-blur-md border-b border-amber-500/30 px-4 py-2.5 flex items-center justify-between text-white shadow-xl">
+          <div className="flex items-center gap-2 text-xs">
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping" />
+            <span className="font-semibold text-amber-300 hidden sm:inline">
+              Live Preview Mode:
+            </span>
+            <span className="font-mono bg-amber-500/20 px-2 py-0.5 rounded text-amber-200 font-bold">
+              {Math.floor(secondsRemaining / 60)
+                .toString()
+                .padStart(2, "0")}
+              :
+              {(secondsRemaining % 60).toString().padStart(2, "0")}
+            </span>
+            <span className="text-white/60 text-[11px] hidden md:inline">
+              remaining before termination
+            </span>
+          </div>
+
+          <Link
+            href={`/checkout?plan=${proposal.plan}&proposalId=${proposal.id}`}
+          >
+            <Button
+              size="sm"
+              className="h-8 px-3.5 bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white font-semibold text-xs gap-1.5 shadow-md shadow-pink-500/30"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Unlock Permanent Link</span>
+            </Button>
+          </Link>
+        </div>
+      )}
+
       <FloatingHearts count={25} />
       
       {/* Background music engine (Presets, YouTube, Custom) */}
@@ -576,20 +707,6 @@ export default function ProposalPage() {
                 </p>
               </motion.div>
 
-              {/* Photo memories: 3D Storybook Cards Flipbook */}
-              {proposal.photos.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 1 }}
-                  className="mb-8 w-full"
-                >
-                  <CardsFlipbook 
-                    photos={proposal.photos} 
-                    captions={proposal.photoCaptions} 
-                  />
-                </motion.div>
-              )}
 
               {/* YES/NO Buttons */}
               <motion.div

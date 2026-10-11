@@ -6,13 +6,19 @@ function generateId(): string {
   return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 }
 
+export const PREVIEW_DURATION_MS = 4 * 60 * 1000; // 4 minutes temporary preview window
+
 export function saveProposal(data: Omit<ProposalData, "id" | "createdAt">): string {
   const proposals = getAllProposals();
   
+  const isPaid = Boolean(data.isPaid);
+  const now = Date.now();
   const newProposal: ProposalData = {
     ...data,
     id: data.customSlug || generateId(),
-    createdAt: new Date()
+    createdAt: new Date(),
+    isPaid,
+    expiresAt: isPaid ? undefined : (data.expiresAt || now + PREVIEW_DURATION_MS),
   };
   
   proposals.push(newProposal);
@@ -37,6 +43,29 @@ export function saveProposal(data: Omit<ProposalData, "id" | "createdAt">): stri
   }
   
   return newProposal.id;
+}
+
+export function markProposalPaid(id: string): boolean {
+  if (typeof window === "undefined") return false;
+  const proposals = getAllProposals();
+  const proposal = proposals.find((p) => p.id === id || p.customSlug === id);
+  if (!proposal) return false;
+
+  proposal.isPaid = true;
+  delete proposal.expiresAt;
+
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(proposals));
+  } catch {
+    // Quota safety
+  }
+  return true;
+}
+
+export function isProposalExpired(proposal: ProposalData): boolean {
+  if (proposal.isPaid) return false;
+  if (!proposal.expiresAt) return false;
+  return Date.now() > proposal.expiresAt;
 }
 
 export function getProposal(id: string): ProposalData | null {

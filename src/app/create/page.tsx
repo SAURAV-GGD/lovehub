@@ -279,6 +279,8 @@ function CreateContent() {
         backgroundMusic: finalMusicValue,
         customSlug: limits.hasCustomSlug ? customSlug : undefined,
         plan: planKey,
+        isPaid: false,
+        expiresAt: Date.now() + 4 * 60 * 1000,
         customConfig: {
           musicType: musicSelection.type,
           youtubeUrl: musicSelection.youtubeUrl,
@@ -299,7 +301,7 @@ function CreateContent() {
             clientName: partnerName,
             input: { yourName, partnerName, relationshipType, tone, language },
             content: proposalData,
-            status: "final",
+            status: "draft",
             isPublic: true,
             slug: customSlug || id,
           }),
@@ -315,7 +317,7 @@ function CreateContent() {
 
       setProposalId(id);
       setStep(4);
-      toast.success("Proposal created successfully!");
+      toast.success("Live preview created! Valid for 4 minutes.");
     } catch (err) {
       console.error("Proposal creation error:", err);
       toast.error("An error occurred while creating your proposal. Please try again.");
@@ -327,64 +329,123 @@ function CreateContent() {
   const canProceedStep1 = yourName && partnerName && message;
   const canProceedStep2 = photos.length > 0;
 
+  const planPrices: Record<string, number> = {
+    basic: 39,
+    romantic: 69,
+    premium: 169,
+    starter: 39,
+    pro: 69,
+    custom: 169,
+  };
+  const currentPlanPrice = planPrices[planKey] || 69;
+
   if (proposalId) {
     const proposalUrl = getProposalUrl(proposalId);
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`Hey ${partnerName}! I have something special for you: ${proposalUrl}`)}`;
+    const checkoutUrl = `/checkout?plan=${planKey}&proposalId=${proposalId}`;
 
     return (
       <div className="min-h-screen romantic-gradient py-12 px-4">
-        <div className="container mx-auto max-w-2xl text-center">
+        <div className="container mx-auto max-w-xl text-center">
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.5 }}
+            className="space-y-6"
           >
-            <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Heart className="w-12 h-12 text-green-600 fill-green-600" />
+            {/* Top Pill */}
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs font-semibold shadow-sm">
+              <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+              <span>Temporary Live Preview • Active for 4 Minutes</span>
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Your Proposal is Ready!
+
+            <div className="w-20 h-20 bg-pink-100 dark:bg-pink-950/60 border border-pink-200 dark:border-pink-800 rounded-full flex items-center justify-center mx-auto shadow-lg">
+              <Heart className="w-10 h-10 text-pink-500 fill-pink-500 animate-pulse" />
+            </div>
+
+            <h1 className="text-3xl font-extrabold text-foreground">
+              Your Live Preview is Ready!
             </h1>
-            <p className="text-foreground/70 mb-8">
-              Share this magical link with {partnerName} and make your love story unforgettable!
+
+            <p className="text-muted-foreground text-sm max-w-md mx-auto">
+              You can preview how your proposal looks right now. This temporary link will terminate in <strong>4 minutes</strong>. To permanently activate your website and share it with <strong>{partnerName}</strong>, complete payment below!
             </p>
 
-            <Card className="mb-6">
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-2 p-3 bg-muted rounded-lg mb-4">
-                  <Input
-                    value={proposalUrl}
-                    readOnly
-                    className="border-0 bg-transparent focus-visible:ring-0"
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigator.clipboard.writeText(proposalUrl)}
-                  >
-                    Copy
-                  </Button>
+            <Card className="border-border shadow-xl overflow-hidden text-left">
+              <div className="bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-indigo-500/10 p-4 border-b border-border flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-semibold text-foreground uppercase tracking-wider">
+                    {planKey} Plan
+                  </span>
+                  <p className="text-xs text-muted-foreground">Lifetime Website Hosting</p>
+                </div>
+                <div className="text-right">
+                  <span className="text-xl font-black text-foreground">₹{currentPlanPrice}</span>
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 block font-medium">0% extra fees</span>
+                </div>
+              </div>
+
+              <CardContent className="p-5 space-y-4">
+                {/* Temporary Preview URL */}
+                <div className="space-y-1.5">
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Temporary Preview Link (Expires in 4 mins):
+                  </span>
+                  <div className="flex items-center gap-2 p-2 bg-muted rounded-xl border border-border">
+                    <Input
+                      value={proposalUrl}
+                      readOnly
+                      className="border-0 bg-transparent text-xs font-mono h-8 focus-visible:ring-0"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        navigator.clipboard.writeText(proposalUrl);
+                        toast.success("Preview link copied!");
+                      }}
+                      className="h-8 text-xs shrink-0"
+                    >
+                      Copy
+                    </Button>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <Link href={`/proposal/${proposalId}`} target="_blank">
-                    <Button variant="outline" className="w-full">
-                      Preview
+                {/* Primary Actions */}
+                <div className="space-y-2.5 pt-2">
+                  {/* Pay and Get Permanent Link */}
+                  <Link href={checkoutUrl} className="block w-full">
+                    <Button
+                      type="button"
+                      className="w-full h-12 bg-gradient-to-r from-pink-500 via-rose-500 to-red-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold text-sm shadow-lg shadow-pink-500/25 gap-2"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      <span>Pay ₹{currentPlanPrice} via UPI &amp; Get Permanent WebLink</span>
+                      <ArrowRight className="w-4 h-4 ml-auto" />
                     </Button>
                   </Link>
-                  <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
-                    <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      Share on WhatsApp
+
+                  {/* Open Live Preview */}
+                  <Link href={`/proposal/${proposalId}`} target="_blank" className="block w-full">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full h-10 font-semibold text-xs gap-2"
+                    >
+                      <span>Open Live Preview (4 Mins Active)</span>
                     </Button>
-                  </a>
+                  </Link>
                 </div>
+
+                <p className="text-[11px] text-center text-muted-foreground pt-1">
+                  🔒 Instant activation via GPay, PhonePe, Paytm, or BHIM. Direct to bank.
+                </p>
               </CardContent>
             </Card>
 
             <Link href="/">
-              <Button variant="ghost" className="text-foreground/60">
-                <ArrowLeft className="w-4 h-4 mr-2" />
+              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
                 Back to Home
               </Button>
             </Link>

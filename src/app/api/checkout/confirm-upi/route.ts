@@ -54,17 +54,55 @@ export async function POST(request: NextRequest) {
       })
       .onConflictDoNothing();
 
+    // Update proposal if proposalId is provided
+    if (validated.proposalId) {
+      try {
+        const { proposals } = await import("@/db/schema");
+        const { or, eq } = await import("drizzle-orm");
+        const [existing] = await db
+          .select()
+          .from(proposals)
+          .where(
+            or(
+              eq(proposals.id, validated.proposalId),
+              eq(proposals.slug, validated.proposalId)
+            )
+          );
+
+        if (existing) {
+          const currentContent =
+            (existing.content as Record<string, unknown>) || {};
+          await db
+            .update(proposals)
+            .set({
+              status: "final",
+              content: {
+                ...currentContent,
+                isPaid: true,
+                expiresAt: undefined,
+              },
+            })
+            .where(eq(proposals.id, existing.id));
+        }
+      } catch (err) {
+        logger.warn("Could not update proposal to paid in DB", { err });
+      }
+    }
+
     const origin =
       request.headers.get("origin") ||
       process.env.NEXT_PUBLIC_SITE_URL ||
       "http://localhost:3000";
 
-    const redirectUrl = `${origin}/create?plan=${validated.plan}&upgraded=true`;
+    const redirectUrl = validated.proposalId
+      ? `${origin}/checkout/success?proposalId=${validated.proposalId}&plan=${validated.plan}`
+      : `${origin}/create?plan=${validated.plan}&upgraded=true`;
 
     return apiSuccess({
       success: true,
       orderId,
       plan: validated.plan,
+      proposalId: validated.proposalId,
       url: redirectUrl,
     });
   } catch (err) {
