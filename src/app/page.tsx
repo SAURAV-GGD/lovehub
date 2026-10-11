@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { constructMetadata } from "@/lib/seo";
 import InteractiveFloatingHearts from "@/components/InteractiveFloatingHearts";
-import { SiteHeader } from "@/components/site-header";
+import { MotionHero } from "@/components/home/motion-hero";
+import { InteractiveDemo } from "@/components/home/interactive-demo";
 import {
   WebsiteJsonLd,
   OrganizationJsonLd,
@@ -13,7 +14,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import {
   Heart,
-  Sparkles,
   Wand2,
   Camera,
   Music,
@@ -23,12 +23,14 @@ import {
   ShieldCheck,
   Star,
   Flame,
+  Cake,
+  Sparkles,
 } from "lucide-react";
 
 export const metadata = constructMetadata({
-  title: "LoveHub - AI Proposal & Love Letter Website Generator",
+  title: "LoveHub - AI Proposal & Romantic Website Generator",
   description:
-    "Design personalized, romantic proposal websites with AI love letters, photo galleries, celebration music, and interactive Yes/No buttons.",
+    "Venture past the ordinary into an eternal yes. Design personalized, romantic proposal websites and birthday keepsakes with AI love letters, music, and interactive runaway buttons.",
   canonical: "/",
 });
 
@@ -49,7 +51,12 @@ const faqs = [
       "Once created, you get a clean, unique link. You can send it directly via WhatsApp, Instagram DM, iMessage, or display it as a surprise QR code.",
   },
   {
-    question: "Is my proposal private?",
+    question: "Can I also create birthday celebration pages?",
+    answer:
+      "Yes! LoveHub features dedicated interactive 3D birthday wishboards with virtual candle blowing, memory photo walls, and personalized birthday notes.",
+  },
+  {
+    question: "Is my proposal private and secure?",
     answer:
       "Absolutely. Only people with your unique link can view your proposal. You also have full control to toggle visibility or delete the page anytime from your dashboard.",
   },
@@ -58,7 +65,7 @@ const faqs = [
 export default function HomePage() {
   return (
     <div className="relative min-h-screen bg-white text-gray-900 selection:bg-rose-500 selection:text-white">
-      {/* Translucent baby-pink floating hearts with touch-to-burst interaction */}
+      {/* Subtle floating hearts on page */}
       <InteractiveFloatingHearts />
 
       {/* Structured Data */}
@@ -67,104 +74,66 @@ export default function HomePage() {
       <SoftwareAppJsonLd />
       <FaqJsonLd faqs={faqs} />
 
-      {/* Header */}
-      <SiteHeader active="proposals" theme="default" />
+      {/* Redesigned MotionSites Hero Section */}
+      <MotionHero />
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden pt-16 pb-24 lg:pt-24 lg:pb-32 bg-gradient-to-b from-rose-50/70 via-white to-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-rose-100 text-rose-700 text-xs sm:text-sm font-semibold tracking-wide">
-            <Sparkles className="h-4 w-4" />
-            <span>AI-Powered Valentine & Proposal Builder</span>
-          </div>
-
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-gray-950 max-w-4xl mx-auto leading-[1.12]">
-            Turn Your Love Story Into An{" "}
-            <span className="bg-gradient-to-r from-rose-500 via-pink-500 to-purple-600 bg-clip-text text-transparent">
-              Unforgettable Proposal
-            </span>
-          </h1>
-
-          <p className="max-w-2xl mx-auto text-lg sm:text-xl text-gray-600 leading-relaxed font-normal">
-            Surprise your partner with a custom interactive website. Featuring AI-crafted love letters, photo memories, emotional background music, and a runaway &quot;No&quot; button they can never click!
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-            <Button asChild size="lg" className="w-full sm:w-auto h-12 px-8 text-base bg-rose-500 hover:bg-rose-600 text-white font-semibold shadow-lg shadow-rose-500/25 transition-all">
-              <Link href="/create">
-                Build Your Proposal Free <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="lg" className="w-full sm:w-auto h-12 px-8 text-base border-gray-300 hover:bg-gray-50 font-medium">
-              <a href="#how-it-works">See How It Works</a>
-            </Button>
-          </div>
-
-          <div className="pt-8 flex items-center justify-center gap-6 text-xs sm:text-sm text-gray-500">
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Instant Share Link
-            </span>
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-4 w-4 text-emerald-500" /> 100% Mobile Ready
-            </span>
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Private & Secure
-            </span>
-          </div>
-        </div>
-      </section>
+      {/* Live Interactive Runaway "NO" Simulator */}
+      <InteractiveDemo />
 
       {/* How It Works */}
-      <section id="how-it-works" className="py-20 bg-slate-50 border-y border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+      <section id="how-it-works" className="py-24 bg-slate-50 border-y border-gray-100">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 space-y-16">
           <div className="text-center space-y-4 max-w-2xl mx-auto">
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
-              Craft Magic in 3 Simple Steps
+            <Badge variant="outline" className="text-rose-600 border-rose-200 bg-rose-50/50">
+              Simple 3-Step Journey
+            </Badge>
+            <h2 className="font-[family-name:var(--font-playfair)] italic text-3xl sm:text-5xl font-bold text-gray-900 tracking-tight">
+              Craft Magic in Minutes
             </h2>
-            <p className="text-gray-600 text-base">
-              No technical skills required. From idea to heartwarming proposal page in under two minutes.
+            <p className="text-gray-600 text-base sm:text-lg">
+              No technical skills needed. From idea to heartwarming proposal page in under two minutes.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="bg-white border-gray-200 shadow-sm relative overflow-hidden">
-              <CardHeader className="space-y-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-rose-100 text-rose-600">
-                  <Wand2 className="h-6 w-6" />
+            <Card className="bg-white border-gray-200/80 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden rounded-2xl">
+              <CardHeader className="space-y-4 p-8">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-100/80 text-rose-600">
+                  <Wand2 className="h-7 w-7" />
                 </div>
                 <CardTitle className="text-xl font-bold text-gray-900">
                   1. AI Writes Your Story
                 </CardTitle>
-                <CardDescription className="text-gray-600 leading-relaxed text-sm">
+                <CardDescription className="text-gray-600 leading-relaxed text-sm sm:text-base">
                   Choose your tone (Filmy, Emotional, Funny, Cute) and language. Our romance AI generates a customized love letter woven with your inside jokes.
                 </CardDescription>
               </CardHeader>
             </Card>
 
-            <Card className="bg-white border-gray-200 shadow-sm relative overflow-hidden">
-              <CardHeader className="space-y-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-rose-100 text-rose-600">
-                  <Camera className="h-6 w-6" />
+            <Card className="bg-white border-gray-200/80 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden rounded-2xl">
+              <CardHeader className="space-y-4 p-8">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-100/80 text-rose-600">
+                  <Camera className="h-7 w-7" />
                 </div>
                 <CardTitle className="text-xl font-bold text-gray-900">
                   2. Add Memories & Music
                 </CardTitle>
-                <CardDescription className="text-gray-600 leading-relaxed text-sm">
-                  Upload your favorite couple photos, write sweet captions, and pick a melodic romantic piano or guitar background track.
+                <CardDescription className="text-gray-600 leading-relaxed text-sm sm:text-base">
+                  Upload your favorite couple photos, write sweet captions, and pick a melodic romantic piano or acoustic guitar background track.
                 </CardDescription>
               </CardHeader>
             </Card>
 
-            <Card className="bg-white border-gray-200 shadow-sm relative overflow-hidden">
-              <CardHeader className="space-y-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-rose-100 text-rose-600">
-                  <Share2 className="h-6 w-6" />
+            <Card className="bg-white border-gray-200/80 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden rounded-2xl">
+              <CardHeader className="space-y-4 p-8">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-100/80 text-rose-600">
+                  <Share2 className="h-7 w-7" />
                 </div>
                 <CardTitle className="text-xl font-bold text-gray-900">
                   3. Share & Celebrate
                 </CardTitle>
-                <CardDescription className="text-gray-600 leading-relaxed text-sm">
-                  Send the private link via WhatsApp or QR code. Watch them try to click &quot;No&quot; while it runs away, followed by an explosion of confetti on &quot;YES&quot;!
+                <CardDescription className="text-gray-600 leading-relaxed text-sm sm:text-base">
+                  Send the private link via WhatsApp or surprise QR code. Watch them try to click &ldquo;No&rdquo; while it runs away, followed by an explosion of confetti!
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -174,33 +143,33 @@ export default function HomePage() {
 
       {/* Features Grid */}
       <section id="features" className="py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 space-y-16">
           <div className="text-center space-y-4 max-w-2xl mx-auto">
             <Badge variant="outline" className="text-rose-600 border-rose-200 bg-rose-50/50">
               Why Couples Love Us
             </Badge>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
+            <h2 className="font-[family-name:var(--font-playfair)] italic text-3xl sm:text-5xl font-bold text-gray-900 tracking-tight">
               Everything You Need for a Yes
             </h2>
-            <p className="text-gray-600">
+            <p className="text-gray-600 text-base sm:text-lg">
               Every detail is engineered to make your partner feel cherished, loved, and smiling ear to ear.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="p-6 rounded-2xl bg-rose-50/40 border border-rose-100 space-y-3">
-              <div className="h-10 w-10 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center">
-                <Flame className="h-5 w-5" />
+            <div className="p-7 rounded-2xl bg-rose-50/40 border border-rose-100 space-y-4 hover:border-rose-200 transition-colors">
+              <div className="h-12 w-12 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center">
+                <Flame className="h-6 w-6" />
               </div>
-              <h3 className="text-lg font-bold text-gray-900">Runaway &quot;No&quot; Button</h3>
+              <h3 className="text-lg font-bold text-gray-900">Runaway &ldquo;No&rdquo; Button</h3>
               <p className="text-sm text-gray-600 leading-relaxed">
-                A playful interactive mini-game where the &quot;No&quot; button teleports across the screen whenever their cursor or finger approaches.
+                A playful interactive mini-game where the &ldquo;No&rdquo; button teleports across the screen whenever their cursor or finger approaches.
               </p>
             </div>
 
-            <div className="p-6 rounded-2xl bg-rose-50/40 border border-rose-100 space-y-3">
-              <div className="h-10 w-10 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center">
-                <Music className="h-5 w-5" />
+            <div className="p-7 rounded-2xl bg-rose-50/40 border border-rose-100 space-y-4 hover:border-rose-200 transition-colors">
+              <div className="h-12 w-12 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center">
+                <Music className="h-6 w-6" />
               </div>
               <h3 className="text-lg font-bold text-gray-900">Romantic Background Melodies</h3>
               <p className="text-sm text-gray-600 leading-relaxed">
@@ -208,9 +177,9 @@ export default function HomePage() {
               </p>
             </div>
 
-            <div className="p-6 rounded-2xl bg-rose-50/40 border border-rose-100 space-y-3">
-              <div className="h-10 w-10 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center">
-                <Camera className="h-5 w-5" />
+            <div className="p-7 rounded-2xl bg-rose-50/40 border border-rose-100 space-y-4 hover:border-rose-200 transition-colors">
+              <div className="h-12 w-12 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center">
+                <Camera className="h-6 w-6" />
               </div>
               <h3 className="text-lg font-bold text-gray-900">Photo Memory Slideshow</h3>
               <p className="text-sm text-gray-600 leading-relaxed">
@@ -218,9 +187,9 @@ export default function HomePage() {
               </p>
             </div>
 
-            <div className="p-6 rounded-2xl bg-rose-50/40 border border-rose-100 space-y-3">
-              <div className="h-10 w-10 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center">
-                <Wand2 className="h-5 w-5" />
+            <div className="p-7 rounded-2xl bg-rose-50/40 border border-rose-100 space-y-4 hover:border-rose-200 transition-colors">
+              <div className="h-12 w-12 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center">
+                <Wand2 className="h-6 w-6" />
               </div>
               <h3 className="text-lg font-bold text-gray-900">Bilingual AI Romance Engine</h3>
               <p className="text-sm text-gray-600 leading-relaxed">
@@ -228,9 +197,9 @@ export default function HomePage() {
               </p>
             </div>
 
-            <div className="p-6 rounded-2xl bg-rose-50/40 border border-rose-100 space-y-3">
-              <div className="h-10 w-10 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center">
-                <ShieldCheck className="h-5 w-5" />
+            <div className="p-7 rounded-2xl bg-rose-50/40 border border-rose-100 space-y-4 hover:border-rose-200 transition-colors">
+              <div className="h-12 w-12 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center">
+                <ShieldCheck className="h-6 w-6" />
               </div>
               <h3 className="text-lg font-bold text-gray-900">Private & Unguessable Links</h3>
               <p className="text-sm text-gray-600 leading-relaxed">
@@ -238,42 +207,65 @@ export default function HomePage() {
               </p>
             </div>
 
-            <div className="p-6 rounded-2xl bg-rose-50/40 border border-rose-100 space-y-3">
-              <div className="h-10 w-10 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center">
-                <Star className="h-5 w-5" />
+            <div className="p-7 rounded-2xl bg-rose-50/40 border border-rose-100 space-y-4 hover:border-rose-200 transition-colors">
+              <div className="h-12 w-12 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center">
+                <Star className="h-6 w-6" />
               </div>
               <h3 className="text-lg font-bold text-gray-900">Full-Screen Celebration</h3>
               <p className="text-sm text-gray-600 leading-relaxed">
-                Heart bursts and colorful confetti showers light up the screen the second they hit &quot;YES!&quot;.
+                Heart bursts and colorful confetti showers light up the screen the second they hit &ldquo;YES!&rdquo;.
               </p>
             </div>
           </div>
         </div>
       </section>
 
+      {/* Birthday Cross-Promo Banner */}
+      <section className="py-16 bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-teal-500/10 border-y border-amber-200/50">
+        <div className="max-w-6xl mx-auto px-5 sm:px-8 flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="space-y-3 text-center md:text-left">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-semibold">
+              <Cake className="w-4 h-4 text-amber-600" />
+              <span>Also on LoveHub</span>
+            </div>
+            <h3 className="font-[family-name:var(--font-playfair)] italic text-2xl sm:text-3xl font-bold text-gray-900">
+              Planning a Birthday Celebration?
+            </h3>
+            <p className="text-gray-600 text-sm sm:text-base max-w-xl">
+              Create interactive 3D wishboards with virtual candle blowing, emotional audio notes, and polaroid photo walls for friends & family.
+            </p>
+          </div>
+          <Button asChild size="lg" className="rounded-full bg-[#0E6B5E] hover:bg-[#095248] text-white px-8 py-3 text-base shadow-lg shrink-0">
+            <Link href="/birthdays">
+              Explore Birthday Wishboards <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
+      </section>
+
       {/* Pricing Section */}
-      <section id="pricing" className="py-20 bg-slate-50 border-t border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+      <section id="pricing" className="py-24 bg-slate-50 border-t border-gray-100">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 space-y-16">
           <div className="text-center space-y-4 max-w-2xl mx-auto">
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
+            <h2 className="font-[family-name:var(--font-playfair)] italic text-3xl sm:text-5xl font-bold text-gray-900 tracking-tight">
               Simple, Transparent Pricing
             </h2>
-            <p className="text-gray-600 text-base">
-              Start with our free generator or upgrade for audio, animated buttons, and custom URLs.
+            <p className="text-gray-600 text-base sm:text-lg">
+              Start free or upgrade for audio tracks, custom URLs, and animated runaway buttons.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto items-stretch">
             {/* Free Plan */}
-            <Card className="flex flex-col justify-between bg-white border-gray-200">
-              <CardHeader className="space-y-2">
+            <Card className="flex flex-col justify-between bg-white border-gray-200 rounded-3xl p-2 shadow-sm">
+              <CardHeader className="space-y-2 p-6">
                 <CardTitle className="text-xl font-bold text-gray-900">Free</CardTitle>
                 <div className="text-3xl font-extrabold text-gray-900">$0</div>
                 <CardDescription className="text-gray-500 text-sm">
                   Perfect for a quick, sweet proposal message
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-6 p-6 pt-0">
                 <ul className="space-y-3 text-sm text-gray-600">
                   <li className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Up to 3 photos
@@ -285,18 +277,18 @@ export default function HomePage() {
                     <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Clean proposal link
                   </li>
                 </ul>
-                <Button asChild variant="outline" className="w-full">
-                  <Link href="/create?plan=basic">Get Started</Link>
+                <Button asChild variant="outline" className="w-full rounded-full py-5">
+                  <Link href="/create?plan=basic">Get Started Free</Link>
                 </Button>
               </CardContent>
             </Card>
 
             {/* Romantic Plan */}
-            <Card className="flex flex-col justify-between bg-white border-rose-400 shadow-xl relative scale-105 z-10">
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-rose-500 text-white text-xs font-bold tracking-wide">
+            <Card className="flex flex-col justify-between bg-white border-rose-400 shadow-xl relative scale-105 z-10 rounded-3xl p-2">
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3.5 py-1 rounded-full bg-rose-500 text-white text-xs font-bold tracking-wide shadow-md">
                 MOST POPULAR
               </div>
-              <CardHeader className="space-y-2">
+              <CardHeader className="space-y-2 p-6 pt-8">
                 <CardTitle className="text-xl font-bold text-gray-900">Romantic</CardTitle>
                 <div className="text-3xl font-extrabold text-gray-900">
                   $9 <span className="text-sm font-normal text-gray-500">/ one-time</span>
@@ -305,13 +297,13 @@ export default function HomePage() {
                   Interactive celebration with runaway button
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-6 p-6 pt-0">
                 <ul className="space-y-3 text-sm text-gray-600">
                   <li className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-rose-500" /> Up to 5 photos
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-rose-500" /> Runaway &quot;No&quot; button
+                    <CheckCircle2 className="h-4 w-4 text-rose-500" /> Runaway &ldquo;No&rdquo; button
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-rose-500" /> Background music track
@@ -320,24 +312,24 @@ export default function HomePage() {
                     <CheckCircle2 className="h-4 w-4 text-rose-500" /> Full-screen confetti
                   </li>
                 </ul>
-                <Button asChild className="w-full bg-rose-500 hover:bg-rose-600 text-white font-semibold">
+                <Button asChild className="w-full rounded-full py-5 bg-rose-500 hover:bg-rose-600 text-white font-semibold shadow-md">
                   <Link href="/create?plan=romantic">Create Romantic Proposal</Link>
                 </Button>
               </CardContent>
             </Card>
 
             {/* Premium Plan */}
-            <Card className="flex flex-col justify-between bg-white border-gray-200">
-              <CardHeader className="space-y-2">
+            <Card className="flex flex-col justify-between bg-white border-gray-200 rounded-3xl p-2 shadow-sm">
+              <CardHeader className="space-y-2 p-6">
                 <CardTitle className="text-xl font-bold text-gray-900">Premium Forever</CardTitle>
                 <div className="text-3xl font-extrabold text-gray-900">
                   $19 <span className="text-sm font-normal text-gray-500">/ one-time</span>
                 </div>
                 <CardDescription className="text-gray-500 text-sm">
-                  Custom link slug and premium memory slideshow
+                  Custom link slug and memory slideshow
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-6 p-6 pt-0">
                 <ul className="space-y-3 text-sm text-gray-600">
                   <li className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Up to 10 photos
@@ -346,13 +338,13 @@ export default function HomePage() {
                     <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Custom URL slug
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Memory slideshow
-                  </li>
-                  <li className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Priority AI generation
                   </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Lifetime page hosting
+                  </li>
                 </ul>
-                <Button asChild variant="outline" className="w-full">
+                <Button asChild variant="outline" className="w-full rounded-full py-5">
                   <Link href="/create?plan=premium">Get Premium</Link>
                 </Button>
               </CardContent>
@@ -362,22 +354,22 @@ export default function HomePage() {
       </section>
 
       {/* FAQ Section */}
-      <section id="faq" className="py-20 bg-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+      <section id="faq" className="py-24 bg-white">
+        <div className="max-w-4xl mx-auto px-5 sm:px-8 space-y-12">
           <div className="text-center space-y-4">
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
+            <h2 className="font-[family-name:var(--font-playfair)] italic text-3xl sm:text-5xl font-bold text-gray-900 tracking-tight">
               Frequently Asked Questions
             </h2>
-            <p className="text-gray-600">
-              Have questions? Here are the most common answers.
+            <p className="text-gray-600 text-base sm:text-lg">
+              Everything you need to know about setting up your proposal or celebration.
             </p>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-5">
             {faqs.map((faq, index) => (
               <div
                 key={index}
-                className="p-6 rounded-xl bg-slate-50 border border-gray-200/80 space-y-2"
+                className="p-6 sm:p-7 rounded-2xl bg-slate-50 border border-gray-200/80 space-y-2 hover:border-gray-300 transition-colors"
               >
                 <h3 className="text-base sm:text-lg font-bold text-gray-900">
                   {faq.question}
@@ -391,18 +383,18 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="py-20 bg-gradient-to-r from-rose-500 to-pink-600 text-white text-center">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-          <Heart className="h-12 w-12 mx-auto fill-white/90 animate-bounce" />
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-            Ready to Create Something Beautiful?
+      {/* Final CTA Banner */}
+      <section className="py-24 bg-gradient-to-r from-rose-500 via-pink-600 to-rose-600 text-white text-center relative overflow-hidden">
+        <div className="max-w-4xl mx-auto px-5 sm:px-8 space-y-7 relative z-10">
+          <Heart className="h-14 w-14 mx-auto fill-white/90 animate-bounce" />
+          <h2 className="font-[family-name:var(--font-playfair)] italic text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight">
+            Ready to Venture Into An Eternal Yes?
           </h2>
-          <p className="text-rose-100 text-lg max-w-xl mx-auto">
+          <p className="text-rose-100 text-base sm:text-xl max-w-xl mx-auto leading-relaxed">
             Give your partner a moment they will remember for the rest of their lives.
           </p>
-          <div className="pt-2">
-            <Button asChild size="lg" className="h-12 px-8 bg-white text-rose-600 hover:bg-rose-50 font-bold shadow-xl">
+          <div className="pt-3">
+            <Button asChild size="lg" className="h-14 px-9 rounded-full bg-white text-rose-600 hover:bg-rose-50 font-bold text-base shadow-2xl transition-transform hover:scale-105">
               <Link href="/create">
                 Start Creating Free <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
@@ -413,13 +405,13 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="border-t border-gray-100 bg-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-6 text-sm text-gray-500">
-          <div className="flex items-center gap-2">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-6 text-sm text-gray-500">
+          <div className="flex items-center gap-2.5">
             <Heart className="h-5 w-5 text-rose-500 fill-rose-500" />
-            <span className="font-bold text-gray-900">LoveHub</span>
+            <span className="font-bold text-gray-900 text-base">LoveHub</span>
             <span>&copy; {new Date().getFullYear()} All rights reserved.</span>
           </div>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center flex-wrap gap-6">
             <Link href="/privacy" className="hover:text-rose-600 transition-colors">
               Privacy Policy
             </Link>
