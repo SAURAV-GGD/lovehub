@@ -20,6 +20,13 @@ import {
   Share2,
   Cake,
   PartyPopper,
+  ArrowUpRight,
+  Flame,
+  CheckCircle2,
+  Lock,
+  Globe,
+  Wand2,
+  Music,
 } from "lucide-react";
 import { toast } from "sonner";
 import { BirthdayRecord } from "@/lib/admin-store";
@@ -110,168 +117,364 @@ export default function DashboardPage() {
 
   if (isSessionLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#07090E] flex items-center justify-center p-4 text-white">
         <div className="space-y-4 w-full max-w-md text-center">
-          <Heart className="h-10 w-10 text-rose-500 fill-rose-500 animate-pulse mx-auto" />
-          <p className="text-sm text-gray-500">Loading your dashboard...</p>
+          <div className="w-14 h-14 mx-auto rounded-full bg-rose-500/20 border border-rose-500/40 flex items-center justify-center shadow-lg shadow-rose-500/20">
+            <Heart className="h-7 w-7 text-rose-500 fill-rose-500 animate-pulse" />
+          </div>
+          <p className="text-sm font-medium text-slate-400">Loading your creator console...</p>
         </div>
       </div>
     );
   }
 
+  const userName = session?.user?.name || "Creator";
+  const userInitial = userName.charAt(0).toUpperCase();
+
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Navigation Bar */}
-      <header className="sticky top-0 z-40 bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <Heart className="h-6 w-6 text-rose-500 fill-rose-500" />
-            <span className="text-xl font-bold tracking-tight text-gray-900">
-              LoveHub
-            </span>
+    <div className="relative min-h-screen bg-[#07090E] text-slate-100 selection:bg-rose-500 selection:text-white overflow-hidden">
+      {/* Cinematic Ambient Glow Backlights */}
+      <div className="absolute top-[-10%] left-[-10%] w-[550px] h-[550px] bg-rose-600/10 rounded-full blur-[160px] pointer-events-none" />
+      <div className="absolute top-[5%] right-[-10%] w-[550px] h-[550px] bg-teal-500/10 rounded-full blur-[170px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[25%] w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[180px] pointer-events-none" />
+
+      {/* Floating Glassmorphic Top Navbar */}
+      <header className="sticky top-0 z-40 backdrop-blur-xl bg-slate-950/65 border-b border-white/10 shadow-2xl">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 h-20 flex items-center justify-between">
+          {/* Brand Logo */}
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-md transition-transform group-hover:scale-105">
+              <Heart className="h-5 w-5 text-rose-400 fill-rose-400" />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xl sm:text-2xl font-bold tracking-tight text-white font-sans">
+                LoveHub
+              </span>
+              <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-white/10 text-white/80 border border-white/15">
+                Console
+              </span>
+            </div>
           </Link>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600 hidden sm:inline">
-              Hi, <strong className="font-semibold text-gray-900">{session?.user?.name || "User"}</strong>
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSignOut}
-              className="text-gray-600 hover:text-red-600"
+
+          {/* Profile & Controls */}
+          <div className="flex items-center gap-3 sm:gap-5">
+            <Link
+              href="/"
+              className="text-xs sm:text-sm font-medium text-slate-300 hover:text-white transition-colors hidden md:inline"
             >
-              <LogOut className="h-4 w-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">Sign Out</span>
-            </Button>
+              Explore Home
+            </Link>
+
+            <Link
+              href="/checkout"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/20 text-xs font-semibold text-rose-300 shadow-sm transition-all hover:scale-105"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-rose-400" />
+              <span>Upgrade Plan</span>
+            </Link>
+
+            {/* User Capsule */}
+            <div className="flex items-center gap-2.5 pl-2 sm:pl-3 border-l border-white/15">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-rose-500 to-pink-600 text-white font-bold flex items-center justify-center text-xs shadow-md">
+                {userInitial}
+              </div>
+              <div className="hidden sm:flex flex-col text-left">
+                <span className="text-xs font-semibold text-white leading-tight">
+                  {userName}
+                </span>
+                <span className="text-[10px] text-slate-400">
+                  {session?.user?.email || "Member"}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-white/5 transition-colors ml-1"
+                title="Sign out"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Header with CTA */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
-              Your Proposals
+      {/* Main Console Container */}
+      <main className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 py-10 sm:py-14 space-y-10 sm:space-y-12">
+        {/* Console Hero Title & Quick Action Row */}
+        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 pb-2">
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full backdrop-blur-md bg-white/10 border border-white/15 text-white/90 text-xs font-medium">
+              <Sparkles className="w-3.5 h-3.5 text-rose-400" />
+              <span>Creator Studio & Keepsakes</span>
+            </div>
+            <h1 className="font-[family-name:var(--font-playfair)] italic text-3xl sm:text-5xl lg:text-6xl text-white font-bold tracking-tight">
+              Your Romantic Creations
             </h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Manage, edit, and share your magical proposal websites
+            <p className="font-sans text-sm sm:text-base text-slate-300 max-w-2xl leading-relaxed">
+              Manage your interactive proposal websites, playful runaway &ldquo;No&rdquo; setups, and bespoke 3D birthday wishboards in one unified sanctuary.
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <Button asChild variant="outline" className="border-rose-200 text-rose-600 hover:bg-rose-50">
-              <Link href="/checkout">
-                <Sparkles className="h-4 w-4 mr-2" /> Upgrade Plan
+
+          <div className="flex items-center gap-3 flex-wrap">
+            <Button
+              asChild
+              className="rounded-full bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white font-semibold shadow-lg shadow-teal-500/20 px-6 py-2.5 text-sm transition-all hover:scale-[1.02]"
+            >
+              <Link href="/birthdays/new">
+                <Cake className="h-4 w-4 mr-2" /> New Birthday Page <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
               </Link>
             </Button>
-            <Button asChild className="bg-rose-500 hover:bg-rose-600 text-white font-medium shadow">
+            <Button
+              asChild
+              className="rounded-full bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-semibold shadow-lg shadow-rose-500/25 px-6 py-2.5 text-sm transition-all hover:scale-[1.02]"
+            >
               <Link href="/create">
-                <Plus className="h-4 w-4 mr-2" /> Create New
+                <Plus className="h-4 w-4 mr-1.5" /> Build Proposal <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
               </Link>
             </Button>
           </div>
         </div>
 
-        {/* Unified Platform Tabs */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-gray-200 pb-3">
-          <div className="flex items-center gap-2">
+        {/* 4 MotionSites-Inspired Glass Metric Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {/* Stat 1: Total Proposals */}
+          <div className="backdrop-blur-xl bg-white/[0.04] border border-white/10 hover:border-rose-500/30 rounded-3xl p-6 shadow-xl transition-all duration-300 group">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                Proposals Active
+              </span>
+              <div className="w-10 h-10 rounded-2xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 group-hover:scale-110 transition-transform">
+                <Heart className="w-5 h-5 fill-rose-500/30" />
+              </div>
+            </div>
+            <div className="font-[family-name:var(--font-playfair)] italic text-3xl sm:text-4xl font-bold text-white mb-1">
+              {proposals.length}
+            </div>
+            <p className="text-xs text-slate-400">
+              Interactive love letters crafted
+            </p>
+          </div>
+
+          {/* Stat 2: Birthday Keepsakes */}
+          <div className="backdrop-blur-xl bg-white/[0.04] border border-white/10 hover:border-teal-500/30 rounded-3xl p-6 shadow-xl transition-all duration-300 group">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                Birthday Boards
+              </span>
+              <div className="w-10 h-10 rounded-2xl bg-teal-500/15 border border-teal-500/30 flex items-center justify-center text-teal-400 group-hover:scale-110 transition-transform">
+                <Cake className="w-5 h-5" />
+              </div>
+            </div>
+            <div className="font-[family-name:var(--font-playfair)] italic text-3xl sm:text-4xl font-bold text-white mb-1">
+              {birthdays.length}
+            </div>
+            <p className="text-xs text-slate-400">
+              3D celebration wishboards
+            </p>
+          </div>
+
+          {/* Stat 3: Guaranteed Yes Rate */}
+          <div className="backdrop-blur-xl bg-white/[0.04] border border-white/10 hover:border-amber-500/30 rounded-3xl p-6 shadow-xl transition-all duration-300 group">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                Acceptance Rate
+              </span>
+              <div className="w-10 h-10 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 group-hover:scale-110 transition-transform">
+                <Flame className="w-5 h-5" />
+              </div>
+            </div>
+            <div className="font-[family-name:var(--font-playfair)] italic text-3xl sm:text-4xl font-bold text-amber-300 mb-1">
+              100%
+            </div>
+            <p className="text-xs text-slate-400">
+              Runaway &ldquo;No&rdquo; button enabled
+            </p>
+          </div>
+
+          {/* Stat 4: Account Tier */}
+          <div className="backdrop-blur-xl bg-white/[0.04] border border-white/10 hover:border-purple-500/30 rounded-3xl p-6 shadow-xl transition-all duration-300 group">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                Creator Tier
+              </span>
+              <div className="w-10 h-10 rounded-2xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-400 group-hover:scale-110 transition-transform">
+                <Sparkles className="w-5 h-5" />
+              </div>
+            </div>
+            <div className="font-[family-name:var(--font-playfair)] italic text-2xl sm:text-3xl font-bold text-white mb-1">
+              VIP Explorer
+            </div>
+            <p className="text-xs text-slate-400">
+              Instant QR & private link sharing
+            </p>
+          </div>
+        </div>
+
+        {/* Tab Switcher & Filter Controls */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-4 border-t border-white/10">
+          {/* Frosted Glass Segment Toggle */}
+          <div className="backdrop-blur-xl bg-white/[0.05] border border-white/10 rounded-full p-1.5 flex items-center gap-1.5 w-fit shadow-lg">
             <button
               onClick={() => setActiveTab("proposals")}
-              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+              className={`px-5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${
                 activeTab === "proposals"
-                  ? "bg-rose-500 text-white shadow-sm"
-                  : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
+                  ? "bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-md shadow-rose-500/30"
+                  : "text-slate-300 hover:text-white hover:bg-white/5"
               }`}
             >
-              ❤️ Romantic Proposals ({proposals.length})
+              <Heart className={`w-4 h-4 ${activeTab === "proposals" ? "fill-white" : ""}`} />
+              <span>Romantic Proposals ({proposals.length})</span>
             </button>
             <button
               onClick={() => setActiveTab("birthdays")}
-              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+              className={`px-5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${
                 activeTab === "birthdays"
-                  ? "bg-teal-600 text-white shadow-sm"
-                  : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
+                  ? "bg-gradient-to-r from-teal-500 to-emerald-600 text-white shadow-md shadow-teal-500/30"
+                  : "text-slate-300 hover:text-white hover:bg-white/5"
               }`}
             >
-              🎂 Birthday Celebrations ({birthdays.length})
+              <Cake className="w-4 h-4" />
+              <span>Birthday Wishboards ({birthdays.length})</span>
             </button>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button asChild size="sm" className="bg-teal-600 hover:bg-teal-700 text-white text-xs">
-              <Link href="/birthdays/new">
-                <Cake className="h-3.5 w-3.5 mr-1.5" /> New Birthday Page
-              </Link>
-            </Button>
-            <Button asChild size="sm" className="bg-rose-500 hover:bg-rose-600 text-white text-xs">
-              <Link href="/create">
-                <Plus className="h-3.5 w-3.5 mr-1.5" /> New Proposal
-              </Link>
-            </Button>
-          </div>
+          <span className="text-xs text-slate-400">
+            Showing {activeTab === "proposals" ? proposals.length : birthdays.length} live {activeTab}
+          </span>
         </div>
 
-        {/* Content based on Active Tab */}
+        {/* Main Content Area */}
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map((i) => (
-              <Card key={i} className="p-6 space-y-4">
-                <Skeleton className="h-6 w-3/4" />
-                <Skeleton className="h-4 w-1/2" />
+              <div key={i} className="backdrop-blur-xl bg-white/[0.03] border border-white/10 rounded-3xl p-6 space-y-4">
+                <Skeleton className="h-6 w-3/4 bg-white/10" />
+                <Skeleton className="h-4 w-1/2 bg-white/10" />
                 <div className="pt-4 flex gap-2">
-                  <Skeleton className="h-9 flex-1" />
-                  <Skeleton className="h-9 w-9" />
+                  <Skeleton className="h-10 flex-1 bg-white/10 rounded-full" />
+                  <Skeleton className="h-10 w-10 bg-white/10 rounded-full" />
                 </div>
-              </Card>
+              </div>
             ))}
           </div>
         ) : activeTab === "proposals" ? (
           proposals.length === 0 ? (
-            <Card className="text-center py-16 px-4 border-dashed border-2 border-gray-200">
-              <CardContent className="space-y-4 max-w-md mx-auto">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-rose-50 text-rose-500">
-                  <Heart className="h-8 w-8 fill-rose-500/30" />
+            /* Redesigned Luxury Empty State for Proposals */
+            <div className="backdrop-blur-2xl bg-white/[0.03] border border-white/15 rounded-3xl p-8 sm:p-14 text-center shadow-2xl relative overflow-hidden space-y-8">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-rose-500/10 rounded-full blur-[120px] pointer-events-none" />
+
+              <div className="relative z-10 max-w-xl mx-auto space-y-4">
+                <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-tr from-rose-500/20 to-pink-500/20 border border-rose-500/40 flex items-center justify-center shadow-xl shadow-rose-500/20">
+                  <Heart className="h-10 w-10 text-rose-400 fill-rose-400/50 animate-pulse" />
                 </div>
-                <div className="space-y-2">
-                  <CardTitle className="text-xl font-bold text-gray-900">
-                    No proposals yet
-                  </CardTitle>
-                  <CardDescription className="text-gray-500 text-sm">
-                    Create your first personalized love proposal with AI generated messages, photo moments, and celebration music!
-                  </CardDescription>
+
+                <h3 className="font-[family-name:var(--font-playfair)] italic text-3xl sm:text-4xl font-bold text-white tracking-tight">
+                  No Proposals Created Yet
+                </h3>
+
+                <p className="font-sans text-sm sm:text-base text-slate-300 leading-relaxed">
+                  Turn your love story into a breathtaking interactive website. Pick an AI tone, add your cherished photos, and surprise your partner with an impossible-to-decline runaway &ldquo;No&rdquo; button.
+                </p>
+
+                <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+                  <Button
+                    asChild
+                    size="lg"
+                    className="w-full sm:w-auto rounded-full bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-bold px-8 py-3 text-base shadow-xl shadow-rose-500/25 transition-transform hover:scale-105"
+                  >
+                    <Link href="/create">
+                      <Plus className="h-5 w-5 mr-2" /> Create Your First Proposal
+                    </Link>
+                  </Button>
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="lg"
+                    className="w-full sm:w-auto rounded-full border-white/20 hover:bg-white/10 text-slate-200"
+                  >
+                    <Link href="/#interactive-demo">
+                      Try Live Simulator
+                    </Link>
+                  </Button>
                 </div>
-                <Button asChild className="bg-rose-500 hover:bg-rose-600 text-white font-medium">
-                  <Link href="/create">
-                    <Plus className="h-4 w-4 mr-2" /> Create Your First Proposal
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
+              </div>
+
+              {/* 3 Inspiring Template Inspiration Cards */}
+              <div className="pt-6 border-t border-white/10 text-left">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-4 text-center">
+                  Popular Styles To Get Started
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-rose-400/40 transition-colors space-y-2">
+                    <div className="flex items-center gap-2 text-rose-400 font-semibold text-sm">
+                      <Flame className="w-4 h-4" /> Filmy Bollywood Romance
+                    </div>
+                    <p className="text-xs text-slate-400 leading-relaxed">
+                      Dramatic dialogues, emotional background songs, and playful runaway button.
+                    </p>
+                  </div>
+                  <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-rose-400/40 transition-colors space-y-2">
+                    <div className="flex items-center gap-2 text-pink-400 font-semibold text-sm">
+                      <Music className="w-4 h-4" /> Acoustic Love Letter
+                    </div>
+                    <p className="text-xs text-slate-400 leading-relaxed">
+                      Heartfelt prose, acoustic guitar melodies, and responsive photo album.
+                    </p>
+                  </div>
+                  <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/10 hover:border-rose-400/40 transition-colors space-y-2">
+                    <div className="flex items-center gap-2 text-teal-400 font-semibold text-sm">
+                      <Sparkles className="w-4 h-4" /> Surprise Milestone
+                    </div>
+                    <p className="text-xs text-slate-400 leading-relaxed">
+                      Instant QR code cards ready to print for candlelit dinners or anniversaries.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           ) : (
+            /* Proposals Card Grid */
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {proposals.map((item) => (
-                <Card
+                <div
                   key={item.id}
-                  className="hover:shadow-lg transition-shadow border-gray-200 bg-white flex flex-col justify-between"
+                  className="backdrop-blur-xl bg-white/[0.04] border border-white/10 hover:border-rose-500/40 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-rose-500/10 flex flex-col justify-between space-y-5 group"
                 >
-                  <CardHeader className="space-y-2 pb-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <CardTitle className="text-lg font-bold text-gray-900 line-clamp-1">
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <h3 className="text-lg font-bold text-white line-clamp-1 group-hover:text-rose-300 transition-colors">
                         {item.title}
-                      </CardTitle>
-                      <Badge variant={item.isPublic ? "default" : "secondary"}>
-                        {item.isPublic ? "Public" : "Private"}
+                      </h3>
+                      <Badge
+                        className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold border ${
+                          item.isPublic
+                            ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
+                            : "bg-purple-500/15 text-purple-300 border-purple-500/30"
+                        }`}
+                      >
+                        {item.isPublic ? (
+                          <span className="flex items-center gap-1">
+                            <Globe className="w-3 h-3" /> Public
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1">
+                            <Lock className="w-3 h-3" /> Private
+                          </span>
+                        )}
                       </Badge>
                     </div>
+
                     {item.clientName && (
-                      <CardDescription className="text-sm font-medium text-rose-600">
-                        For: {item.clientName}
-                      </CardDescription>
+                      <p className="font-[family-name:var(--font-playfair)] italic text-sm text-rose-300">
+                        Dedicated to: {item.clientName}
+                      </p>
                     )}
-                    <div className="flex items-center text-xs text-gray-400 gap-1 pt-1">
-                      <Calendar className="h-3.5 w-3.5" />
+
+                    <div className="flex items-center text-xs text-slate-400 gap-1.5 pt-1">
+                      <Calendar className="h-3.5 w-3.5 text-slate-500" />
                       <span>
+                        Created{" "}
                         {new Date(item.createdAt).toLocaleDateString(undefined, {
                           month: "short",
                           day: "numeric",
@@ -279,89 +482,114 @@ export default function DashboardPage() {
                         })}
                       </span>
                     </div>
-                  </CardHeader>
 
-                  <CardContent className="pt-2 border-t border-gray-100 flex items-center gap-2">
+                    <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 font-mono text-[11px] text-slate-400 truncate">
+                      lovehub.site/proposal/{item.slug || item.id}
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-white/10 flex items-center gap-2">
                     <Button
                       asChild
-                      variant="outline"
                       size="sm"
-                      className="flex-1 text-gray-700 hover:text-gray-900"
+                      className="flex-1 rounded-full bg-white hover:bg-white/90 text-slate-950 font-semibold text-xs transition-transform hover:scale-[1.02]"
                     >
-                      <Link
-                        href={`/proposal/${item.slug || item.id}`}
-                        target="_blank"
-                      >
-                        <ExternalLink className="h-4 w-4 mr-1.5" /> View
+                      <Link href={`/proposal/${item.slug || item.id}`} target="_blank">
+                        <ExternalLink className="h-3.5 w-3.5 mr-1.5" /> View Page
                       </Link>
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => copyLink(item.id, item.slug)}
-                      title="Copy Link"
+                      title="Copy Shareable Link"
+                      className="rounded-full border-white/15 bg-white/5 hover:bg-white/15 text-white"
                     >
-                      <Copy className="h-4 w-4" />
+                      <Copy className="h-3.5 w-3.5" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => deleteProposal(item.id)}
-                      className="text-gray-400 hover:text-red-600 hover:bg-red-50"
+                      className="rounded-full text-slate-400 hover:text-red-400 hover:bg-red-500/10"
                       title="Delete Proposal"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-3.5 w-3.5" />
                     </Button>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               ))}
             </div>
           )
         ) : (
           /* Birthdays Tab */
           birthdays.length === 0 ? (
-            <Card className="text-center py-16 px-4 border-dashed border-2 border-gray-200">
-              <CardContent className="space-y-4 max-w-md mx-auto">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-teal-50 text-teal-600">
-                  <Cake className="h-8 w-8" />
+            /* Redesigned Luxury Empty State for Birthdays */
+            <div className="backdrop-blur-2xl bg-white/[0.03] border border-white/15 rounded-3xl p-8 sm:p-14 text-center shadow-2xl relative overflow-hidden space-y-8">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-teal-500/10 rounded-full blur-[120px] pointer-events-none" />
+
+              <div className="relative z-10 max-w-xl mx-auto space-y-4">
+                <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-tr from-teal-500/20 to-emerald-500/20 border border-teal-500/40 flex items-center justify-center shadow-xl shadow-teal-500/20">
+                  <Cake className="h-10 w-10 text-teal-400 animate-bounce" />
                 </div>
-                <div className="space-y-2">
-                  <CardTitle className="text-xl font-bold text-gray-900">
-                    No Birthday Pages Yet
-                  </CardTitle>
-                  <CardDescription className="text-gray-500 text-sm">
-                    Surprise a friend, partner, or family member with a bespoke birthday celebration page!
-                  </CardDescription>
+
+                <h3 className="font-[family-name:var(--font-playfair)] italic text-3xl sm:text-4xl font-bold text-white tracking-tight">
+                  No Birthday Wishboards Yet
+                </h3>
+
+                <p className="font-sans text-sm sm:text-base text-slate-300 leading-relaxed">
+                  Surprise a partner, best friend, or family member with a virtual celebration website featuring interactive candle blowing, memories photo wall, and music notes.
+                </p>
+
+                <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+                  <Button
+                    asChild
+                    size="lg"
+                    className="w-full sm:w-auto rounded-full bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white font-bold px-8 py-3 text-base shadow-xl shadow-teal-500/25 transition-transform hover:scale-105"
+                  >
+                    <Link href="/birthdays/new">
+                      <Cake className="h-5 w-5 mr-2" /> Create First Birthday Page
+                    </Link>
+                  </Button>
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="lg"
+                    className="w-full sm:w-auto rounded-full border-white/20 hover:bg-white/10 text-slate-200"
+                  >
+                    <Link href="/birthdays">
+                      Explore Wishboard Showcase
+                    </Link>
+                  </Button>
                 </div>
-                <Button asChild className="bg-teal-600 hover:bg-teal-700 text-white font-medium">
-                  <Link href="/birthdays/new">
-                    <Cake className="h-4 w-4 mr-2" /> Create First Birthday Page
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ) : (
+            /* Birthdays Card Grid */
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {birthdays.map((item) => (
-                <Card
+                <div
                   key={item.id}
-                  className="hover:shadow-lg transition-shadow border-teal-100 bg-white flex flex-col justify-between"
+                  className="backdrop-blur-xl bg-white/[0.04] border border-white/10 hover:border-teal-500/40 rounded-3xl p-6 shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-teal-500/10 flex flex-col justify-between space-y-5 group"
                 >
-                  <CardHeader className="space-y-2 pb-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <CardTitle className="text-lg font-bold text-gray-900 line-clamp-1">
-                        🎉 {item.personName}&apos;s Celebration
-                      </CardTitle>
-                      <Badge className="bg-teal-100 text-teal-800 text-[10px]">
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <h3 className="text-lg font-bold text-white line-clamp-1 group-hover:text-teal-300 transition-colors">
+                        🎉 {item.personName}&apos;s Wishboard
+                      </h3>
+                      <Badge className="rounded-full px-2.5 py-0.5 text-[10px] font-semibold bg-teal-500/15 text-teal-300 border border-teal-500/30">
                         Published
                       </Badge>
                     </div>
-                    <CardDescription className="text-xs text-gray-500 capitalize">
+
+                    <p className="font-[family-name:var(--font-playfair)] italic text-sm text-teal-300">
                       {item.relationship ? `Relationship: ${item.relationship}` : "Celebration"} • {item.birthDate || "Special Day"}
-                    </CardDescription>
-                    <div className="flex items-center text-xs text-gray-400 gap-1 pt-1">
-                      <Calendar className="h-3.5 w-3.5" />
+                    </p>
+
+                    <div className="flex items-center text-xs text-slate-400 gap-1.5 pt-1">
+                      <Calendar className="h-3.5 w-3.5 text-slate-500" />
                       <span>
+                        Created{" "}
                         {new Date(item.createdAt).toLocaleDateString(undefined, {
                           month: "short",
                           day: "numeric",
@@ -369,17 +597,20 @@ export default function DashboardPage() {
                         })}
                       </span>
                     </div>
-                  </CardHeader>
 
-                  <CardContent className="pt-2 border-t border-gray-100 flex items-center gap-2">
+                    <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 font-mono text-[11px] text-slate-400 truncate">
+                      lovehub.site/birthdays/{item.slug || item.id}
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-white/10 flex items-center gap-2">
                     <Button
                       asChild
-                      variant="outline"
                       size="sm"
-                      className="flex-1 text-gray-700 hover:text-gray-900"
+                      className="flex-1 rounded-full bg-white hover:bg-white/90 text-slate-950 font-semibold text-xs transition-transform hover:scale-[1.02]"
                     >
                       <Link href={`/birthdays/${item.slug || item.id}`} target="_blank">
-                        <ExternalLink className="h-4 w-4 mr-1.5" /> View
+                        <ExternalLink className="h-3.5 w-3.5 mr-1.5" /> View Board
                       </Link>
                     </Button>
                     <Button
@@ -391,27 +622,58 @@ export default function DashboardPage() {
                         toast.success("Celebration link copied!");
                       }}
                       title="Copy Link"
+                      className="rounded-full border-white/15 bg-white/5 hover:bg-white/15 text-white"
                     >
-                      <Copy className="h-4 w-4" />
+                      <Copy className="h-3.5 w-3.5" />
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => {
                         const link = `${window.location.origin}/birthdays/${item.slug || item.id}`;
-                        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`🎉 Check out this birthday celebration page for ${item.personName}: ${link}`)}`, "_blank");
+                        window.open(
+                          `https://api.whatsapp.com/send?text=${encodeURIComponent(
+                            `🎉 Check out this birthday celebration page for ${item.personName}: ${link}`
+                          )}`,
+                          "_blank"
+                        );
                       }}
                       title="Share to WhatsApp"
-                      className="text-teal-700 hover:bg-teal-50"
+                      className="rounded-full border-white/15 bg-white/5 hover:bg-teal-500/20 text-teal-300"
                     >
-                      <Share2 className="h-4 w-4" />
+                      <Share2 className="h-3.5 w-3.5" />
                     </Button>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               ))}
             </div>
           )
         )}
+
+        {/* Bottom VIP Upgrade Promo Card */}
+        <div className="backdrop-blur-xl bg-gradient-to-r from-rose-500/10 via-purple-500/10 to-teal-500/10 border border-white/15 rounded-3xl p-8 sm:p-10 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl">
+          <div className="space-y-2 text-center md:text-left">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-rose-300 text-xs font-semibold">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Lifetime Celebration Pass</span>
+            </div>
+            <h3 className="font-[family-name:var(--font-playfair)] italic text-2xl sm:text-3xl font-bold text-white">
+              Elevate With Custom URLs & Priority AI Romance
+            </h3>
+            <p className="text-slate-300 text-sm max-w-xl">
+              Get unlimited photo uploads, custom link slugs (e.g., lovehub.site/p/alex-and-sam), and priority generation for just $19 one-time.
+            </p>
+          </div>
+          <Button
+            asChild
+            size="lg"
+            className="rounded-full bg-white text-slate-950 hover:bg-white/90 font-bold px-8 py-3 text-sm shadow-xl transition-transform hover:scale-105 shrink-0"
+          >
+            <Link href="/checkout">
+              Upgrade to VIP Pass <ArrowUpRight className="ml-1.5 h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
       </main>
     </div>
   );
