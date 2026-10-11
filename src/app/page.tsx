@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { constructMetadata } from "@/lib/seo";
 import InteractiveFloatingHearts from "@/components/InteractiveFloatingHearts";
+import { SiteHeader } from "@/components/site-header";
 import {
   WebsiteJsonLd,
   OrganizationJsonLd,
@@ -67,40 +68,7 @@ export default function HomePage() {
       <FaqJsonLd faqs={faqs} />
 
       {/* Header */}
-      <header className="sticky top-0 z-50 backdrop-blur-md bg-white/85 border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <Heart className="h-7 w-7 text-rose-500 fill-rose-500" />
-            <span className="text-2xl font-black tracking-tight text-gray-900">
-              LoveHub
-            </span>
-          </Link>
-          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
-            <a href="#how-it-works" className="hover:text-rose-500 transition-colors">
-              How It Works
-            </a>
-            <a href="#features" className="hover:text-rose-500 transition-colors">
-              Features
-            </a>
-            <a href="#pricing" className="hover:text-rose-500 transition-colors">
-              Pricing
-            </a>
-            <a href="#faq" className="hover:text-rose-500 transition-colors">
-              FAQ
-            </a>
-          </nav>
-          <div className="flex items-center gap-3">
-            <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
-              <Link href="/login">Sign In</Link>
-            </Button>
-            <Button asChild size="sm" className="bg-rose-500 hover:bg-rose-600 text-white font-medium shadow-sm">
-              <Link href="/create">
-                Create Proposal <ArrowRight className="ml-1.5 h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </header>
+      <SiteHeader active="proposals" theme="default" />
 
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-16 pb-24 lg:pt-24 lg:pb-32 bg-gradient-to-b from-rose-50/70 via-white to-white">

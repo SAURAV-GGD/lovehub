@@ -9,10 +9,12 @@ LoveHub is a modern web application that enables users to create personalized, i
 - Interactive Proposal Pages: Responsive, celebration-ready web experiences with animated runaway "No" button, floating hearts, confetti bursts, and optional background music.
 - Photo Memories: High-resolution photo upload slots with romantic captions.
 - Custom Link Sharing: Instant unique proposal URLs shareable directly via WhatsApp, SMS, or QR code.
+- Birthday Pages: Single-page collaborative surprise cards where friends and family leave wishes and photos that unlock on the birthday (/birthdays).
 - User Accounts: Secure email/password and Google OAuth authentication with private dashboards.
 
 ## Important URLs
 - Homepage: /
+- Birthday Pages: /birthdays
 - Proposal Builder: /create
 - User Dashboard: /dashboard
 - Pricing & Plans: /checkout

@@ -4,7 +4,9 @@ export const siteConfig = {
   name: "LoveHub",
   description:
     "Create a personalized, magical proposal website for your partner. AI-crafted love letters, photo memories, romantic themes, and interactive celebration buttons.",
-  url: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
+  url:
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    (process.env.NODE_ENV === "production" ? "https://lovehub.in" : "http://localhost:3000"),
   ogImage: "/og-image.png",
   creator: "@lovehub",
 };

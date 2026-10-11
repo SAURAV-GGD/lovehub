@@ -45,6 +45,29 @@
   --color-romantic-light: var(--romantic-light);
   --color-romantic-dark: var(--romantic-dark);
   --color-romantic-pink: var(--romantic-pink);
+  --color-bd-ground: var(--bd-ground);
+  --color-bd-ink: var(--bd-ink);
+  --color-bd-muted: var(--bd-muted);
+  --color-bd-line: var(--bd-line);
+  --color-bd-teal: var(--bd-teal);
+  --color-bd-marigold: var(--bd-marigold);
+  --color-bd-coral: var(--bd-coral);
+  --color-bd-gold: var(--bd-gold);
+  --color-bd-mint: var(--bd-mint);
+  --font-fraunces: var(--font-fraunces);
+  --font-hanken: var(--font-hanken-grotesk);
+}
+
+.theme-birthday {
+  --bd-ground: #FDF4E7;
+  --bd-ink: #14231F;
+  --bd-muted: #55655F;
+  --bd-line: #E6DCC6;
+  --bd-teal: #0E6B5E;
+  --bd-marigold: #F2B134;
+  --bd-coral: #FF6B45;
+  --bd-gold: #D9A441;
+  --bd-mint: #CDEBE0;
 }
 
 :root {
