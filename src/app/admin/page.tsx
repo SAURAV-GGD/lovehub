@@ -65,6 +65,7 @@ import {
   languageLabels,
   musicOptions,
 } from "@/lib/proposal-types";
+import { MusicSelector, MusicSelectionState } from "@/components/music/music-selector";
 import { saveProposal } from "@/lib/proposal-storage";
 
 interface ClientItem {
@@ -142,7 +143,11 @@ export default function AdminDashboardPage() {
   const [message, setMessage] = useState("");
   const [photos, setPhotos] = useState<string[]>([]);
   const [photoCaptions, setPhotoCaptions] = useState<string[]>([]);
-  const [backgroundMusic, setBackgroundMusic] = useState("romantic-piano");
+  const [musicSelection, setMusicSelection] = useState<MusicSelectionState>({
+    type: "preset",
+    presetId: "romantic-piano",
+    musicTitle: "Romantic Piano Melody",
+  });
   const [customSlug, setCustomSlug] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAiGenerating, setIsAiGenerating] = useState(false);
@@ -372,7 +377,11 @@ export default function AdminDashboardPage() {
       message,
       photos,
       photoCaptions,
-      backgroundMusic,
+      backgroundMusic: musicSelection.type === "none"
+        ? "none"
+        : musicSelection.type === "preset"
+        ? (musicSelection.presetId || "romantic-piano")
+        : musicSelection.type,
       customSlug: customSlug.trim() || undefined,
       customConfig: {
         enableRunawayButton: enableRunaway,
@@ -380,6 +389,11 @@ export default function AdminDashboardPage() {
         enableHeartburst,
         enableSlideshow,
         vipBadge: creatorPlan === "custom" ? vipBadgeText : undefined,
+        musicType: musicSelection.type,
+        youtubeUrl: musicSelection.youtubeUrl,
+        youtubeVideoId: musicSelection.youtubeVideoId,
+        customMusicUrl: musicSelection.customAudioUrl,
+        musicTitle: musicSelection.musicTitle,
       },
       status: "final" as const,
       isPublic: true,
@@ -407,7 +421,7 @@ export default function AdminDashboardPage() {
             message: message,
             photos: photos,
             photoCaptions: photoCaptions,
-            backgroundMusic: backgroundMusic,
+            backgroundMusic: payload.backgroundMusic,
             customSlug: created.slug || undefined,
             plan: creatorPlan,
             createdByAdmin: true,
@@ -1350,40 +1364,34 @@ export default function AdminDashboardPage() {
                     )}
                   </div>
 
-                  {/* Soundtrack & Vanity URL */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                  {/* Soundtrack Selection (Presets, YouTube, Custom) */}
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-slate-300 flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
                         <Music className="w-3.5 h-3.5 text-rose-400" /> Background Audio Soundtrack
-                      </Label>
-                      <Select value={backgroundMusic} onValueChange={setBackgroundMusic}>
-                        <SelectTrigger className="bg-slate-950 border-slate-800 text-xs text-slate-100">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-slate-900 border-slate-800 text-slate-200 text-xs">
-                          {musicOptions.map((opt) => (
-                            <SelectItem key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                      </span>
+                      <span className="text-[11px] text-slate-400">
+                        {musicSelection.type === "none"
+                          ? "Muted"
+                          : musicSelection.musicTitle || "Custom Track"}
+                      </span>
+                    </Label>
+                    <MusicSelector value={musicSelection} onChange={setMusicSelection} />
+                  </div>
 
-                    <div className="space-y-1.5">
-                      <Label htmlFor="admin-custom-slug" className="text-xs font-semibold text-slate-300">
-                        Custom Vanity URL Slug (Optional)
-                      </Label>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs text-slate-400 font-mono">/proposal/</span>
-                        <Input
-                          id="admin-custom-slug"
-                          placeholder="e.g. forever-with-you"
-                          value={customSlug}
-                          onChange={(e) => setCustomSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"))}
-                          className="bg-slate-950 border-slate-800 text-xs text-slate-100 font-mono"
-                        />
-                      </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="admin-custom-slug" className="text-xs font-semibold text-slate-300">
+                      Custom Vanity URL Slug (Optional)
+                    </Label>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs text-slate-400 font-mono">/proposal/</span>
+                      <Input
+                        id="admin-custom-slug"
+                        placeholder="e.g. forever-with-you"
+                        value={customSlug}
+                        onChange={(e) => setCustomSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"))}
+                        className="bg-slate-950 border-slate-800 text-xs text-slate-100 font-mono"
+                      />
                     </div>
                   </div>
 

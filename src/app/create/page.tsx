@@ -29,6 +29,7 @@ import {
   languageLabels,
   musicOptions,
 } from "@/lib/proposal-types";
+import { MusicSelector, MusicSelectionState } from "@/components/music/music-selector";
 import { generateProposalMessage } from "@/lib/ai-generator";
 import { saveProposal, isSlugAvailable, getProposalUrl } from "@/lib/proposal-storage";
 import { trackEvent } from "@/lib/analytics";
@@ -50,7 +51,11 @@ function CreateContent() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [photos, setPhotos] = useState<string[]>([]);
   const [photoCaptions, setPhotoCaptions] = useState<string[]>([]);
-  const [backgroundMusic, setBackgroundMusic] = useState("romantic-piano");
+  const [musicSelection, setMusicSelection] = useState<MusicSelectionState>({
+    type: "preset",
+    presetId: "romantic-piano",
+    musicTitle: "Romantic Piano Melody",
+  });
   const [customSlug, setCustomSlug] = useState("");
   const [slugError, setSlugError] = useState("");
   const [proposalId, setProposalId] = useState<string | null>(null);
@@ -208,6 +213,14 @@ function CreateContent() {
       return;
     }
 
+    const finalMusicValue = limits.hasMusic
+      ? musicSelection.type === "none"
+        ? "none"
+        : musicSelection.type === "preset"
+        ? musicSelection.presetId || "romantic-piano"
+        : musicSelection.type
+      : "none";
+
     const proposalData = {
       yourName,
       partnerName,
@@ -217,9 +230,16 @@ function CreateContent() {
       message,
       photos,
       photoCaptions,
-      backgroundMusic: limits.hasMusic ? backgroundMusic : "none",
+      backgroundMusic: finalMusicValue,
       customSlug: limits.hasCustomSlug ? customSlug : undefined,
       plan: planKey,
+      customConfig: {
+        musicType: musicSelection.type,
+        youtubeUrl: musicSelection.youtubeUrl,
+        youtubeVideoId: musicSelection.youtubeVideoId,
+        customMusicUrl: musicSelection.customAudioUrl,
+        musicTitle: musicSelection.musicTitle,
+      },
     };
 
     const id = saveProposal(proposalData);
@@ -623,20 +643,22 @@ function CreateContent() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {limits.hasMusic && (
-                    <div className="space-y-2">
-                      <Label>Background Music</Label>
-                      <Select value={backgroundMusic} onValueChange={setBackgroundMusic}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {musicOptions.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm font-semibold flex items-center gap-1.5">
+                          <Music className="w-4 h-4 text-primary" />
+                          Background Music & Soundtrack
+                        </Label>
+                        <span className="text-xs text-foreground/60 font-medium">
+                          {musicSelection.type === "none"
+                            ? "Silent"
+                            : musicSelection.musicTitle || "Custom Track"}
+                        </span>
+                      </div>
+                      <MusicSelector
+                        value={musicSelection}
+                        onChange={setMusicSelection}
+                      />
                     </div>
                   )}
 

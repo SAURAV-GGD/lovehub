@@ -27,6 +27,10 @@ export interface ProposalData {
     enableSlideshow?: boolean;
     slideshowSpeed?: number;
     customMusicUrl?: string;
+    musicType?: "preset" | "youtube" | "custom" | "none";
+    youtubeVideoId?: string;
+    youtubeUrl?: string;
+    musicTitle?: string;
     vipBadge?: string;
   };
 }

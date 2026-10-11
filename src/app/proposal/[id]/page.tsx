@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import { Heart, Volume2, VolumeX, ChevronLeft, ChevronRight } from "lucide-react";
+import { Heart, Volume2, VolumeX, ChevronLeft, ChevronRight, Music, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { getProposal } from "@/lib/proposal-storage";
 import { ProposalData, planLimits } from "@/lib/proposal-types";
 import { useParams } from "next/navigation";
+import { YouTubeAudioPlayer } from "@/components/music/youtube-audio-player";
+import { getPresetAudioUrl, extractYouTubeVideoId } from "@/lib/music";
 
 // Floating hearts component
 const FloatingHearts = ({ count = 20 }: { count?: number }) => {
@@ -370,7 +372,9 @@ export default function ProposalPage() {
   const [showResponse, setShowResponse] = useState(false);
   const [saidYes, setSaidYes] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
+  const [hasInteracted, setHasInteracted] = useState(false);
   const [dodgeCount, setDodgeCount] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -435,14 +439,61 @@ export default function ProposalPage() {
   };
 
   const toggleMute = () => {
-    setIsMuted(!isMuted);
+    setHasInteracted(true);
+    const nextMuted = !isMuted;
+    setIsMuted(nextMuted);
+    setIsPlaying(!nextMuted);
     if (audioRef.current) {
-      audioRef.current.muted = !isMuted;
-      if (isMuted) {
-        audioRef.current.play();
+      audioRef.current.muted = nextMuted;
+      if (nextMuted) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play().catch(() => {});
       }
     }
   };
+
+  const limits = proposal ? (planLimits[proposal.plan] || planLimits.custom || planLimits.premium) : planLimits.romantic;
+  const isMusicDisabled = !proposal || !limits.hasMusic || proposal.backgroundMusic === "none" || proposal.customConfig?.musicType === "none";
+
+  const youtubeVideoId = proposal ? (
+    proposal.customConfig?.youtubeVideoId ||
+    (proposal.customConfig?.youtubeUrl ? extractYouTubeVideoId(proposal.customConfig.youtubeUrl) : null) ||
+    (proposal.backgroundMusic?.startsWith("yt:") ? proposal.backgroundMusic.replace("yt:", "") : null) ||
+    (proposal.backgroundMusic === "youtube" ? proposal.customConfig?.youtubeVideoId : null)
+  ) : null;
+
+  const customAudioUrl = proposal?.customConfig?.customMusicUrl;
+
+  const presetAudioUrl = proposal && !youtubeVideoId && !customAudioUrl && proposal.backgroundMusic !== "none"
+    ? getPresetAudioUrl(proposal.backgroundMusic) || "/audio/romantic.mp3"
+    : null;
+
+  const audioSourceUrl = customAudioUrl || presetAudioUrl;
+  const musicTitle = proposal?.customConfig?.musicTitle || (youtubeVideoId ? "YouTube Romantic Track" : "Romantic Piano");
+
+  // Autoplay gesture unlock for mobile browsers
+  useEffect(() => {
+    if (isMusicDisabled) return;
+
+    const handleFirstGesture = () => {
+      setHasInteracted(true);
+      setIsMuted(false);
+      setIsPlaying(true);
+      if (audioRef.current) {
+        audioRef.current.muted = false;
+        audioRef.current.play().catch(() => {});
+      }
+    };
+
+    window.addEventListener("click", handleFirstGesture, { once: true });
+    window.addEventListener("touchstart", handleFirstGesture, { once: true });
+
+    return () => {
+      window.removeEventListener("click", handleFirstGesture);
+      window.removeEventListener("touchstart", handleFirstGesture);
+    };
+  }, [isMusicDisabled]);
 
   if (loading) {
     return (
@@ -471,27 +522,77 @@ export default function ProposalPage() {
     );
   }
 
-  const limits = planLimits[proposal.plan] || planLimits.custom || planLimits.premium;
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-900 via-red-900 to-pink-800 relative overflow-hidden">
       <FloatingHearts count={25} />
       
-      {/* Background music (placeholder) */}
-      {limits.hasMusic && proposal.backgroundMusic !== "none" && (
-        <audio ref={audioRef} loop muted={isMuted}>
-          <source src="/audio/romantic.mp3" type="audio/mpeg" />
-        </audio>
-      )}
+      {/* Background music engine (Presets, YouTube, Custom) */}
+      {!isMusicDisabled && (
+        <>
+          {youtubeVideoId ? (
+            <YouTubeAudioPlayer
+              videoId={youtubeVideoId}
+              isPlaying={isPlaying && !isMuted}
+              isMuted={isMuted}
+            />
+          ) : audioSourceUrl ? (
+            <audio ref={audioRef} loop muted={isMuted} autoPlay playsInline>
+              <source src={audioSourceUrl} type="audio/mpeg" />
+            </audio>
+          ) : null}
 
-      {/* Music toggle */}
-      {limits.hasMusic && proposal.backgroundMusic !== "none" && (
-        <button
-          onClick={toggleMute}
-          className="fixed top-4 right-4 z-50 w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors"
-        >
-          {isMuted ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
-        </button>
+          {/* Floating Luxury Music Pill Widget */}
+          <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
+            {!hasInteracted && isMuted && (
+              <motion.div
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-pink-500/90 text-white text-xs font-semibold rounded-full shadow-lg backdrop-blur-md animate-pulse cursor-pointer select-none"
+                onClick={toggleMute}
+              >
+                <span>🎵 Tap to listen</span>
+                <Heart className="w-3 h-3 fill-current text-white" />
+              </motion.div>
+            )}
+
+            <button
+              onClick={toggleMute}
+              className="group flex items-center gap-2.5 px-3.5 py-2 bg-black/40 hover:bg-black/60 border border-white/20 backdrop-blur-md rounded-full text-white transition-all shadow-xl hover:scale-105 active:scale-95"
+              title={isMuted ? "Unmute romantic background music" : "Mute background music"}
+            >
+              {/* Animated Equalizer Wave */}
+              {!isMuted && isPlaying ? (
+                <div className="flex items-end gap-0.5 h-3.5 px-0.5">
+                  <motion.span
+                    animate={{ height: ["4px", "14px", "6px"] }}
+                    transition={{ repeat: Infinity, duration: 0.6, ease: "easeInOut" }}
+                    className="w-1 bg-pink-400 rounded-full"
+                  />
+                  <motion.span
+                    animate={{ height: ["8px", "16px", "4px"] }}
+                    transition={{ repeat: Infinity, duration: 0.5, ease: "easeInOut", delay: 0.1 }}
+                    className="w-1 bg-rose-300 rounded-full"
+                  />
+                  <motion.span
+                    animate={{ height: ["5px", "12px", "7px"] }}
+                    transition={{ repeat: Infinity, duration: 0.7, ease: "easeInOut", delay: 0.2 }}
+                    className="w-1 bg-pink-400 rounded-full"
+                  />
+                </div>
+              ) : (
+                <Music className="w-3.5 h-3.5 text-pink-300/80" />
+              )}
+
+              <span className="text-xs font-medium max-w-[120px] sm:max-w-[170px] truncate">
+                {isMuted ? "Muted" : musicTitle}
+              </span>
+
+              <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+                {isMuted ? <VolumeX className="w-3.5 h-3.5 text-white/70" /> : <Volume2 className="w-3.5 h-3.5 text-pink-300" />}
+              </div>
+            </button>
+          </div>
+        </>
       )}
 
       {/* Celebration effects */}
