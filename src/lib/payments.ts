@@ -11,15 +11,20 @@ export const PLAN_LIMITS = {
 };
 
 export const PLAN_PRICING = {
+  basic: {
+    name: "Basic Plan",
+    amount: 39, // ₹39
+    currency: "inr",
+  },
   romantic: {
     name: "Romantic Plan",
-    amount: 900, // $9.00
-    currency: "usd",
+    amount: 69, // ₹69
+    currency: "inr",
   },
   premium: {
     name: "Premium Forever Plan",
-    amount: 1900, // $19.00
-    currency: "usd",
+    amount: 169, // ₹169
+    currency: "inr",
   },
 };
 

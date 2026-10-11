@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
+import { UpiPaymentSection } from "@/components/checkout/upi-payment-section";
 
 const plans = {
   basic: {
@@ -151,83 +152,60 @@ function CheckoutContent() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
+            className="space-y-6"
           >
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl">Payment Method</CardTitle>
-                <CardDescription>Choose your preferred payment option</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Razorpay Option */}
-                <Button
-                  className="w-full h-auto py-4 bg-[#072654] hover:bg-[#0a3a7a] text-white flex items-center justify-between"
-                  onClick={() => handlePayment("razorpay")}
-                  disabled={isProcessing}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white rounded flex items-center justify-center">
-                      <CreditCard className="w-6 h-6 text-[#072654]" />
-                    </div>
-                    <div className="text-left">
-                      <p className="font-semibold">Pay with Razorpay</p>
-                      <p className="text-xs opacity-80">UPI, Cards, Netbanking, Wallets</p>
-                    </div>
-                  </div>
-                  <span className="text-lg font-bold">₹{plan.price}</span>
-                </Button>
+            {/* Primary Zero-Commission Direct UPI via upipay */}
+            <UpiPaymentSection
+              planKey={planKey}
+              planPrice={plan.price}
+              planName={plan.name}
+              onSuccess={(url) => {
+                window.location.href = url;
+              }}
+            />
 
-                {/* Cashfree Payment Option */}
-                <Button
-                  className="w-full h-auto py-4 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white flex items-center justify-between"
-                  onClick={() => handlePayment("cashfree")}
-                  disabled={isProcessing}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white rounded flex items-center justify-center">
-                      <CreditCard className="w-6 h-6 text-emerald-700" />
-                    </div>
-                    <div className="text-left">
-                      <p className="font-semibold">Pay with Cashfree</p>
-                      <p className="text-xs opacity-90">UPI, Cards, Netbanking &amp; Wallets</p>
-                    </div>
-                  </div>
-                  <span className="text-lg font-bold">₹{plan.price}</span>
-                </Button>
-
-                {isProcessing && (
-                  <div className="text-center py-4">
-                    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                    <p className="text-foreground/70 text-sm">Processing payment...</p>
-                  </div>
-                )}
-
-                {/* Security Notice */}
-                <div className="mt-6 pt-6 border-t">
-                  <div className="flex items-center gap-2 text-sm text-foreground/60 mb-2">
-                    <Shield className="w-4 h-4" />
-                    <span>Secure checkout powered by trusted payment providers</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-foreground/60">
-                    <Lock className="w-4 h-4" />
-                    <span>Your payment information is encrypted</span>
-                  </div>
+            {/* Alternative Payment Options (Cards / Netbanking) */}
+            <div className="bg-card/50 backdrop-blur-sm rounded-xl border border-border/60 p-4">
+              <p className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wider">
+                Or Pay With Cards / Netbanking:
+              </p>
+              <Button
+                variant="outline"
+                className="w-full py-3 h-auto flex items-center justify-between text-xs font-medium"
+                onClick={() => handlePayment("cashfree")}
+                disabled={isProcessing}
+              >
+                <div className="flex items-center gap-2.5">
+                  <CreditCard className="w-4 h-4 text-primary" />
+                  <span>Debit / Credit Cards &amp; Netbanking</span>
                 </div>
+                <span>₹{plan.price}</span>
+              </Button>
+            </div>
 
-                {/* Testimonial */}
-                <div className="mt-6 p-4 bg-primary/5 rounded-xl">
-                  <div className="flex items-center gap-1 mb-2">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                    ))}
-                  </div>
-                  <p className="text-sm text-foreground/80 italic">
-                    "She said YES! The proposal page was so beautiful and romantic. 
-                    Worth every penny!"
-                  </p>
-                  <p className="text-sm text-foreground/60 mt-2">— Happy Customer</p>
+            {/* Security & Testimonial */}
+            <div className="bg-card/40 backdrop-blur-sm rounded-xl border border-border/60 p-4 space-y-3">
+              <div className="flex items-center gap-2 text-xs text-foreground/70">
+                <Shield className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span>Zero commission • Direct bank settlement via UPI</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-foreground/70">
+                <Lock className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span>End-to-end encrypted bank payment</span>
+              </div>
+
+              <div className="pt-3 border-t border-border/60">
+                <div className="flex items-center gap-1 mb-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
+                  ))}
                 </div>
-              </CardContent>
-            </Card>
+                <p className="text-xs text-foreground/80 italic">
+                  &ldquo;She said YES! The proposal page was so beautiful and romantic. Worth every penny!&rdquo;
+                </p>
+                <p className="text-[11px] text-foreground/60 mt-1">— Happy Customer</p>
+              </div>
+            </div>
           </motion.div>
         </div>
 
