@@ -37,6 +37,9 @@ export default function JourneyVideo() {
           v.currentTime = cur;
           last = cur;
         }
+        // Subtle depth scale 1.0 -> 1.06 across the walk
+        const scale = 1.0 + (cur / d) * 0.06;
+        v.style.transform = `scale(${scale.toFixed(4)})`;
       }
       raf = requestAnimationFrame(loop);
     };
