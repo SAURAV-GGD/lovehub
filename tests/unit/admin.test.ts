@@ -42,6 +42,48 @@ describe("Admin Authentication & Security", () => {
     const tampered = token.slice(0, -5) + "abcde";
     expect(verifyToken(tampered)).toBeNull();
   });
+
+  it("POST /api/admin/auth returns valid JSON with success: true and sets cookie", async () => {
+    const { POST } = await import("../../src/app/api/admin/auth/route");
+    const req = new Request("http://localhost:3000/api/admin/auth", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: DEFAULT_ADMIN_EMAIL,
+        password: DEFAULT_ADMIN_PASSWORD,
+      }),
+    });
+
+    const res = await POST(req as any);
+    expect(res.status).toBe(200);
+
+    const body = await res.json();
+    expect(body.success).toBe(true);
+    expect(body.data?.user?.email).toBe(DEFAULT_ADMIN_EMAIL);
+    expect(body.data?.user?.role).toBe("admin");
+
+    const cookieHeader = res.headers.get("set-cookie");
+    expect(cookieHeader).toContain("lovehub_admin_session=");
+  });
+
+  it("POST /api/admin/auth returns 401 for incorrect password", async () => {
+    const { POST } = await import("../../src/app/api/admin/auth/route");
+    const req = new Request("http://localhost:3000/api/admin/auth", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: DEFAULT_ADMIN_EMAIL,
+        password: "IncorrectPassword",
+      }),
+    });
+
+    const res = await POST(req as any);
+    expect(res.status).toBe(401);
+
+    const body = await res.json();
+    expect(body.success).toBe(false);
+    expect(body.error).toBe("Invalid administrator credentials");
+  });
 });
 
 describe("Admin Multi-Version Plans & Unlimited Studio", () => {

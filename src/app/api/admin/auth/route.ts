@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import {
   validateAdminCredentials,
   createAdminSession,
@@ -24,16 +24,14 @@ export async function POST(request: NextRequest) {
     }
 
     const { session, token } = createAdminSession(email);
-    const response = NextResponse.json(
-      apiSuccess({
-        user: {
-          id: session.id,
-          name: session.name,
-          email: session.email,
-          role: session.role,
-        },
-      })
-    );
+    const response = apiSuccess({
+      user: {
+        id: session.id,
+        name: session.name,
+        email: session.email,
+        role: session.role,
+      },
+    });
 
     setAdminCookie(response, token);
     return response;
@@ -49,21 +47,19 @@ export async function GET(request: NextRequest) {
     return apiError("Not authenticated as administrator", "UNAUTHORIZED", 401);
   }
 
-  return NextResponse.json(
-    apiSuccess({
-      user: {
-        id: session.id,
-        name: session.name,
-        email: session.email,
-        role: session.role,
-      },
-      defaultAdminEmail: DEFAULT_ADMIN_EMAIL,
-    })
-  );
+  return apiSuccess({
+    user: {
+      id: session.id,
+      name: session.name,
+      email: session.email,
+      role: session.role,
+    },
+    defaultAdminEmail: DEFAULT_ADMIN_EMAIL,
+  });
 }
 
 export async function DELETE() {
-  const response = NextResponse.json(apiSuccess({ message: "Admin signed out successfully" }));
+  const response = apiSuccess({ message: "Admin signed out successfully" });
   clearAdminCookie(response);
   return response;
 }

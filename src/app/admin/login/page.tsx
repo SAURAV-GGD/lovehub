@@ -49,13 +49,18 @@ function AdminLoginForm() {
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await res.json();
-      if (res.ok && data.success) {
+      const data = await res.json().catch(() => null);
+      if (res.ok && (data?.success !== false)) {
         toast.success("Administrator session verified! Welcome to LoveHub Console.");
         router.push(callbackUrl);
         router.refresh();
       } else {
-        toast.error(data.error?.message || "Invalid administrator credentials");
+        const errorMsg =
+          (typeof data?.error === "string" ? data.error : null) ||
+          data?.error?.message ||
+          data?.message ||
+          "Invalid administrator credentials";
+        toast.error(errorMsg);
       }
     } catch {
       toast.error("Network error while connecting to Admin Auth service");
