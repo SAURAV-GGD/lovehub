@@ -5,6 +5,7 @@ import { MotionHero } from "@/components/home/motion-hero";
 import { InteractiveDemo } from "@/components/home/interactive-demo";
 import JourneyVideo from "@/components/immersive/JourneyVideo";
 import ScrollDriver from "@/components/immersive/ScrollDriver";
+import ImmersiveLoader from "@/components/immersive/ImmersiveLoader";
 import {
   WebsiteJsonLd,
   OrganizationJsonLd,
@@ -74,6 +75,9 @@ export default function HomePage() {
 
       {/* Lenis Smooth Scroll & Progress Engine */}
       <ScrollDriver />
+
+      {/* Floating Cherry Blossom Petals Canvas (Idle Loaded) */}
+      <ImmersiveLoader />
 
       {/* Subtle floating hearts on page */}
       <InteractiveFloatingHearts />
