@@ -8,8 +8,8 @@ You must respond ONLY with valid, parseable JSON matching this exact schema:
 {
   "headline": "A short, beautiful headline (e.g., 'From Our First Hello to Forever')",
   "intro": "1-2 sentences capturing the warmth of the connection",
-  "story": "A vivid 2-3 paragraph reflection on how the bond grew",
-  "loveLetter": "The centerpiece emotional message (2-3 paragraphs)",
+  "story": "A vivid 1-2 paragraph reflection on how the bond grew",
+  "loveLetter": "The centerpiece emotional message (2 touching, heartfelt paragraphs)",
   "promises": [
     "Promise 1",
     "Promise 2",

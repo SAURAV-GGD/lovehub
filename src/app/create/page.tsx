@@ -538,10 +538,10 @@ function CreateContent() {
                         size="sm"
                         onClick={handleGenerateMessage}
                         disabled={!yourName || !partnerName || isGenerating}
-                        className="gap-2"
+                        className="gap-2 transition-all active:scale-95"
                       >
-                        <Wand2 className="w-4 h-4" />
-                        {isGenerating ? "Generating..." : "Generate with AI"}
+                        <Wand2 className={`w-4 h-4 ${isGenerating ? "animate-spin text-pink-500" : "text-pink-500"}`} />
+                        {isGenerating ? "Crafting with AI... ✨" : "Generate with AI"}
                       </Button>
                     </div>
                     <Textarea

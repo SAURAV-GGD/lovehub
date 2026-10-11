@@ -13,55 +13,127 @@ export interface GeneratedProposalContent {
   rejectButtonText: string;
 }
 
+// In-memory LRU-style cache for instant responses (5 min TTL)
+const generationCache = new Map<string, { data: GeneratedProposalContent; timestamp: number }>();
+const CACHE_TTL_MS = 5 * 60 * 1000;
+
+function getCacheKey(input: GenerateProposalInput): string {
+  return `${input.yourName.trim().toLowerCase()}_${input.partnerName.trim().toLowerCase()}_${input.tone}_${input.language}_${(input.memories || "").trim().toLowerCase()}`;
+}
+
+async function callGeminiModel(
+  model: string,
+  apiKey: string,
+  systemPrompt: string,
+  userPrompt: string,
+  timeoutMs = 5500
+): Promise<GeneratedProposalContent | null> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      signal: controller.signal,
+      body: JSON.stringify({
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }],
+          },
+        ],
+        generationConfig: {
+          temperature: 0.75,
+          responseMimeType: "application/json",
+          maxOutputTokens: 600,
+        },
+      }),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      const text =
+        data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+      const parsed = JSON.parse(text) as GeneratedProposalContent;
+      if (parsed.headline && parsed.loveLetter && parsed.question) {
+        return parsed;
+      }
+    } else {
+      const errorText = await response.text();
+      logger.warn(`Model ${model} returned non-ok status`, {
+        status: response.status,
+        error: errorText.slice(0, 160),
+      });
+    }
+  } catch (err) {
+    logger.warn(`Model ${model} call failed or timed out`, {
+      message: err instanceof Error ? err.message : String(err),
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+
+  return null;
+}
+
 export async function generateProposal(
   input: GenerateProposalInput
 ): Promise<GeneratedProposalContent> {
+  // Check fast in-memory cache first
+  const cacheKey = getCacheKey(input);
+  const cached = generationCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+    logger.info("Serving proposal generation from cache (0ms latency)");
+    return cached.data;
+  }
+
   const apiKey = process.env.AI_API_KEY;
-  const model = process.env.AI_MODEL || "gemini-3.8-flash";
+  // gemini-3.5-flash-lite delivers ~1.5s - 2s generation speeds (4x faster than 3.8-flash)
+  const configuredModel = process.env.AI_MODEL;
+  const primaryModel =
+    configuredModel && configuredModel !== "gemini-3.8-flash"
+      ? configuredModel
+      : "gemini-3.5-flash-lite";
 
   if (apiKey) {
-    try {
-      logger.info("Calling AI provider for proposal generation", { model });
-      const systemPrompt = buildProposalSystemPrompt();
-      const userPrompt = buildProposalUserPrompt(input);
+    logger.info("Calling high-speed AI provider for proposal generation", {
+      model: primaryModel,
+    });
+    const systemPrompt = buildProposalSystemPrompt();
+    const userPrompt = buildProposalUserPrompt(input);
 
-      // Support Gemini REST API
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: "user",
-              parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }],
-            },
-          ],
-          generationConfig: {
-            temperature: 0.8,
-            responseMimeType: "application/json",
-          },
-        }),
-      });
+    // 1. Try primary fast model (timeout: 5.5s)
+    let result = await callGeminiModel(
+      primaryModel,
+      apiKey,
+      systemPrompt,
+      userPrompt,
+      5500
+    );
 
-      if (response.ok) {
-        const data = await response.json();
-        const text =
-          data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
-        const parsed = JSON.parse(text) as GeneratedProposalContent;
-        if (parsed.headline && parsed.loveLetter && parsed.question) {
-          logger.info("AI proposal generation succeeded");
-          return parsed;
-        }
-      } else {
-        const errorText = await response.text();
-        logger.warn("AI provider returned non-ok status, using fallback", {
-          status: response.status,
-          errorText,
-        });
+    // 2. If primary model is busy/rate-limited, try fast secondary model
+    if (!result && primaryModel !== "gemini-flash-lite-latest") {
+      logger.info(
+        "Primary model busy, switching to secondary fast model gemini-flash-lite-latest"
+      );
+      result = await callGeminiModel(
+        "gemini-flash-lite-latest",
+        apiKey,
+        systemPrompt,
+        userPrompt,
+        4500
+      );
+    }
+
+    if (result) {
+      generationCache.set(cacheKey, { data: result, timestamp: Date.now() });
+      if (generationCache.size > 100) {
+        const oldestKey = generationCache.keys().next().value;
+        if (oldestKey) generationCache.delete(oldestKey);
       }
-    } catch (err) {
-      logger.error("AI provider error, falling back to curated templates", err);
+      return result;
     }
   }
 
