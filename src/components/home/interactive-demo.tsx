@@ -54,9 +54,7 @@ export function InteractiveDemo() {
   };
 
   return (
-    <section id="interactive-demo" className="relative py-24 sm:py-32 bg-slate-900 text-white overflow-hidden">
-      {/* Background ambient glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-rose-500/10 rounded-full blur-[140px] pointer-events-none" />
+    <section id="demo" className="relative min-h-screen py-24 sm:py-32 text-white overflow-hidden flex items-center justify-center">
 
       <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8">
         {/* Section Header */}
