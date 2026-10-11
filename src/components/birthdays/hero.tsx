@@ -32,7 +32,7 @@ export function BirthdaysHero() {
             <div className="pt-2 flex flex-col sm:flex-row items-start sm:items-center gap-5 sm:gap-7">
               {/* Primary Coral CTA Button */}
               <Link
-                href="/signup?callbackUrl=/birthdays/new"
+                href="/birthdays/new"
                 className="inline-flex items-center justify-center rounded-full bg-[#E85025] hover:bg-[#C94419] text-white px-8 py-4 text-base sm:text-lg font-semibold shadow-[0_8px_20px_rgba(232,80,37,0.25)] hover:shadow-[0_10px_24px_rgba(232,80,37,0.35)] hover:-translate-y-0.5 transition-all duration-200"
               >
                 Create a birthday page

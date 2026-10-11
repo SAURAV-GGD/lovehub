@@ -14,6 +14,14 @@ export const auth = betterAuth({
       verification: schema.verification,
     },
   }),
+  trustedOrigins: [
+    "https://lovehub.in",
+    "https://www.lovehub.in",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    process.env.BETTER_AUTH_URL,
+    process.env.NEXT_PUBLIC_SITE_URL,
+  ].filter(Boolean) as string[],
   plugins: [
     dash(),
   ],
@@ -36,5 +44,5 @@ export const auth = betterAuth({
   baseURL:
     process.env.BETTER_AUTH_URL ||
     process.env.NEXT_PUBLIC_SITE_URL ||
-    "http://localhost:3000",
+    "https://www.lovehub.in",
 });

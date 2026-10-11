@@ -32,6 +32,9 @@ import {
   X,
   Code,
   Layers,
+  Cake,
+  Gift,
+  PartyPopper,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,6 +58,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { BirthdayRecord } from "@/lib/admin-store";
 import {
   PlanType,
   RelationshipType,
@@ -116,19 +120,37 @@ export default function AdminDashboardPage() {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [clients, setClients] = useState<ClientItem[]>([]);
   const [proposals, setProposals] = useState<ProposalItem[]>([]);
+  const [birthdays, setBirthdays] = useState<BirthdayRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Birthday Creator States
+  const [bdayPersonName, setBdayPersonName] = useState("");
+  const [bdayDate, setBdayDate] = useState("");
+  const [bdayRelationship, setBdayRelationship] = useState("best-friend");
+  const [bdayMessage, setBdayMessage] = useState("");
+  const [bdayPhotos, setBdayPhotos] = useState<string[]>([]);
+  const [bdayPhotoCaptions, setBdayPhotoCaptions] = useState<string[]>([]);
+  const [bdayMusic, setBdayMusic] = useState("birthday-cheer");
+  const [bdayCustomSlug, setBdayCustomSlug] = useState("");
+  const [bdayEnableConfetti, setBdayEnableConfetti] = useState(true);
+  const [bdayEnableBalloons, setBdayEnableBalloons] = useState(true);
+  const [bdayEnableCandles, setBdayEnableCandles] = useState(true);
+  const [isSubmittingBday, setIsSubmittingBday] = useState(false);
+  const [isAiGeneratingBday, setIsAiGeneratingBday] = useState(false);
 
   // Filters
   const [clientSearch, setClientSearch] = useState("");
   const [proposalSearch, setProposalSearch] = useState("");
   const [proposalPlanFilter, setProposalPlanFilter] = useState("all");
+  const [birthdaySearch, setBirthdaySearch] = useState("");
 
   // Modals
   const [inspectProposal, setInspectProposal] = useState<ProposalItem | null>(null);
   const [inspectClient, setInspectClient] = useState<ClientItem | null>(null);
   const [clientProposalsModal, setClientProposalsModal] = useState<ProposalItem[]>([]);
   const [createdProposalModal, setCreatedProposalModal] = useState<ProposalItem | null>(null);
+  const [createdBirthdayModal, setCreatedBirthdayModal] = useState<BirthdayRecord | null>(null);
 
   // Proposal Creator States
   const [creatorPlan, setCreatorPlan] = useState<PlanType>("custom");
@@ -162,10 +184,11 @@ export default function AdminDashboardPage() {
   // Load Dashboard Data
   const loadData = useCallback(async () => {
     try {
-      const [statsRes, clientsRes, proposalsRes] = await Promise.all([
+      const [statsRes, clientsRes, proposalsRes, birthdaysRes] = await Promise.all([
         fetch("/api/admin/stats"),
         fetch("/api/admin/clients"),
         fetch("/api/admin/proposals"),
+        fetch("/api/admin/birthdays"),
       ]);
 
       if (statsRes.ok) {
@@ -181,6 +204,11 @@ export default function AdminDashboardPage() {
       if (proposalsRes.ok) {
         const json = await proposalsRes.json();
         if (json.success) setProposals(json.data);
+      }
+
+      if (birthdaysRes.ok) {
+        const json = await birthdaysRes.json();
+        if (json.success) setBirthdays(json.data);
       }
     } catch {
       toast.error("Failed to load admin console data");
@@ -460,6 +488,102 @@ export default function AdminDashboardPage() {
     toast.info("Creator form cleared. Ready for your next proposal!");
   };
 
+  // Delete Birthday Page
+  const handleDeleteBirthday = async (id: string) => {
+    if (!confirm("Are you sure you want to permanently delete this birthday celebration?")) return;
+    try {
+      const res = await fetch(`/api/admin/birthdays?id=${id}`, { method: "DELETE" });
+      if (res.ok) {
+        toast.success("Birthday celebration deleted from system");
+        setBirthdays((prev) => prev.filter((b) => b.id !== id && b.slug !== id));
+      } else {
+        toast.error("Could not delete birthday celebration");
+      }
+    } catch {
+      toast.error("An error occurred during deletion");
+    }
+  };
+
+  // AI Birthday Generator for Admin
+  const generateAiBirthdayWish = () => {
+    if (!bdayPersonName.trim()) {
+      toast.error("Please enter the recipient's name first");
+      return;
+    }
+    setIsAiGeneratingBday(true);
+    setTimeout(() => {
+      const wishes: Record<string, string> = {
+        "best-friend": `Happy Birthday to my irreplaceable partner in crime, ${bdayPersonName}! 🎉 Through thick and thin, bad jokes and midnight memories, you make this life extraordinary. May this year shower you with success and unstoppable joy!`,
+        partner: `Happy Birthday to the keeper of my heart, ${bdayPersonName}. ❤️ In every universe and all lifetimes, you are my favorite person. Thank you for filling every day with warmth, passion, and light. Forever yours!`,
+        sibling: `Happy Birthday ${bdayPersonName}! 🌟 We might argue over the remote, but nobody has your back like I do. Wishing you a phenomenal year packed with dreams achieved!`,
+      };
+      setBdayMessage(
+        wishes[bdayRelationship] ||
+          `Wishing the happiest of birthdays to ${bdayPersonName}! 🎂 May your special day be overflowing with love, grand laughter, and the beginning of your finest year yet!`
+      );
+      setIsAiGeneratingBday(false);
+      toast.success("AI generated a VIP birthday celebration wish!");
+    }, 500);
+  };
+
+  // Create VIP Birthday Page
+  const handleCreateAdminBirthday = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!bdayPersonName.trim()) {
+      toast.error("Please enter the birthday recipient's name");
+      return;
+    }
+    if (!bdayMessage.trim()) {
+      toast.error("Please provide a birthday message");
+      return;
+    }
+
+    setIsSubmittingBday(true);
+    try {
+      const payload = {
+        personName: bdayPersonName,
+        birthDate: bdayDate,
+        relationship: bdayRelationship,
+        message: bdayMessage,
+        music: bdayMusic,
+        photos: bdayPhotos,
+        photoCaptions: bdayPhotoCaptions,
+        customSlug: bdayCustomSlug.trim() || undefined,
+        customConfig: {
+          enableConfetti: bdayEnableConfetti,
+          enableBalloons: bdayEnableBalloons,
+          enableCandles: bdayEnableCandles,
+          vipBadge: "Executive VIP Bespoke Edition",
+        },
+      };
+
+      const res = await fetch("/api/admin/birthdays", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        const created: BirthdayRecord = data.data;
+        toast.success("Bespoke VIP Birthday Celebration created successfully!");
+        setCreatedBirthdayModal(created);
+        setBirthdays((prev) => [created, ...prev]);
+        setBdayPersonName("");
+        setBdayMessage("");
+        setBdayPhotos([]);
+        setBdayPhotoCaptions([]);
+        setBdayCustomSlug("");
+      } else {
+        toast.error(data.error?.message || "Failed to create birthday page");
+      }
+    } catch {
+      toast.error("Network error while creating birthday celebration");
+    } finally {
+      setIsSubmittingBday(false);
+    }
+  };
+
   // Filtered Clients & Proposals
   const filteredClients = clients.filter(
     (c) =>
@@ -566,19 +690,39 @@ export default function AdminDashboardPage() {
                 <FileText className="w-4 h-4 mr-2" /> All Proposals ({proposals.length})
               </TabsTrigger>
               <TabsTrigger
+                value="birthdays"
+                className="data-[state=active]:bg-teal-600 data-[state=active]:text-white text-xs sm:text-sm font-medium py-2 px-4 rounded-lg"
+              >
+                <Cake className="w-4 h-4 mr-2" /> All Birthdays ({birthdays.length})
+              </TabsTrigger>
+              <TabsTrigger
                 value="creator"
                 className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-rose-500 data-[state=active]:to-pink-600 data-[state=active]:text-white text-xs sm:text-sm font-semibold py-2 px-4 rounded-lg text-rose-400"
               >
-                <Sparkles className="w-4 h-4 mr-2" /> Create Unlimited Proposal
+                <Sparkles className="w-4 h-4 mr-2" /> Create Proposal
+              </TabsTrigger>
+              <TabsTrigger
+                value="birthday-creator"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-teal-500 data-[state=active]:to-emerald-600 data-[state=active]:text-white text-xs sm:text-sm font-semibold py-2 px-4 rounded-lg text-teal-400"
+              >
+                <Gift className="w-4 h-4 mr-2" /> Create VIP Birthday
               </TabsTrigger>
             </TabsList>
 
-            <Button
-              onClick={() => setActiveTab("creator")}
-              className="bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white shadow-md shadow-rose-600/20 text-xs sm:text-sm"
-            >
-              <Plus className="w-4 h-4 mr-1.5" /> New Proposal Studio
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={() => setActiveTab("birthday-creator")}
+                className="bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white shadow-md shadow-teal-600/20 text-xs sm:text-sm"
+              >
+                <Cake className="w-4 h-4 mr-1.5" /> New Birthday Studio
+              </Button>
+              <Button
+                onClick={() => setActiveTab("creator")}
+                className="bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white shadow-md shadow-rose-600/20 text-xs sm:text-sm"
+              >
+                <Plus className="w-4 h-4 mr-1.5" /> New Proposal Studio
+              </Button>
+            </div>
           </div>
 
           {/* ========================================================
@@ -1465,8 +1609,382 @@ export default function AdminDashboardPage() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* ========================================================
+              TAB: ALL BIRTHDAYS MANAGEMENT
+             ======================================================== */}
+          <TabsContent value="birthdays" className="space-y-6">
+            <Card className="bg-slate-900/80 border-slate-800 shadow-xl">
+              <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4">
+                <div>
+                  <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
+                    <Cake className="w-5 h-5 text-teal-400" /> Platform Birthday Celebrations
+                  </CardTitle>
+                  <CardDescription className="text-xs text-slate-400">
+                    Inspect, manage, and view all live birthday pages created on LoveHub.
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Input
+                    placeholder="Search birthdays..."
+                    value={birthdaySearch}
+                    onChange={(e) => setBirthdaySearch(e.target.value)}
+                    className="w-52 h-8 text-xs bg-slate-950 border-slate-800 text-slate-200"
+                  />
+                  <Button
+                    onClick={() => setActiveTab("birthday-creator")}
+                    size="sm"
+                    className="bg-teal-600 hover:bg-teal-700 text-white text-xs h-8"
+                  >
+                    <Plus className="w-3.5 h-3.5 mr-1" /> New VIP Birthday
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {birthdays.length === 0 ? (
+                  <div className="p-12 text-center text-slate-500 space-y-3">
+                    <Cake className="w-10 h-10 mx-auto text-slate-600" />
+                    <p className="text-sm">No birthday celebrations found.</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-950/80 text-slate-400 border-b border-slate-800">
+                        <tr>
+                          <th className="p-3">Celebration Star</th>
+                          <th className="p-3">Relationship</th>
+                          <th className="p-3">Date</th>
+                          <th className="p-3">Created By</th>
+                          <th className="p-3">Live URL Slug</th>
+                          <th className="p-3 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/60">
+                        {birthdays
+                          .filter(
+                            (b) =>
+                              b.personName.toLowerCase().includes(birthdaySearch.toLowerCase()) ||
+                              b.slug.toLowerCase().includes(birthdaySearch.toLowerCase())
+                          )
+                          .map((b) => (
+                            <tr key={b.id} className="hover:bg-slate-800/30 transition-colors">
+                              <td className="p-3 font-semibold text-white">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-7 h-7 rounded-lg bg-teal-500/20 text-teal-400 flex items-center justify-center font-bold text-xs">
+                                    🎂
+                                  </div>
+                                  <span>{b.personName}</span>
+                                </div>
+                              </td>
+                              <td className="p-3 text-slate-300 capitalize">{b.relationship || "friend"}</td>
+                              <td className="p-3 text-slate-400">{b.birthDate || "Special Day"}</td>
+                              <td className="p-3">
+                                {b.createdByAdmin ? (
+                                  <Badge className="bg-amber-950 text-amber-300 border-amber-800 text-[10px]">
+                                    Admin VIP
+                                  </Badge>
+                                ) : (
+                                  <span className="text-slate-400 text-[11px]">{b.userName || "User"}</span>
+                                )}
+                              </td>
+                              <td className="p-3 font-mono text-[11px] text-teal-400">/birthdays/{b.slug}</td>
+                              <td className="p-3 text-right">
+                                <div className="flex items-center justify-end gap-1.5">
+                                  <Button
+                                    asChild
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 text-[11px] border-slate-800 bg-slate-900 text-slate-300 hover:text-white"
+                                  >
+                                    <Link href={`/birthdays/${b.slug}`} target="_blank">
+                                      <ExternalLink className="w-3 h-3 mr-1" /> View
+                                    </Link>
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      const url = `${typeof window !== "undefined" ? window.location.origin : ""}/birthdays/${b.slug}`;
+                                      navigator.clipboard.writeText(url);
+                                      toast.success("Birthday link copied!");
+                                    }}
+                                    className="h-7 text-[11px] text-slate-400 hover:text-white"
+                                  >
+                                    <Copy className="w-3 h-3" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleDeleteBirthday(b.id)}
+                                    className="h-7 text-[11px] text-red-400 hover:text-red-300 hover:bg-red-950/40"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* ========================================================
+              TAB: VIP BIRTHDAY CREATION STUDIO
+             ======================================================== */}
+          <TabsContent value="birthday-creator" className="space-y-6">
+            <Card className="bg-slate-900/90 border-slate-800 shadow-2xl">
+              <CardHeader className="bg-gradient-to-r from-teal-950/40 to-slate-900 border-b border-slate-800 pb-5">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <Badge className="bg-teal-950 text-teal-300 border-teal-800 text-[10px] font-semibold">
+                      EXECUTIVE VIP BIRTHDAY ENGINE
+                    </Badge>
+                    <CardTitle className="text-xl font-black text-white flex items-center gap-2">
+                      <Gift className="w-5 h-5 text-teal-400" /> Create Bespoke VIP Birthday Celebration
+                    </CardTitle>
+                    <CardDescription className="text-xs text-slate-400">
+                      Craft unlimited custom birthday pages with interactive balloons, confetti, candles, and music.
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6">
+                <form onSubmit={handleCreateAdminBirthday} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-slate-300">Birthday Star Name *</Label>
+                      <Input
+                        value={bdayPersonName}
+                        onChange={(e) => setBdayPersonName(e.target.value)}
+                        placeholder="e.g. Maya, Sarah, Rahul"
+                        className="bg-slate-950 border-slate-800 text-xs text-slate-100"
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-slate-300">Celebration Date / Milestone</Label>
+                      <Input
+                        value={bdayDate}
+                        onChange={(e) => setBdayDate(e.target.value)}
+                        placeholder="e.g. 24 October, Turning 25"
+                        className="bg-slate-950 border-slate-800 text-xs text-slate-100"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-slate-300">Relationship</Label>
+                      <select
+                        value={bdayRelationship}
+                        onChange={(e) => setBdayRelationship(e.target.value)}
+                        className="w-full h-9 rounded-md bg-slate-950 border border-slate-800 text-xs text-slate-100 px-3"
+                      >
+                        <option value="best-friend">Best Friend 🎉</option>
+                        <option value="partner">Partner / Soulmate ❤️</option>
+                        <option value="sibling">Sister / Brother 🌟</option>
+                        <option value="parent">Mom / Dad 💐</option>
+                        <option value="colleague">Colleague ☕</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Message & AI */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-semibold text-slate-300">Birthday Message *</Label>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={generateAiBirthdayWish}
+                        disabled={isAiGeneratingBday}
+                        className="border-teal-800 bg-teal-950/40 text-teal-300 hover:bg-teal-900/60 text-xs h-7"
+                      >
+                        <Wand2 className={`w-3 h-3 mr-1 ${isAiGeneratingBday ? "animate-spin" : ""}`} />
+                        {isAiGeneratingBday ? "Drafting..." : "AI Generate Wish"}
+                      </Button>
+                    </div>
+                    <Textarea
+                      rows={4}
+                      value={bdayMessage}
+                      onChange={(e) => setBdayMessage(e.target.value)}
+                      placeholder="Write your bespoke celebration message..."
+                      className="bg-slate-950 border-slate-800 text-xs text-slate-100 leading-relaxed"
+                      required
+                    />
+                  </div>
+
+                  {/* Photos */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-semibold text-slate-300">Celebration Photos</Label>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          const demo = "https://images.unsplash.com/photo-1513151233558-d860c5398176?w=800&auto=format&fit=crop&q=80";
+                          setBdayPhotos([...bdayPhotos, demo]);
+                          setBdayPhotoCaptions([...bdayPhotoCaptions, `Memory #${bdayPhotos.length + 1}`]);
+                        }}
+                        className="border-slate-800 bg-slate-900 text-slate-300 text-xs h-7"
+                      >
+                        + Add Sample Photo
+                      </Button>
+                    </div>
+                    {bdayPhotos.length > 0 && (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {bdayPhotos.map((url, i) => (
+                          <div key={i} className="relative rounded-lg overflow-hidden border border-slate-800 bg-slate-950">
+                            <img src={url} alt="Photo" className="w-full h-24 object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setBdayPhotos(bdayPhotos.filter((_, idx) => idx !== i));
+                                setBdayPhotoCaptions(bdayPhotoCaptions.filter((_, idx) => idx !== i));
+                              }}
+                              className="absolute top-1 right-1 p-1 bg-red-600/80 rounded-full text-white hover:bg-red-600"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Custom Vanity URL Slug */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-300">Custom URL Slug (Optional)</Label>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs text-slate-400 font-mono">/birthdays/</span>
+                      <Input
+                        value={bdayCustomSlug}
+                        onChange={(e) => setBdayCustomSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"))}
+                        placeholder="e.g. maya-celebrates-25"
+                        className="bg-slate-950 border-slate-800 text-xs text-slate-100 font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Interactive Options */}
+                  <div className="p-4 rounded-xl bg-teal-950/20 border border-teal-900/40 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={bdayEnableConfetti}
+                        onChange={(e) => setBdayEnableConfetti(e.target.checked)}
+                        className="rounded border-slate-700 text-teal-600 focus:ring-teal-500"
+                      />
+                      Confetti Shower 🎊
+                    </label>
+                    <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={bdayEnableBalloons}
+                        onChange={(e) => setBdayEnableBalloons(e.target.checked)}
+                        className="rounded border-slate-700 text-teal-600 focus:ring-teal-500"
+                      />
+                      Floating Balloons 🎈
+                    </label>
+                    <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={bdayEnableCandles}
+                        onChange={(e) => setBdayEnableCandles(e.target.checked)}
+                        className="rounded border-slate-700 text-teal-600 focus:ring-teal-500"
+                      />
+                      Virtual Cake Candles 🎂
+                    </label>
+                  </div>
+
+                  <div className="pt-2 flex justify-end gap-3">
+                    <Button
+                      type="submit"
+                      disabled={isSubmittingBday}
+                      className="bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white font-bold py-2.5 px-6 shadow-xl shadow-teal-600/30 text-xs sm:text-sm"
+                    >
+                      <Cake className="w-4 h-4 mr-2" />
+                      {isSubmittingBday ? "Publishing Birthday..." : "Create VIP Birthday Celebration"}
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </main>
+
+      {/* ========================================================
+          MODAL: CREATED BIRTHDAY SUCCESS DIALOG
+         ======================================================== */}
+      {createdBirthdayModal && (
+        <Dialog open={!!createdBirthdayModal} onOpenChange={() => setCreatedBirthdayModal(null)}>
+          <DialogContent className="bg-slate-900 border-slate-800 text-slate-100 max-w-lg">
+            <DialogHeader className="text-center">
+              <div className="mx-auto w-12 h-12 rounded-full bg-teal-500/20 text-teal-400 flex items-center justify-center mb-2">
+                <PartyPopper className="w-7 h-7" />
+              </div>
+              <DialogTitle className="text-xl font-bold text-white">
+                VIP Birthday Page Created! 🎉
+              </DialogTitle>
+              <DialogDescription className="text-slate-400 text-xs">
+                Celebration page for {createdBirthdayModal.personName} is published and live.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 pt-2">
+              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1.5">
+                <span className="text-[11px] font-semibold text-slate-400">Shareable Birthday Link:</span>
+                <div className="flex items-center gap-2">
+                  <Input
+                    readOnly
+                    value={`${typeof window !== "undefined" ? window.location.origin : ""}/birthdays/${createdBirthdayModal.slug}`}
+                    className="h-8 text-xs font-mono bg-slate-900 border-slate-800 text-slate-200"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      const url = `${typeof window !== "undefined" ? window.location.origin : ""}/birthdays/${createdBirthdayModal.slug}`;
+                      navigator.clipboard.writeText(url);
+                      toast.success("Link copied!");
+                    }}
+                    className="bg-teal-600 hover:bg-teal-700 text-white text-xs h-8 px-3"
+                  >
+                    Copy
+                  </Button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <Button
+                  asChild
+                  variant="outline"
+                  className="w-full border-slate-700 bg-slate-800 text-slate-200 hover:text-white"
+                >
+                  <Link href={`/birthdays/${createdBirthdayModal.slug}`} target="_blank">
+                    <ExternalLink className="w-3.5 h-3.5 mr-1.5" /> View Page
+                  </Link>
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const url = `${typeof window !== "undefined" ? window.location.origin : ""}/birthdays/${createdBirthdayModal.slug}`;
+                    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`🎉 Happy Birthday celebration page: ${url}`)}`, "_blank");
+                  }}
+                  className="w-full border-teal-800 bg-teal-950/60 text-teal-300 hover:bg-teal-900/80"
+                >
+                  <Share2 className="w-3.5 h-3.5 mr-1.5" /> WhatsApp
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* ========================================================
           MODAL: CREATED PROPOSAL SUCCESS DIALOG

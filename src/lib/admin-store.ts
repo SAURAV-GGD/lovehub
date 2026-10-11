@@ -30,13 +30,70 @@ export interface ProposalRecord {
   content: Record<string, unknown>;
 }
 
+export interface BirthdayRecord {
+  id: string;
+  userId?: string;
+  userEmail?: string;
+  userName?: string;
+  personName: string;
+  birthDate?: string;
+  relationship?: string;
+  message: string;
+  tone?: string;
+  language?: string;
+  photos: string[];
+  photoCaptions?: string[];
+  music?: string;
+  slug: string;
+  createdByAdmin: boolean;
+  status: "published" | "draft";
+  createdAt: string;
+  customConfig?: {
+    enableConfetti?: boolean;
+    enableBalloons?: boolean;
+    enableCandles?: boolean;
+    vipBadge?: string;
+  };
+}
+
 // Fallback in-memory store for when DB is unreachable or during local dev
 interface FallbackStore {
   clients: ClientItem[];
   proposals: ProposalRecord[];
+  birthdays: BirthdayRecord[];
 }
 
 const globalFallbackStore: FallbackStore = {
+  birthdays: [
+    {
+      id: "bday_demo_1",
+      userId: "cli_101",
+      userName: "Rahul Verma",
+      userEmail: "rahul.verma@example.com",
+      personName: "Riya",
+      birthDate: "14 March",
+      relationship: "best-friend",
+      message: "Happy 26th Birthday Riya! Thank you for being the sunshine and endless laughter in every room you walk into. Here is to another year of unforgettable adventures!",
+      tone: "joyful",
+      language: "english",
+      photos: [
+        "https://images.unsplash.com/photo-1513151233558-d860c5398176?w=800&auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=800&auto=format&fit=crop&q=80",
+      ],
+      photoCaptions: ["Our legendary road trip", "Making birthday wishes"],
+      music: "birthday-cheer",
+      slug: "riya-turns-26",
+      createdByAdmin: false,
+      status: "published",
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(),
+      customConfig: {
+        enableConfetti: true,
+        enableBalloons: true,
+        enableCandles: true,
+        vipBadge: "Signature Birthday Celebration",
+      },
+    },
+  ],
   clients: [
     {
       id: "cli_101",
@@ -607,8 +664,174 @@ export async function getAdminStats() {
   return {
     totalClients: allClients.length,
     totalProposals: allProposals.length,
+    totalBirthdays: (await getAdminBirthdays()).length,
     totalPhotos,
     planCounts,
     recentProposals: allProposals.slice(0, 5),
   };
 }
+
+/**
+ * Get all birthday celebration records
+ */
+export async function getAdminBirthdays(): Promise<BirthdayRecord[]> {
+  try {
+    const { pool } = await import("@/db");
+    const result = await pool.query(
+      `SELECT * FROM "birthday_pages" ORDER BY "created_at" DESC`
+    );
+    if (result.rows && result.rows.length > 0) {
+      const dbRows: BirthdayRecord[] = result.rows.map((row) => ({
+        id: row.id,
+        userId: row.user_id || undefined,
+        personName: row.person_name,
+        birthDate: row.birth_date || undefined,
+        message: row.message,
+        tone: row.tone || "celebratory",
+        language: row.language || "english",
+        photos: Array.isArray(row.photos) ? row.photos : [],
+        photoCaptions: Array.isArray(row.photo_captions) ? row.photo_captions : [],
+        music: row.music || "birthday-cheer",
+        slug: row.slug,
+        createdByAdmin: Boolean(row.created_by_admin),
+        status: (row.is_public ? "published" : "draft") as "published" | "draft",
+        createdAt: row.created_at ? new Date(row.created_at).toISOString() : new Date().toISOString(),
+      }));
+
+      // Merge with memory store
+      const combined = [...dbRows];
+      for (const mem of globalFallbackStore.birthdays) {
+        if (!combined.some((b) => b.id === mem.id || b.slug === mem.slug)) {
+          combined.push(mem);
+        }
+      }
+      return combined;
+    }
+  } catch (err) {
+    console.warn("DB birthday query fallback to in-memory store:", err);
+  }
+
+  return [...globalFallbackStore.birthdays];
+}
+
+/**
+ * Create a new Birthday Celebration Page (Admin or User)
+ */
+export async function createAdminBirthday(data: {
+  personName: string;
+  birthDate?: string;
+  relationship?: string;
+  message: string;
+  tone?: string;
+  language?: string;
+  photos: string[];
+  photoCaptions?: string[];
+  music?: string;
+  customSlug?: string;
+  createdByAdmin?: boolean;
+  userId?: string;
+  customConfig?: BirthdayRecord["customConfig"];
+}): Promise<BirthdayRecord> {
+  const id = "bday_" + Math.random().toString(36).substring(2, 9);
+  const baseSlug =
+    data.customSlug ||
+    data.personName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") +
+      "-birthday";
+  const slug = baseSlug || "celebration-" + id;
+
+  const record: BirthdayRecord = {
+    id,
+    userId: data.userId || "admin-master",
+    userName: data.createdByAdmin ? "Admin Love Architect" : "Valued Member",
+    userEmail: data.createdByAdmin ? "admin@lovehub.com" : undefined,
+    personName: data.personName,
+    birthDate: data.birthDate,
+    relationship: data.relationship || "friend",
+    message: data.message,
+    tone: data.tone || "celebratory",
+    language: data.language || "english",
+    photos: data.photos || [],
+    photoCaptions: data.photoCaptions || [],
+    music: data.music || "birthday-cheer",
+    slug,
+    createdByAdmin: data.createdByAdmin !== false,
+    status: "published",
+    createdAt: new Date().toISOString(),
+    customConfig: data.customConfig || {
+      enableConfetti: true,
+      enableBalloons: true,
+      enableCandles: true,
+      vipBadge: data.createdByAdmin ? "VIP Executive Birthday Edition" : "Celebration Edition",
+    },
+  };
+
+  try {
+    const { pool } = await import("@/db");
+    await pool.query(
+      `INSERT INTO "birthday_pages" (
+        id, user_id, person_name, birth_date, message, tone, language,
+        photos, photo_captions, music, slug, is_public, created_by_admin
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+      ON CONFLICT ("slug") DO UPDATE SET
+        person_name = EXCLUDED.person_name,
+        message = EXCLUDED.message,
+        photos = EXCLUDED.photos,
+        updated_at = NOW()`,
+      [
+        record.id,
+        record.userId,
+        record.personName,
+        record.birthDate || null,
+        record.message,
+        record.tone,
+        record.language,
+        JSON.stringify(record.photos),
+        JSON.stringify(record.photoCaptions),
+        record.music,
+        record.slug,
+        true,
+        record.createdByAdmin,
+      ]
+    );
+  } catch (err) {
+    console.warn("DB birthday insert error, keeping in memory store:", err);
+  }
+
+  globalFallbackStore.birthdays.unshift(record);
+  return record;
+}
+
+/**
+ * Delete a birthday record
+ */
+export async function deleteAdminBirthday(idOrSlug: string): Promise<boolean> {
+  try {
+    const { pool } = await import("@/db");
+    await pool.query(
+      `DELETE FROM "birthday_pages" WHERE id = $1 OR slug = $1`,
+      [idOrSlug]
+    );
+  } catch (err) {
+    console.warn("DB birthday delete error:", err);
+  }
+
+  globalFallbackStore.birthdays = globalFallbackStore.birthdays.filter(
+    (b) => b.id !== idOrSlug && b.slug !== idOrSlug
+  );
+  return true;
+}
+
+/**
+ * Get single birthday record by slug or id
+ */
+export async function getBirthdayBySlug(slugOrId: string): Promise<BirthdayRecord | null> {
+  const all = await getAdminBirthdays();
+  return (
+    all.find(
+      (b) =>
+        b.slug?.toLowerCase() === slugOrId.toLowerCase() ||
+        b.id.toLowerCase() === slugOrId.toLowerCase()
+    ) || null
+  );
+}
+

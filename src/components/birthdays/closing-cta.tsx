@@ -48,7 +48,7 @@ export function BirthdaysClosingCta() {
 
         <div className="pt-2 flex justify-center">
           <Link
-            href="/signup?callbackUrl=/birthdays/new"
+            href="/birthdays/new"
             className="inline-flex items-center justify-center rounded-full bg-[#F2B134] hover:bg-[#E5A323] text-[#14231F] px-8 sm:px-10 py-4 sm:py-4.5 text-base sm:text-lg font-bold shadow-[0_8px_25px_rgba(242,177,52,0.3)] hover:shadow-[0_12px_30px_rgba(242,177,52,0.4)] hover:-translate-y-0.5 transition-all duration-200"
           >
             Create a birthday page

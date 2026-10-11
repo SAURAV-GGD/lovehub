@@ -68,7 +68,7 @@ export function SiteHeader({
           {/* Right Action */}
           <div className="hidden sm:flex items-center gap-3">
             <Link
-              href="/signup?callbackUrl=/birthdays/new"
+              href="/birthdays/new"
               className="inline-flex items-center justify-center rounded-full bg-[#0E6B5E] hover:bg-[#095248] text-white px-6 py-2.5 text-sm font-semibold shadow-sm ring-1 ring-[#D9A441]/80 hover:ring-[#D9A441] transition-all hover:shadow-md"
             >
               Create a page
@@ -119,7 +119,7 @@ export function SiteHeader({
             </nav>
             <div className="pt-2">
               <Link
-                href="/signup?callbackUrl=/birthdays/new"
+                href="/birthdays/new"
                 onClick={() => setMobileMenuOpen(false)}
                 className="w-full inline-flex items-center justify-center rounded-full bg-[#0E6B5E] text-white py-3 text-sm font-semibold ring-1 ring-[#D9A441]"
               >
