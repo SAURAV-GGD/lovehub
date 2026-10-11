@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
       return apiError("Invalid plan selected", "BAD_REQUEST", 400);
     }
 
-    const vpa = process.env.UPI_VPA || "lovehub@upi";
+    const vpa = process.env.UPI_VPA || "paytm.s1kx5cu@pty";
     const merchantName = process.env.UPI_MERCHANT_NAME || "LoveHub";
     const orderId = `lh_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
 
