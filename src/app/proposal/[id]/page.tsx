@@ -9,6 +9,7 @@ import { ProposalData, planLimits } from "@/lib/proposal-types";
 import { useParams } from "next/navigation";
 import { YouTubeAudioPlayer } from "@/components/music/youtube-audio-player";
 import { getPresetAudioUrl, extractYouTubeVideoId } from "@/lib/music";
+import { CardsFlipbook } from "@/components/proposal/cards-flipbook";
 
 // Floating hearts component
 const FloatingHearts = ({ count = 20 }: { count?: number }) => {
@@ -117,94 +118,8 @@ const HeartBurst = () => {
 };
 
 // Photo slideshow component
-const PhotoSlideshow = ({ 
-  photos, 
-  captions 
-}: { 
-  photos: string[]; 
-  captions: string[];
-}) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-
-  useEffect(() => {
-    if (!isAutoPlaying || photos.length <= 1) return;
-    
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % photos.length);
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, [isAutoPlaying, photos.length]);
-
-  if (photos.length === 0) return null;
-
-  return (
-    <div 
-      className="relative w-full max-w-md mx-auto"
-      onMouseEnter={() => setIsAutoPlaying(false)}
-      onMouseLeave={() => setIsAutoPlaying(true)}
-    >
-      <div className="aspect-square rounded-2xl overflow-hidden bg-black/20 shadow-2xl">
-        <AnimatePresence mode="wait">
-          <motion.img
-            key={currentIndex}
-            src={photos[currentIndex]}
-            alt={captions[currentIndex] || `Memory ${currentIndex + 1}`}
-            className="w-full h-full object-cover"
-            initial={{ opacity: 0, scale: 1.1 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ duration: 0.5 }}
-          />
-        </AnimatePresence>
-      </div>
-      
-      {captions[currentIndex] && (
-        <motion.p
-          key={`caption-${currentIndex}`}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mt-4 text-white/90 text-lg italic"
-        >
-          &ldquo;{captions[currentIndex]}&rdquo;
-        </motion.p>
-      )}
-
-      {photos.length > 1 && (
-        <>
-          <button
-            onClick={() => setCurrentIndex((prev) => (prev - 1 + photos.length) % photos.length)}
-            className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors"
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </button>
-          <button
-            onClick={() => setCurrentIndex((prev) => (prev + 1) % photos.length)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors"
-          >
-            <ChevronRight className="w-6 h-6" />
-          </button>
-          
-          {/* Dots indicator */}
-          <div className="flex items-center justify-center gap-2 mt-4">
-            {photos.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentIndex(index)}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  index === currentIndex 
-                    ? "bg-white w-6" 
-                    : "bg-white/50 hover:bg-white/70"
-                }`}
-              />
-            ))}
-          </div>
-        </>
-      )}
-    </div>
-  );
-};
+// 3D Cards Flipbook component (Heyzine card-flip action style)
+const PhotoSlideshow = CardsFlipbook;
 
 // NO button that runs away dynamically across full phone and desktop screen
 const RUNAWAY_PHRASES = [
@@ -661,33 +576,15 @@ export default function ProposalPage() {
                 </p>
               </motion.div>
 
-              {/* Photos (if not slideshow, show first photo) */}
-              {proposal.photos.length > 0 && !limits.hasSlideshow && (
+              {/* Photo memories: 3D Storybook Cards Flipbook */}
+              {proposal.photos.length > 0 && (
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
+                  initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 1 }}
-                  className="mb-8"
+                  className="mb-8 w-full"
                 >
-                  <div className="aspect-square max-w-xs mx-auto rounded-2xl overflow-hidden shadow-2xl">
-                    <img
-                      src={proposal.photos[0]}
-                      alt="Our memory"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Photo slideshow for premium */}
-              {limits.hasSlideshow && proposal.photos.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 1 }}
-                  className="mb-8"
-                >
-                  <PhotoSlideshow 
+                  <CardsFlipbook 
                     photos={proposal.photos} 
                     captions={proposal.photoCaptions} 
                   />
