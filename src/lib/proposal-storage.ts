@@ -11,7 +11,7 @@ export const PREVIEW_DURATION_MS = 4 * 60 * 1000; // 4 minutes temporary preview
 export function saveProposal(data: Omit<ProposalData, "id" | "createdAt">): string {
   const proposals = getAllProposals();
   
-  const isPaid = Boolean(data.isPaid);
+  const isPaid = Boolean(data.isPaid) || data.plan === "basic";
   const now = Date.now();
   const newProposal: ProposalData = {
     ...data,

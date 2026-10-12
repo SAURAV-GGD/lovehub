@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Heart, ArrowLeft, Wand2, Camera, Music, X, Upload, ArrowRight, Sparkles, Shield, AlertTriangle } from "lucide-react";
+import { Heart, ArrowLeft, Wand2, Camera, Music, X, Upload, ArrowRight, Sparkles, Shield, AlertTriangle, CheckCircle2, ExternalLink } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -38,8 +38,9 @@ import { toast } from "sonner";
 function CreateContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const planKey = (searchParams.get("plan") || "romantic") as PlanType;
-  const limits = planLimits[planKey];
+  const initialPlan = (searchParams.get("plan") || "basic") as PlanType;
+  const [planKey, setPlanKey] = useState<PlanType>(initialPlan);
+  const limits = planLimits[planKey] || planLimits.basic;
 
   const [step, setStep] = useState(1);
   const [yourName, setYourName] = useState("");
@@ -352,43 +353,54 @@ function CreateContent() {
             transition={{ duration: 0.5 }}
             className="space-y-6"
           >
-            {/* Top Pill */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs font-semibold shadow-sm">
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
-              <span>Temporary Live Preview • Active for 4 Minutes</span>
-            </div>
+            {/* Top Status Pill */}
+            {planKey === "basic" ? (
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-semibold shadow-sm">
+                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                <span>🎉 Free Proposal Live &amp; Permanent!</span>
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs font-semibold shadow-sm">
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+                <span>Temporary Live Preview • Active for 4 Minutes</span>
+              </div>
+            )}
 
             <div className="w-20 h-20 bg-pink-100 dark:bg-pink-950/60 border border-pink-200 dark:border-pink-800 rounded-full flex items-center justify-center mx-auto shadow-lg">
               <Heart className="w-10 h-10 text-pink-500 fill-pink-500 animate-pulse" />
             </div>
 
             <h1 className="text-3xl font-extrabold text-foreground">
-              Your Live Preview is Ready!
+              {planKey === "basic" ? "Your Proposal is Ready to Share!" : "Your Live Preview is Ready!"}
             </h1>
 
             <p className="text-muted-foreground text-sm max-w-md mx-auto">
-              You can preview how your proposal looks right now. This temporary link will terminate in <strong>4 minutes</strong>. To permanently activate your website and share it with <strong>{partnerName}</strong>, complete payment below!
+              {planKey === "basic"
+                ? `Your personalized proposal website for ${partnerName} is created. Share the permanent link directly with your partner!`
+                : `You can preview how your proposal looks right now. To permanently activate your website with background tunes & runaway button, complete payment below!`}
             </p>
 
             <Card className="border-border shadow-xl overflow-hidden text-left">
-              <div className="bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-indigo-500/10 p-4 border-b border-border flex items-center justify-between">
-                <div>
-                  <span className="text-xs font-semibold text-foreground uppercase tracking-wider">
-                    {planKey} Plan
-                  </span>
-                  <p className="text-xs text-muted-foreground">Lifetime Website Hosting</p>
+              {planKey !== "basic" && (
+                <div className="bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-indigo-500/10 p-4 border-b border-border flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-semibold text-foreground uppercase tracking-wider">
+                      {planKey} Plan
+                    </span>
+                    <p className="text-xs text-muted-foreground">Lifetime Website Hosting</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xl font-black text-foreground">₹{currentPlanPrice}</span>
+                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 block font-medium">0% extra fees</span>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <span className="text-xl font-black text-foreground">₹{currentPlanPrice}</span>
-                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 block font-medium">0% extra fees</span>
-                </div>
-              </div>
+              )}
 
               <CardContent className="p-5 space-y-4">
-                {/* Temporary Preview URL */}
+                {/* Shareable Proposal URL */}
                 <div className="space-y-1.5">
                   <span className="text-xs font-medium text-muted-foreground">
-                    Temporary Preview Link (Expires in 4 mins):
+                    {planKey === "basic" ? "Your Shareable Proposal Link:" : "Temporary Preview Link (Expires in 4 mins):"}
                   </span>
                   <div className="flex items-center gap-2 p-2 bg-muted rounded-xl border border-border">
                     <Input
@@ -402,44 +414,89 @@ function CreateContent() {
                       size="sm"
                       onClick={() => {
                         navigator.clipboard.writeText(proposalUrl);
-                        toast.success("Preview link copied!");
+                        toast.success("Proposal link copied to clipboard!");
                       }}
-                      className="h-8 text-xs shrink-0"
+                      className="h-8 text-xs shrink-0 cursor-pointer"
                     >
-                      Copy
+                      Copy Link
                     </Button>
                   </div>
                 </div>
 
                 {/* Primary Actions */}
                 <div className="space-y-2.5 pt-2">
-                  {/* Pay and Get Permanent Link */}
-                  <Link href={checkoutUrl} className="block w-full">
-                    <Button
-                      type="button"
-                      className="w-full h-12 bg-gradient-to-r from-pink-500 via-rose-500 to-red-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold text-sm shadow-lg shadow-pink-500/25 gap-2"
-                    >
-                      <Sparkles className="w-4 h-4" />
-                      <span>Pay ₹{currentPlanPrice} via UPI &amp; Get Permanent WebLink</span>
-                      <ArrowRight className="w-4 h-4 ml-auto" />
-                    </Button>
-                  </Link>
+                  {planKey === "basic" ? (
+                    <>
+                      <Link href={`/proposal/${proposalId}`} target="_blank" className="block w-full">
+                        <Button
+                          type="button"
+                          className="w-full h-12 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-bold text-sm shadow-lg shadow-rose-500/25 gap-2 cursor-pointer"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                          <span>Open &amp; View Your Proposal</span>
+                        </Button>
+                      </Link>
 
-                  {/* Open Live Preview */}
-                  <Link href={`/proposal/${proposalId}`} target="_blank" className="block w-full">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full h-10 font-semibold text-xs gap-2"
-                    >
-                      <span>Open Live Preview (4 Mins Active)</span>
-                    </Button>
-                  </Link>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          const shareText = `Hey ${partnerName}, I made something special just for you: ${proposalUrl}`;
+                          window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`, "_blank");
+                        }}
+                        className="w-full h-10 font-semibold text-xs gap-2 text-emerald-600 hover:bg-emerald-50 border-emerald-200 cursor-pointer"
+                      >
+                        <span>Share Directly on WhatsApp 💬</span>
+                      </Button>
+
+                      {/* Optional Upgrade to Romantic */}
+                      <div className="pt-4 border-t border-border text-center space-y-1.5">
+                        <p className="text-xs font-semibold text-foreground">
+                          Want the playful Runaway &ldquo;No&rdquo; button &amp; background music?
+                        </p>
+                        <Link href={`/checkout?plan=romantic&proposalId=${proposalId}`}>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 font-bold cursor-pointer"
+                          >
+                            <Sparkles className="w-3.5 h-3.5 mr-1" /> Upgrade to Romantic Plan for ₹69 →
+                          </Button>
+                        </Link>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      {/* Pay and Get Permanent Link */}
+                      <Link href={checkoutUrl} className="block w-full">
+                        <Button
+                          type="button"
+                          className="w-full h-12 bg-gradient-to-r from-pink-500 via-rose-500 to-red-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold text-sm shadow-lg shadow-pink-500/25 gap-2 cursor-pointer"
+                        >
+                          <Sparkles className="w-4 h-4" />
+                          <span>Pay ₹{currentPlanPrice} via UPI &amp; Get Permanent WebLink</span>
+                          <ArrowRight className="w-4 h-4 ml-auto" />
+                        </Button>
+                      </Link>
+
+                      {/* Open Live Preview */}
+                      <Link href={`/proposal/${proposalId}`} target="_blank" className="block w-full">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="w-full h-10 font-semibold text-xs gap-2 cursor-pointer"
+                        >
+                          <span>Open Live Preview (4 Mins Active)</span>
+                        </Button>
+                      </Link>
+
+                      <p className="text-[11px] text-center text-muted-foreground pt-1">
+                        🔒 Instant activation via GPay, PhonePe, Paytm, or BHIM. Direct to bank.
+                      </p>
+                    </>
+                  )}
                 </div>
-
-                <p className="text-[11px] text-center text-muted-foreground pt-1">
-                  🔒 Instant activation via GPay, PhonePe, Paytm, or BHIM. Direct to bank.
-                </p>
               </CardContent>
             </Card>
 
@@ -465,8 +522,73 @@ function CreateContent() {
             Back
           </Link>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-foreground/60">Plan:</span>
-            <span className="text-sm font-medium text-primary capitalize">{planKey}</span>
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-primary/10 text-primary capitalize">
+              Active Plan: {planKey === "basic" ? "Free Forever" : planKey}
+            </span>
+          </div>
+        </div>
+
+        {/* Interactive Plan Selector Bar */}
+        <div className="mb-8 p-3 rounded-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-border shadow-sm">
+          <div className="flex items-center justify-between px-2 mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-primary" /> Choose Creation Tier
+            </span>
+            <span className="text-xs text-primary font-semibold">
+              {planKey === "basic" ? "Free Forever (₹0)" : planKey === "romantic" ? "Romantic (₹69)" : "VIP Lifetime (₹169)"}
+            </span>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={() => setPlanKey("basic")}
+              className={`p-3 rounded-xl text-left transition-all border cursor-pointer ${
+                planKey === "basic"
+                  ? "bg-rose-50 dark:bg-rose-950/40 border-rose-500 shadow-sm ring-1 ring-rose-500"
+                  : "bg-background border-border/70 hover:border-border"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs font-bold text-foreground">Free</span>
+                <span className="text-xs font-extrabold text-emerald-600">₹0</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground line-clamp-1">3 photos • AI Letter • Free Link</p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setPlanKey("romantic")}
+              className={`p-3 rounded-xl text-left transition-all border relative cursor-pointer ${
+                planKey === "romantic"
+                  ? "bg-rose-50 dark:bg-rose-950/40 border-rose-500 shadow-sm ring-1 ring-rose-500"
+                  : "bg-background border-border/70 hover:border-border"
+              }`}
+            >
+              <span className="absolute -top-2 right-2 px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[9px] font-bold">
+                POPULAR
+              </span>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs font-bold text-foreground">Romantic</span>
+                <span className="text-xs font-extrabold text-rose-600">₹69</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground line-clamp-1">Runaway NO • Music • Confetti • 5 photos</p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setPlanKey("premium")}
+              className={`p-3 rounded-xl text-left transition-all border cursor-pointer ${
+                planKey === "premium"
+                  ? "bg-purple-50 dark:bg-purple-950/40 border-purple-500 shadow-sm ring-1 ring-purple-500"
+                  : "bg-background border-border/70 hover:border-border"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs font-bold text-foreground">Premium</span>
+                <span className="text-xs font-extrabold text-purple-600">₹169</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground line-clamp-1">Custom Slug • 12 photos • 3D Flipbook</p>
+            </button>
           </div>
         </div>
 

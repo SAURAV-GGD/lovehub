@@ -11,6 +11,7 @@ import { useParams } from "next/navigation";
 import { YouTubeAudioPlayer } from "@/components/music/youtube-audio-player";
 import { getPresetAudioUrl, extractYouTubeVideoId } from "@/lib/music";
 import { CardsFlipbook } from "@/components/proposal/cards-flipbook";
+import { toast } from "sonner";
 
 // Floating hearts component
 const FloatingHearts = ({ count = 20 }: { count?: number }) => {
@@ -375,7 +376,9 @@ export default function ProposalPage() {
   };
 
   const handleNo = () => {
-    // NO button runs away, this is just a fallback
+    toast("Are you sure? 🥺 Think about it one more time! ❤️", {
+      duration: 3500,
+    });
   };
 
   const toggleMute = () => {

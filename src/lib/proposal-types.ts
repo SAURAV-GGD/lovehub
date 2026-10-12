@@ -49,7 +49,7 @@ export const planLimits: Record<PlanType, {
   basic: {
     maxPhotos: 3,
     hasMusic: false,
-    hasAnimatedButtons: true,
+    hasAnimatedButtons: false,
     hasConfetti: false,
     hasSlideshow: false,
     hasCustomSlug: false,
@@ -58,7 +58,7 @@ export const planLimits: Record<PlanType, {
   starter: {
     maxPhotos: 3,
     hasMusic: false,
-    hasAnimatedButtons: true,
+    hasAnimatedButtons: false,
     hasConfetti: false,
     hasSlideshow: false,
     hasCustomSlug: false,
