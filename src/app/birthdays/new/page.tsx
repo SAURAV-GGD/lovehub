@@ -21,6 +21,9 @@ import {
   CheckCircle2,
   Copy,
   ExternalLink,
+  Film,
+  Video,
+  Link2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +32,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { SiteHeader } from "@/components/site-header";
 import { toast } from "sonner";
+import { compressImageFile, saveBirthday } from "@/lib/birthday-storage";
 
 const RELATIONSHIPS = [
   { value: "best-friend", label: "Best Friend 🎉" },
@@ -65,6 +69,16 @@ export default function NewBirthdayPage() {
   const [enableConfetti, setEnableConfetti] = useState(true);
   const [enableBalloons, setEnableBalloons] = useState(true);
   const [enableCandles, setEnableCandles] = useState(true);
+  const [enableFlipbook, setEnableFlipbook] = useState(true);
+
+  // Video Reel & Runaway Treat Settings
+  const [videoUrl, setVideoUrl] = useState("");
+  const [enableRunawayTreat, setEnableRunawayTreat] = useState(true);
+  const [treatQuestion, setTreatQuestion] = useState("Will you give us a birthday party treat today? 🍕🎂");
+  const [treatYesText, setTreatYesText] = useState("Haan Bilkul! Party Pakki! 🎉");
+  const [treatNoText, setTreatNoText] = useState("Nahi Dunga 🏃‍♂️💨");
+  const [isCompressingPhotos, setIsCompressingPhotos] = useState(false);
+  const [urlPhotoInput, setUrlPhotoInput] = useState("");
 
   // Status
   const [isAiGenerating, setIsAiGenerating] = useState(false);
@@ -81,6 +95,44 @@ export default function NewBirthdayPage() {
     const nextPhoto = samples[photos.length % samples.length];
     setPhotos([...photos, nextPhoto]);
     setPhotoCaptions([...photoCaptions, `Unforgettable memory #${photos.length + 1}`]);
+  };
+
+  // Photo Upload Handler with Automatic Compression
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsCompressingPhotos(true);
+    const toastId = toast.loading(`Optimizing & adding ${files.length} photo(s)...`);
+
+    try {
+      const fileArr = Array.from(files);
+      const compressedList = await Promise.all(
+        fileArr.map((f) => compressImageFile(f, 1280, 0.8))
+      );
+
+      const valid = compressedList.filter(Boolean);
+      setPhotos((prev) => [...prev, ...valid]);
+      setPhotoCaptions((prev) => [
+        ...prev,
+        ...valid.map((_, i) => `Unforgettable memory #${prev.length + i + 1}`),
+      ]);
+
+      toast.success(`Added ${valid.length} photo(s) successfully!`, { id: toastId });
+    } catch {
+      toast.error("Failed to process photos", { id: toastId });
+    } finally {
+      setIsCompressingPhotos(false);
+      e.target.value = "";
+    }
+  };
+
+  const handleAddPhotoByUrl = () => {
+    if (!urlPhotoInput.trim()) return;
+    setPhotos((prev) => [...prev, urlPhotoInput.trim()]);
+    setPhotoCaptions((prev) => [...prev, `Unforgettable memory #${prev.length + 1}`]);
+    setUrlPhotoInput("");
+    toast.success("Photo added from URL");
   };
 
   const removePhoto = (index: number) => {
@@ -136,6 +188,7 @@ export default function NewBirthdayPage() {
         tone,
         language,
         music,
+        videoUrl: videoUrl.trim() || undefined,
         photos,
         photoCaptions,
         customSlug: customSlug.trim() || undefined,
@@ -143,6 +196,13 @@ export default function NewBirthdayPage() {
           enableConfetti,
           enableBalloons,
           enableCandles,
+          enableFlipbook,
+          enableVideo: Boolean(videoUrl.trim()),
+          videoUrl: videoUrl.trim() || undefined,
+          enableRunawayTreat,
+          treatQuestion,
+          treatYesText,
+          treatNoText,
           vipBadge: "Birthday Celebration Page",
         },
       };
@@ -155,6 +215,11 @@ export default function NewBirthdayPage() {
 
       const data = await res.json();
       if (res.ok && data.success) {
+        // Save locally for instantaneous offline & client retrieval
+        try {
+          saveBirthday(data.data);
+        } catch {}
+
         toast.success("Birthday Celebration page published!");
         setCreatedSlug(data.data.slug);
       } else {
@@ -365,37 +430,71 @@ export default function NewBirthdayPage() {
               {/* Card 3: Memory Photos */}
               <Card className="border-[#E6DCC6] bg-white/95 shadow-md rounded-2xl overflow-hidden">
                 <CardHeader className="bg-gradient-to-r from-amber-50/60 to-teal-50/60 border-b border-[#E6DCC6]/60 pb-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="flex items-center gap-2 text-[#D9A441]">
                       <Camera className="w-5 h-5" />
-                      <CardTitle className="text-lg font-serif">3. Favorite Memories &amp; Photos</CardTitle>
+                      <CardTitle className="text-lg font-serif">3. Favorite Memories &amp; Photos (Unlimited)</CardTitle>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label className="cursor-pointer inline-flex items-center gap-1.5 bg-[#0E6B5E] hover:bg-[#0a5247] text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors shadow-sm">
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>{isCompressingPhotos ? "Optimizing..." : "Upload Photos"}</span>
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          disabled={isCompressingPhotos}
+                          onChange={handlePhotoUpload}
+                          className="hidden"
+                        />
+                      </label>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={addSamplePhoto}
+                        className="border-[#D9A441] text-[#b88528] hover:bg-amber-50 text-xs"
+                      >
+                        + Sample
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-6 space-y-4">
+                  {/* Quick URL adder */}
+                  <div className="flex items-center gap-2">
+                    <div className="relative flex-1">
+                      <Link2 className="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                      <Input
+                        placeholder="Or paste direct image URL (https://...)"
+                        value={urlPhotoInput}
+                        onChange={(e) => setUrlPhotoInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleAddPhotoByUrl();
+                          }
+                        }}
+                        className="pl-8 h-8 text-xs border-gray-200"
+                      />
                     </div>
                     <Button
                       type="button"
                       size="sm"
                       variant="outline"
-                      onClick={addSamplePhoto}
-                      className="border-[#D9A441] text-[#b88528] hover:bg-amber-50 text-xs"
+                      onClick={handleAddPhotoByUrl}
+                      className="h-8 text-xs border-gray-200"
                     >
-                      + Add Sample Photo
+                      + Add URL
                     </Button>
                   </div>
-                </CardHeader>
-                <CardContent className="p-6 space-y-4">
+
                   {photos.length === 0 ? (
                     <div className="border-2 border-dashed border-[#E6DCC6] rounded-2xl p-6 text-center space-y-2">
                       <Camera className="w-8 h-8 mx-auto text-gray-400" />
                       <p className="text-xs text-gray-600">
-                        Add precious photos to appear in the memory gallery!
+                        Upload your favorite pictures or add sample photos!
                       </p>
-                      <Button
-                        type="button"
-                        size="sm"
-                        onClick={addSamplePhoto}
-                        className="bg-[#0E6B5E] hover:bg-[#0a5247] text-white text-xs"
-                      >
-                        Add Celebratory Photos
-                      </Button>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -435,6 +534,31 @@ export default function NewBirthdayPage() {
                 </CardContent>
               </Card>
 
+              {/* Card 4: Birthday Video Message */}
+              <Card className="border-[#E6DCC6] bg-white/95 shadow-md rounded-2xl overflow-hidden">
+                <CardHeader className="bg-gradient-to-r from-rose-50/60 to-amber-50/60 border-b border-[#E6DCC6]/60 pb-4">
+                  <div className="flex items-center gap-2 text-rose-600">
+                    <Film className="w-5 h-5" />
+                    <CardTitle className="text-lg font-serif">4. Birthday Video Message / Reel</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-6 space-y-2">
+                  <Label className="font-semibold text-xs text-[#14231F]">YouTube Link or MP4 Video URL (Optional)</Label>
+                  <div className="relative">
+                    <Video className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <Input
+                      value={videoUrl}
+                      onChange={(e) => setVideoUrl(e.target.value)}
+                      placeholder="e.g. https://www.youtube.com/watch?v=... or direct MP4 link"
+                      className="pl-9 text-xs border-[#E6DCC6]"
+                    />
+                  </div>
+                  <p className="text-[11px] text-gray-500">
+                    Add a special video tribute or compilation reel to play on their birthday celebration page!
+                  </p>
+                </CardContent>
+              </Card>
+
               {/* Card 4: Music & Magic */}
               <Card className="border-[#E6DCC6] bg-white/95 shadow-md rounded-2xl overflow-hidden">
                 <CardHeader className="bg-gradient-to-r from-teal-50/60 to-rose-50/60 border-b border-[#E6DCC6]/60 pb-4">
@@ -465,36 +589,92 @@ export default function NewBirthdayPage() {
                     </div>
                   </div>
 
-                  <div className="pt-2 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <label className="flex items-center gap-2 text-xs font-medium text-gray-700 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={enableConfetti}
-                        onChange={(e) => setEnableConfetti(e.target.checked)}
-                        className="rounded text-[#0E6B5E] focus:ring-[#0E6B5E]"
-                      />
-                      Confetti Shower 🎊
-                    </label>
+                  <div className="pt-2 border-t border-gray-100 space-y-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <label className="flex items-center gap-2 text-xs font-medium text-gray-700 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={enableConfetti}
+                          onChange={(e) => setEnableConfetti(e.target.checked)}
+                          className="rounded text-[#0E6B5E] focus:ring-[#0E6B5E]"
+                        />
+                        Confetti Shower 🎊
+                      </label>
 
-                    <label className="flex items-center gap-2 text-xs font-medium text-gray-700 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={enableBalloons}
-                        onChange={(e) => setEnableBalloons(e.target.checked)}
-                        className="rounded text-[#0E6B5E] focus:ring-[#0E6B5E]"
-                      />
-                      Floating Balloons 🎈
-                    </label>
+                      <label className="flex items-center gap-2 text-xs font-medium text-gray-700 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={enableBalloons}
+                          onChange={(e) => setEnableBalloons(e.target.checked)}
+                          className="rounded text-[#0E6B5E] focus:ring-[#0E6B5E]"
+                        />
+                        Floating Balloons 🎈
+                      </label>
 
-                    <label className="flex items-center gap-2 text-xs font-medium text-gray-700 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={enableCandles}
-                        onChange={(e) => setEnableCandles(e.target.checked)}
-                        className="rounded text-[#0E6B5E] focus:ring-[#0E6B5E]"
-                      />
-                      Virtual Cake Candles 🎂
-                    </label>
+                      <label className="flex items-center gap-2 text-xs font-medium text-gray-700 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={enableCandles}
+                          onChange={(e) => setEnableCandles(e.target.checked)}
+                          className="rounded text-[#0E6B5E] focus:ring-[#0E6B5E]"
+                        />
+                        Cake Candles 🎂
+                      </label>
+
+                      <label className="flex items-center gap-2 text-xs font-medium text-gray-700 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={enableFlipbook}
+                          onChange={(e) => setEnableFlipbook(e.target.checked)}
+                          className="rounded text-[#0E6B5E] focus:ring-[#0E6B5E]"
+                        />
+                        3D Flipbook 📖
+                      </label>
+                    </div>
+
+                    {/* Uncatchable Treat Button Challenge */}
+                    <div className="p-4 rounded-xl bg-amber-50/70 border border-amber-200/80 space-y-3">
+                      <label className="flex items-center gap-2 text-xs font-bold text-amber-900 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={enableRunawayTreat}
+                          onChange={(e) => setEnableRunawayTreat(e.target.checked)}
+                          className="rounded text-amber-600 focus:ring-amber-500"
+                        />
+                        Uncatchable &quot;NO&quot; Treat Button Challenge 🍕🏃‍♂️ (Special Feature)
+                      </label>
+                      {enableRunawayTreat && (
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                          <div>
+                            <Label className="text-[10px] text-gray-500">Treat Question</Label>
+                            <Input
+                              value={treatQuestion}
+                              onChange={(e) => setTreatQuestion(e.target.value)}
+                              placeholder="e.g. Will you give us a party today? 🍕"
+                              className="h-8 text-xs border-amber-200 bg-white mt-1"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-[10px] text-gray-500">YES Button Text</Label>
+                            <Input
+                              value={treatYesText}
+                              onChange={(e) => setTreatYesText(e.target.value)}
+                              placeholder="e.g. Haan Bilkul! Party Pakki! 🎉"
+                              className="h-8 text-xs border-amber-200 bg-white mt-1"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-[10px] text-gray-500">Runaway NO Button Text</Label>
+                            <Input
+                              value={treatNoText}
+                              onChange={(e) => setTreatNoText(e.target.value)}
+                              placeholder="e.g. Nahi Dunga 🏃‍♂️💨"
+                              className="h-8 text-xs border-amber-200 bg-white mt-1"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>

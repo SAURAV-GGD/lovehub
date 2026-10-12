@@ -35,6 +35,9 @@ import {
   Cake,
   Gift,
   PartyPopper,
+  Film,
+  Video,
+  Link2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -71,6 +74,7 @@ import {
 } from "@/lib/proposal-types";
 import { MusicSelector, MusicSelectionState } from "@/components/music/music-selector";
 import { saveProposal } from "@/lib/proposal-storage";
+import { compressImageFile, saveBirthday } from "@/lib/birthday-storage";
 
 interface ClientItem {
   id: string;
@@ -136,6 +140,21 @@ export default function AdminDashboardPage() {
   const [bdayEnableConfetti, setBdayEnableConfetti] = useState(true);
   const [bdayEnableBalloons, setBdayEnableBalloons] = useState(true);
   const [bdayEnableCandles, setBdayEnableCandles] = useState(true);
+  const [bdayEnableFlipbook, setBdayEnableFlipbook] = useState(true);
+  const [bdayVideoUrl, setBdayVideoUrl] = useState("");
+  const [bdayEnableRunawayTreat, setBdayEnableRunawayTreat] = useState(true);
+  const [bdayTreatQuestion, setBdayTreatQuestion] = useState("Will you give us a birthday party treat today? 🍕🎂");
+  const [bdayTreatYesText, setBdayTreatYesText] = useState("Haan Bilkul! Party Pakki! 🎉");
+  const [bdayTreatNoText, setBdayTreatNoText] = useState("Nahi Dunga 🏃‍♂️💨");
+  const [bdayMusicSelection, setBdayMusicSelection] = useState<MusicSelectionState>({
+    type: "preset",
+    presetId: "birthday-cheer",
+    musicTitle: "Joyful Birthday Anthem",
+  });
+  const [isCompressingBdayPhotos, setIsCompressingBdayPhotos] = useState(false);
+  const [isCompressingProposalPhotos, setIsCompressingProposalPhotos] = useState(false);
+  const [urlPhotoInput, setUrlPhotoInput] = useState("");
+  const [bdayUrlPhotoInput, setBdayUrlPhotoInput] = useState("");
   const [isSubmittingBday, setIsSubmittingBday] = useState(false);
   const [isAiGeneratingBday, setIsAiGeneratingBday] = useState(false);
 
@@ -335,20 +354,80 @@ export default function AdminDashboardPage() {
     }
   };
 
-  // Photo Upload Handler (Supports Unlimited Photos for Admin)
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Photo Upload Handler (Supports Unlimited Photos for Admin with Automatic Compression)
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    Array.from(files).forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setPhotos((prev) => [...prev, reader.result as string]);
-        setPhotoCaptions((prev) => [...prev, "Our Cherished Moment"]);
-      };
-      reader.readAsDataURL(file);
-    });
-    toast.success(`Added ${files.length} photo(s) to proposal`);
+    setIsCompressingProposalPhotos(true);
+    const toastId = toast.loading(`Optimizing & adding ${files.length} proposal photo(s)...`);
+
+    try {
+      const fileArr = Array.from(files);
+      const compressedList = await Promise.all(
+        fileArr.map((f) => compressImageFile(f, 1280, 0.8))
+      );
+
+      const valid = compressedList.filter(Boolean);
+      setPhotos((prev) => [...prev, ...valid]);
+      setPhotoCaptions((prev) => [
+        ...prev,
+        ...valid.map((_, i) => `Memory #${prev.length + i + 1}`),
+      ]);
+
+      toast.success(`Added ${valid.length} photo(s) to proposal!`, { id: toastId });
+    } catch {
+      toast.error("Failed to process proposal photos", { id: toastId });
+    } finally {
+      setIsCompressingProposalPhotos(false);
+      e.target.value = "";
+    }
+  };
+
+  const handleAddPhotoByUrl = () => {
+    if (!urlPhotoInput.trim()) return;
+    setPhotos((prev) => [...prev, urlPhotoInput.trim()]);
+    setPhotoCaptions((prev) => [...prev, `Memory #${prev.length + 1}`]);
+    setUrlPhotoInput("");
+    toast.success("Photo added from URL");
+  };
+
+  // Birthday Photo Upload Handler with Automatic Compression
+  const handleBdayPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsCompressingBdayPhotos(true);
+    const toastId = toast.loading(`Optimizing & adding ${files.length} birthday celebration photo(s)...`);
+
+    try {
+      const fileArr = Array.from(files);
+      const compressedList = await Promise.all(
+        fileArr.map((f) => compressImageFile(f, 1280, 0.8))
+      );
+
+      const valid = compressedList.filter(Boolean);
+      setBdayPhotos((prev) => [...prev, ...valid]);
+      setBdayPhotoCaptions((prev) => [
+        ...prev,
+        ...valid.map((_, i) => `Celebration Memory #${prev.length + i + 1}`),
+      ]);
+
+      toast.success(`Added ${valid.length} photo(s) to birthday page!`, { id: toastId });
+    } catch {
+      toast.error("Failed to process birthday photos", { id: toastId });
+    } finally {
+      setIsCompressingBdayPhotos(false);
+      e.target.value = "";
+    }
+  };
+
+  const handleAddBdayPhotoByUrl = () => {
+    if (!bdayUrlPhotoInput.trim()) return;
+    setBdayPhotos((prev) => [...prev, bdayUrlPhotoInput.trim()]);
+    setBdayPhotoCaptions((prev) => [...prev, `Celebration Memory #${prev.length + 1}`]);
+    setBdayUrlPhotoInput("");
+    toast.success("Celebration photo added from URL");
   };
 
   const removePhoto = (idx: number) => {
@@ -540,12 +619,21 @@ export default function AdminDashboardPage() {
 
     setIsSubmittingBday(true);
     try {
+      const finalMusic =
+        bdayMusicSelection.type === "none"
+          ? "none"
+          : bdayMusicSelection.type === "preset"
+          ? (bdayMusicSelection.presetId || "birthday-cheer")
+          : bdayMusicSelection.type;
+
       const payload = {
         personName: bdayPersonName,
         birthDate: bdayDate,
         relationship: bdayRelationship,
         message: bdayMessage,
-        music: bdayMusic,
+        music: finalMusic,
+        videoUrl: bdayVideoUrl.trim() || undefined,
+        youtubeVideoId: bdayMusicSelection.youtubeVideoId,
         photos: bdayPhotos,
         photoCaptions: bdayPhotoCaptions,
         customSlug: bdayCustomSlug.trim() || undefined,
@@ -553,6 +641,18 @@ export default function AdminDashboardPage() {
           enableConfetti: bdayEnableConfetti,
           enableBalloons: bdayEnableBalloons,
           enableCandles: bdayEnableCandles,
+          enableFlipbook: bdayEnableFlipbook,
+          enableVideo: Boolean(bdayVideoUrl.trim()),
+          videoUrl: bdayVideoUrl.trim() || undefined,
+          musicType: bdayMusicSelection.type,
+          youtubeUrl: bdayMusicSelection.youtubeUrl,
+          youtubeVideoId: bdayMusicSelection.youtubeVideoId,
+          customMusicUrl: bdayMusicSelection.customAudioUrl,
+          musicTitle: bdayMusicSelection.musicTitle,
+          enableRunawayTreat: bdayEnableRunawayTreat,
+          treatQuestion: bdayTreatQuestion,
+          treatYesText: bdayTreatYesText,
+          treatNoText: bdayTreatNoText,
           vipBadge: "Executive VIP Bespoke Edition",
         },
       };
@@ -566,6 +666,12 @@ export default function AdminDashboardPage() {
       const data = await res.json();
       if (res.ok && data.success) {
         const created: BirthdayRecord = data.data;
+
+        // Sync to client local storage for instant offline & client view
+        try {
+          saveBirthday(created);
+        } catch {}
+
         toast.success("Bespoke VIP Birthday Celebration created successfully!");
         setCreatedBirthdayModal(created);
         setBirthdays((prev) => [created, ...prev]);
@@ -574,6 +680,7 @@ export default function AdminDashboardPage() {
         setBdayPhotos([]);
         setBdayPhotoCaptions([]);
         setBdayCustomSlug("");
+        setBdayVideoUrl("");
       } else {
         toast.error(data.error?.message || "Failed to create birthday page");
       }
@@ -1458,26 +1565,57 @@ export default function AdminDashboardPage() {
 
                   {/* Unlimited Photos & Captions */}
                   <div className="space-y-3 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <div>
                         <Label className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
                           <Camera className="w-4 h-4 text-rose-400" /> Photo Gallery (Unlimited)
                         </Label>
                         <p className="text-[11px] text-slate-400">
-                          Admin mode permits unlimited photos. Upload memory pictures with individual captions.
+                          Admin mode permits unlimited photos. Upload memory pictures or paste image URLs.
                         </p>
                       </div>
-                      <label className="cursor-pointer inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors">
-                        <Upload className="w-3.5 h-3.5" />
-                        <span>Add Photos</span>
-                        <input
-                          type="file"
-                          multiple
-                          accept="image/*"
-                          onChange={handlePhotoUpload}
-                          className="hidden"
+                      <div className="flex items-center gap-2">
+                        <label className="cursor-pointer inline-flex items-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors shadow-sm">
+                          <Upload className="w-3.5 h-3.5" />
+                          <span>{isCompressingProposalPhotos ? "Optimizing..." : "Upload Photos"}</span>
+                          <input
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            disabled={isCompressingProposalPhotos}
+                            onChange={handlePhotoUpload}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Quick URL adder */}
+                    <div className="flex items-center gap-2 pt-1">
+                      <div className="relative flex-1">
+                        <Link2 className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                        <Input
+                          placeholder="Or paste direct image URL (https://...)"
+                          value={urlPhotoInput}
+                          onChange={(e) => setUrlPhotoInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              handleAddPhotoByUrl();
+                            }
+                          }}
+                          className="pl-8 h-8 text-xs bg-slate-900 border-slate-800 text-slate-200"
                         />
-                      </label>
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={handleAddPhotoByUrl}
+                        className="h-8 text-xs border-slate-800 bg-slate-900 text-slate-300 hover:bg-slate-800"
+                      >
+                        + Add URL
+                      </Button>
                     </div>
 
                     {photos.length > 0 && (
@@ -1818,28 +1956,85 @@ export default function AdminDashboardPage() {
                     />
                   </div>
 
-                  {/* Photos */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-xs font-semibold text-slate-300">Celebration Photos</Label>
+                  {/* Celebration Photos (Full Upload + Compression + URL support) */}
+                  <div className="space-y-3 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div>
+                        <Label className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                          <Camera className="w-4 h-4 text-teal-400" /> Celebration Photos (Unlimited)
+                        </Label>
+                        <p className="text-[11px] text-slate-400">
+                          Upload high-resolution birthday memory photos or paste direct links.
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <label className="cursor-pointer inline-flex items-center gap-1.5 bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors shadow-sm">
+                          <Upload className="w-3.5 h-3.5" />
+                          <span>{isCompressingBdayPhotos ? "Optimizing..." : "Upload Photos"}</span>
+                          <input
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            disabled={isCompressingBdayPhotos}
+                            onChange={handleBdayPhotoUpload}
+                            className="hidden"
+                          />
+                        </label>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            const demo =
+                              "https://images.unsplash.com/photo-1513151233558-d860c5398176?w=800&auto=format&fit=crop&q=80";
+                            setBdayPhotos([...bdayPhotos, demo]);
+                            setBdayPhotoCaptions([
+                              ...bdayPhotoCaptions,
+                              `Memory #${bdayPhotos.length + 1}`,
+                            ]);
+                          }}
+                          className="border-slate-800 bg-slate-900 text-slate-300 text-xs h-7"
+                        >
+                          + Sample
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Quick Image URL adder */}
+                    <div className="flex items-center gap-2 pt-1">
+                      <div className="relative flex-1">
+                        <Link2 className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                        <Input
+                          placeholder="Or paste direct image URL (https://...)"
+                          value={bdayUrlPhotoInput}
+                          onChange={(e) => setBdayUrlPhotoInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              handleAddBdayPhotoByUrl();
+                            }
+                          }}
+                          className="pl-8 h-8 text-xs bg-slate-900 border-slate-800 text-slate-200"
+                        />
+                      </div>
                       <Button
                         type="button"
                         size="sm"
                         variant="outline"
-                        onClick={() => {
-                          const demo = "https://images.unsplash.com/photo-1513151233558-d860c5398176?w=800&auto=format&fit=crop&q=80";
-                          setBdayPhotos([...bdayPhotos, demo]);
-                          setBdayPhotoCaptions([...bdayPhotoCaptions, `Memory #${bdayPhotos.length + 1}`]);
-                        }}
-                        className="border-slate-800 bg-slate-900 text-slate-300 text-xs h-7"
+                        onClick={handleAddBdayPhotoByUrl}
+                        className="h-8 text-xs border-slate-800 bg-slate-900 text-slate-300 hover:bg-slate-800"
                       >
-                        + Add Sample Photo
+                        + Add URL
                       </Button>
                     </div>
+
                     {bdayPhotos.length > 0 && (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 pt-2">
                         {bdayPhotos.map((url, i) => (
-                          <div key={i} className="relative rounded-lg overflow-hidden border border-slate-800 bg-slate-950">
+                          <div
+                            key={i}
+                            className="relative group rounded-xl overflow-hidden border border-slate-800 bg-slate-950"
+                          >
                             <img src={url} alt="Photo" className="w-full h-24 object-cover" />
                             <button
                               type="button"
@@ -1847,14 +2042,58 @@ export default function AdminDashboardPage() {
                                 setBdayPhotos(bdayPhotos.filter((_, idx) => idx !== i));
                                 setBdayPhotoCaptions(bdayPhotoCaptions.filter((_, idx) => idx !== i));
                               }}
-                              className="absolute top-1 right-1 p-1 bg-red-600/80 rounded-full text-white hover:bg-red-600"
+                              className="absolute top-1 right-1 p-1 bg-red-600/80 rounded-full text-white hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
                             >
                               <X className="w-3 h-3" />
                             </button>
+                            <Input
+                              placeholder="Caption..."
+                              value={bdayPhotoCaptions[i] || ""}
+                              onChange={(e) => {
+                                const newCaps = [...bdayPhotoCaptions];
+                                newCaps[i] = e.target.value;
+                                setBdayPhotoCaptions(newCaps);
+                              }}
+                              className="h-6 text-[10px] bg-slate-950 border-0 rounded-none text-slate-200"
+                            />
                           </div>
                         ))}
                       </div>
                     )}
+                  </div>
+
+                  {/* Birthday Video Reel / Tribute URL */}
+                  <div className="space-y-1.5 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+                    <Label className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                      <Film className="w-4 h-4 text-teal-400" /> Birthday Video Message / Reel (YouTube or MP4)
+                    </Label>
+                    <p className="text-[11px] text-slate-400">
+                      Add a YouTube tribute montage or direct MP4 video to display a cinema player on their birthday page.
+                    </p>
+                    <div className="relative pt-1">
+                      <Video className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                      <Input
+                        value={bdayVideoUrl}
+                        onChange={(e) => setBdayVideoUrl(e.target.value)}
+                        placeholder="e.g. https://www.youtube.com/watch?v=... or https://example.com/video.mp4"
+                        className="pl-8 bg-slate-900 border-slate-800 text-xs text-slate-100 font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Birthday Soundtrack Selection */}
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-slate-300 flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <Music className="w-3.5 h-3.5 text-teal-400" /> Celebration Background Music
+                      </span>
+                      <span className="text-[11px] text-slate-400">
+                        {bdayMusicSelection.type === "none"
+                          ? "Muted"
+                          : bdayMusicSelection.musicTitle || "Birthday Anthem"}
+                      </span>
+                    </Label>
+                    <MusicSelector value={bdayMusicSelection} onChange={setBdayMusicSelection} />
                   </div>
 
                   {/* Custom Vanity URL Slug */}
@@ -1865,41 +2104,96 @@ export default function AdminDashboardPage() {
                       <Input
                         value={bdayCustomSlug}
                         onChange={(e) => setBdayCustomSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"))}
-                        placeholder="e.g. maya-celebrates-25"
+                        placeholder="e.g. sakshi-13-10 or maya-celebrates-25"
                         className="bg-slate-950 border-slate-800 text-xs text-slate-100 font-mono"
                       />
                     </div>
                   </div>
 
-                  {/* Interactive Options */}
-                  <div className="p-4 rounded-xl bg-teal-950/20 border border-teal-900/40 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={bdayEnableConfetti}
-                        onChange={(e) => setBdayEnableConfetti(e.target.checked)}
-                        className="rounded border-slate-700 text-teal-600 focus:ring-teal-500"
-                      />
-                      Confetti Shower 🎊
-                    </label>
-                    <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={bdayEnableBalloons}
-                        onChange={(e) => setBdayEnableBalloons(e.target.checked)}
-                        className="rounded border-slate-700 text-teal-600 focus:ring-teal-500"
-                      />
-                      Floating Balloons 🎈
-                    </label>
-                    <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={bdayEnableCandles}
-                        onChange={(e) => setBdayEnableCandles(e.target.checked)}
-                        className="rounded border-slate-700 text-teal-600 focus:ring-teal-500"
-                      />
-                      Virtual Cake Candles 🎂
-                    </label>
+                  {/* Interactive Options & Bespoke VIP Settings */}
+                  <div className="p-4 rounded-xl bg-teal-950/20 border border-teal-900/40 space-y-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                      <label className="flex items-center gap-2 text-slate-300 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={bdayEnableConfetti}
+                          onChange={(e) => setBdayEnableConfetti(e.target.checked)}
+                          className="rounded border-slate-700 text-teal-600 focus:ring-teal-500"
+                        />
+                        <span>Confetti Shower 🎊</span>
+                      </label>
+                      <label className="flex items-center gap-2 text-slate-300 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={bdayEnableBalloons}
+                          onChange={(e) => setBdayEnableBalloons(e.target.checked)}
+                          className="rounded border-slate-700 text-teal-600 focus:ring-teal-500"
+                        />
+                        <span>Floating Balloons 🎈</span>
+                      </label>
+                      <label className="flex items-center gap-2 text-slate-300 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={bdayEnableCandles}
+                          onChange={(e) => setBdayEnableCandles(e.target.checked)}
+                          className="rounded border-slate-700 text-teal-600 focus:ring-teal-500"
+                        />
+                        <span>Cake Candles 🎂</span>
+                      </label>
+                      <label className="flex items-center gap-2 text-slate-300 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={bdayEnableFlipbook}
+                          onChange={(e) => setBdayEnableFlipbook(e.target.checked)}
+                          className="rounded border-slate-700 text-teal-600 focus:ring-teal-500"
+                        />
+                        <span>3D Flipbook 📖</span>
+                      </label>
+                    </div>
+
+                    {/* Uncatchable Runaway Treat Button Challenge Settings */}
+                    <div className="border-t border-teal-900/40 pt-3 space-y-3">
+                      <label className="flex items-center gap-2 text-xs font-semibold text-amber-300 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={bdayEnableRunawayTreat}
+                          onChange={(e) => setBdayEnableRunawayTreat(e.target.checked)}
+                          className="rounded border-slate-700 text-amber-500 focus:ring-amber-400"
+                        />
+                        <span>Uncatchable &quot;NO&quot; Treat Button Challenge 🍕🏃‍♂️ (Special Feature)</span>
+                      </label>
+                      {bdayEnableRunawayTreat && (
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                          <div>
+                            <Label className="text-[10px] text-slate-400">Treat Question</Label>
+                            <Input
+                              value={bdayTreatQuestion}
+                              onChange={(e) => setBdayTreatQuestion(e.target.value)}
+                              placeholder="e.g. Will you give us a treat today? 🍕"
+                              className="h-7 text-xs bg-slate-900 border-slate-800 text-slate-200 mt-1"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-[10px] text-slate-400">YES Button Text</Label>
+                            <Input
+                              value={bdayTreatYesText}
+                              onChange={(e) => setBdayTreatYesText(e.target.value)}
+                              placeholder="e.g. Haan Bilkul! Party Pakki! 🎉"
+                              className="h-7 text-xs bg-slate-900 border-slate-800 text-slate-200 mt-1"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-[10px] text-slate-400">Runaway NO Button Text</Label>
+                            <Input
+                              value={bdayTreatNoText}
+                              onChange={(e) => setBdayTreatNoText(e.target.value)}
+                              placeholder="e.g. Nahi Dunga 🏃‍♂️💨"
+                              className="h-7 text-xs bg-slate-900 border-slate-800 text-slate-200 mt-1"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div className="pt-2 flex justify-end gap-3">

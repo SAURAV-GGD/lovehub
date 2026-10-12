@@ -2,27 +2,28 @@
 
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
-  Cake,
   Heart,
   Sparkles,
-  Volume2,
-  VolumeX,
   Share2,
   Copy,
   PartyPopper,
-  Calendar,
-  Send,
   Flame,
   ArrowLeft,
-  CheckCircle2,
+  Send,
+  Camera,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { BirthdayRecord } from "@/lib/admin-store";
+import { getStoredBirthday } from "@/lib/birthday-storage";
+import { CardsFlipbook } from "@/components/proposal/cards-flipbook";
+import { BirthdayRunawayTreat } from "@/components/birthdays/birthday-runaway-treat";
+import { BirthdayVideoSection } from "@/components/birthdays/birthday-video-section";
+import { BirthdayMusicPlayer } from "@/components/birthdays/birthday-music-player";
 
 // Confetti Component
 function CelebrationConfetti() {
@@ -66,7 +67,7 @@ function FloatingBalloons() {
           className={`absolute w-12 h-16 rounded-full opacity-60 shadow-lg ${
             balloonColors[i % balloonColors.length]
           }`}
-          style={{ left: `${10 + (i * 12)}%` }}
+          style={{ left: `${10 + i * 12}%` }}
           initial={{ y: "110vh" }}
           animate={{ y: "-20vh" }}
           transition={{
@@ -90,7 +91,6 @@ export default function BirthdayCelebrationPage({
 
   const [birthday, setBirthday] = useState<BirthdayRecord | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [candlesBlown, setCandlesBlown] = useState(false);
 
   // Guest Wishboard
@@ -110,14 +110,25 @@ export default function BirthdayCelebrationPage({
   const [guestMessage, setGuestMessage] = useState("");
 
   useEffect(() => {
-    fetch(`/api/birthdays/${slug}`)
+    // 1. Immediately check localStorage fallback
+    const stored = getStoredBirthday(slug);
+    if (stored) {
+      setBirthday(stored);
+      setIsLoading(false);
+    }
+
+    // 2. Fetch from server API with encoded slug
+    const encoded = encodeURIComponent(slug);
+    fetch(`/api/birthdays/${encoded}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.data) {
           setBirthday(data.data);
         }
       })
-      .catch(() => {})
+      .catch((err) => {
+        console.warn("Could not fetch birthday from server, using local copy if present:", err);
+      })
       .finally(() => setIsLoading(false));
   }, [slug]);
 
@@ -161,11 +172,25 @@ export default function BirthdayCelebrationPage({
     "Wishing you an incredible year ahead filled with love, laughter, and magical moments!";
   const photos = birthday?.photos || [];
   const captions = birthday?.photoCaptions || [];
+  const customConfig = birthday?.customConfig || {};
+
+  const videoUrl = birthday?.videoUrl || customConfig.videoUrl;
+  const youtubeVideoId = birthday?.youtubeVideoId || customConfig.youtubeVideoId;
 
   return (
     <div className="min-h-screen bg-[#FDF4E7] text-[#14231F] selection:bg-[#F2B134] selection:text-[#14231F] relative overflow-x-hidden font-sans">
-      <CelebrationConfetti />
-      <FloatingBalloons />
+      {customConfig.enableConfetti !== false && <CelebrationConfetti />}
+      {customConfig.enableBalloons !== false && <FloatingBalloons />}
+
+      {/* Background Audio Soundtrack */}
+      <BirthdayMusicPlayer
+        music={birthday?.music}
+        musicType={customConfig.musicType}
+        musicTitle={customConfig.musicTitle}
+        customMusicUrl={customConfig.customMusicUrl}
+        youtubeUrl={customConfig.youtubeUrl}
+        youtubeVideoId={youtubeVideoId}
+      />
 
       {/* Top Navbar */}
       <header className="sticky top-0 z-40 bg-[#FDF4E7]/90 backdrop-blur-md border-b border-[#E6DCC6]">
@@ -227,59 +252,61 @@ export default function BirthdayCelebrationPage({
         </section>
 
         {/* Interactive Birthday Cake */}
-        <section className="max-w-md mx-auto">
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            className="bg-white rounded-3xl p-8 shadow-xl border border-[#E6DCC6] text-center space-y-4 relative overflow-hidden"
-          >
-            <div className="flex justify-center items-center gap-3">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="flex flex-col items-center">
-                  <motion.div
-                    animate={
-                      candlesBlown
-                        ? { scale: 0, opacity: 0 }
-                        : { scale: [1, 1.2, 1], opacity: [0.9, 1, 0.9] }
-                    }
-                    transition={{ repeat: Infinity, duration: 1.5, delay: i * 0.2 }}
-                  >
-                    <Flame className="w-6 h-6 text-amber-500 fill-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.8)]" />
-                  </motion.div>
-                  <div className="w-2.5 h-6 bg-gradient-to-b from-rose-400 to-pink-500 rounded-sm mt-0.5" />
-                </div>
-              ))}
-            </div>
-
-            <div className="text-6xl select-none">🎂</div>
-
-            <div className="space-y-1">
-              <h2 className="text-xl font-serif font-bold text-[#14231F]">
-                {candlesBlown ? "Wishes Made! 🌟" : "Make a Wish & Blow the Candles"}
-              </h2>
-              <p className="text-xs text-[#55655F]">
-                {candlesBlown
-                  ? "May all your birthday wishes come true!"
-                  : "Tap below to blow out the virtual candles!"}
-              </p>
-            </div>
-
-            <Button
-              onClick={() => {
-                setCandlesBlown(!candlesBlown);
-                if (!candlesBlown) {
-                  toast.success("Pufff! Candles blown! May your dreams come true! 🎉");
-                }
-              }}
-              className={`rounded-full px-6 text-xs font-semibold ${
-                candlesBlown
-                  ? "bg-amber-100 text-amber-800 hover:bg-amber-200"
-                  : "bg-[#0E6B5E] hover:bg-[#094e44] text-white"
-              }`}
+        {customConfig.enableCandles !== false && (
+          <section className="max-w-md mx-auto">
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              className="bg-white rounded-3xl p-8 shadow-xl border border-[#E6DCC6] text-center space-y-4 relative overflow-hidden"
             >
-              {candlesBlown ? "Relight Candles 🕯️" : "Blow Candles Out 💨"}
-            </Button>
-          </motion.div>
-        </section>
+              <div className="flex justify-center items-center gap-3">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="flex flex-col items-center">
+                    <motion.div
+                      animate={
+                        candlesBlown
+                          ? { scale: 0, opacity: 0 }
+                          : { scale: [1, 1.2, 1], opacity: [0.9, 1, 0.9] }
+                      }
+                      transition={{ repeat: Infinity, duration: 1.5, delay: i * 0.2 }}
+                    >
+                      <Flame className="w-6 h-6 text-amber-500 fill-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.8)]" />
+                    </motion.div>
+                    <div className="w-2.5 h-6 bg-gradient-to-b from-rose-400 to-pink-500 rounded-sm mt-0.5" />
+                  </div>
+                ))}
+              </div>
+
+              <div className="text-6xl select-none">🎂</div>
+
+              <div className="space-y-1">
+                <h2 className="text-xl font-serif font-bold text-[#14231F]">
+                  {candlesBlown ? "Wishes Made! 🌟" : "Make a Wish & Blow the Candles"}
+                </h2>
+                <p className="text-xs text-[#55655F]">
+                  {candlesBlown
+                    ? "May all your birthday wishes come true!"
+                    : "Tap below to blow out the virtual candles!"}
+                </p>
+              </div>
+
+              <Button
+                onClick={() => {
+                  setCandlesBlown(!candlesBlown);
+                  if (!candlesBlown) {
+                    toast.success("Pufff! Candles blown! May your dreams come true! 🎉");
+                  }
+                }}
+                className={`rounded-full px-6 text-xs font-semibold ${
+                  candlesBlown
+                    ? "bg-amber-100 text-amber-800 hover:bg-amber-200"
+                    : "bg-[#0E6B5E] hover:bg-[#094e44] text-white"
+                }`}
+              >
+                {candlesBlown ? "Relight Candles 🕯️" : "Blow Candles Out 💨"}
+              </Button>
+            </motion.div>
+          </section>
+        )}
 
         {/* The Heartfelt Message Note */}
         <section className="bg-white rounded-3xl p-8 sm:p-12 shadow-xl border border-[#E6DCC6] relative overflow-hidden">
@@ -296,30 +323,67 @@ export default function BirthdayCelebrationPage({
           </div>
         </section>
 
-        {/* Memory Photo Gallery */}
+        {/* Video Reel Tribute Section (if provided) */}
+        {(videoUrl || youtubeVideoId) && (
+          <BirthdayVideoSection
+            personName={name}
+            videoUrl={videoUrl}
+            youtubeVideoId={youtubeVideoId}
+          />
+        )}
+
+        {/* The Uncatchable Runaway Treat Button Section */}
+        {customConfig.enableRunawayTreat !== false && (
+          <BirthdayRunawayTreat
+            personName={name}
+            question={customConfig.treatQuestion}
+            yesText={customConfig.treatYesText}
+            noText={customConfig.treatNoText}
+          />
+        )}
+
+        {/* Memory Photo Gallery & Interactive 3D Flipbook */}
         {photos.length > 0 && (
-          <section className="space-y-6">
+          <section className="space-y-8">
             <div className="text-center space-y-1">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-bold uppercase tracking-wider">
+                <Camera className="w-3.5 h-3.5" /> Cherished Photo Gallery
+              </div>
               <h2 className="text-2xl sm:text-3xl font-serif font-bold text-[#14231F]">
                 Memories &amp; Moments
               </h2>
-              <p className="text-xs text-[#55655F]">Treasured snapshots through the years</p>
+              <p className="text-xs text-[#55655F]">
+                Treasured snapshots through the years • Flip through or browse below
+              </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {/* 3D Interactive Cards Flipbook with paper-flip sound */}
+            <div className="py-2">
+              <CardsFlipbook
+                photos={photos}
+                captions={captions}
+                autoPlay={true}
+                autoPlaySpeed={4500}
+              />
+            </div>
+
+            {/* Grid of All Photos with Captions */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-4">
               {photos.map((url, idx) => (
                 <motion.div
                   key={idx}
                   whileHover={{ scale: 1.02 }}
-                  className="bg-white p-3 rounded-2xl shadow-md border border-[#E6DCC6] space-y-2"
+                  className="bg-white p-3 rounded-2xl shadow-md border border-[#E6DCC6] space-y-2 group"
                 >
-                  <img
-                    src={url}
-                    alt={`Memory ${idx + 1}`}
-                    className="w-full h-52 object-cover rounded-xl"
-                  />
+                  <div className="overflow-hidden rounded-xl bg-slate-100">
+                    <img
+                      src={url}
+                      alt={`Memory ${idx + 1}`}
+                      className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
                   {captions[idx] && (
-                    <p className="text-xs text-[#55655F] font-serif text-center italic">
+                    <p className="text-xs text-[#55655F] font-serif text-center italic py-1">
                       {captions[idx]}
                     </p>
                   )}
@@ -349,18 +413,18 @@ export default function BirthdayCelebrationPage({
               value={guestName}
               onChange={(e) => setGuestName(e.target.value)}
               placeholder="Your Name (e.g. Grandma, Rohit)"
-              className="border-[#E6DCC6] text-xs"
+              className="border-[#E6DCC6] text-xs bg-amber-50/20"
             />
             <Textarea
               value={guestMessage}
               onChange={(e) => setGuestMessage(e.target.value)}
               placeholder="Write your sweet birthday wish..."
               rows={3}
-              className="border-[#E6DCC6] text-xs"
+              className="border-[#E6DCC6] text-xs bg-amber-50/20"
             />
             <Button
               type="submit"
-              className="w-full bg-[#0E6B5E] hover:bg-[#0a5247] text-white text-xs font-semibold h-10"
+              className="w-full bg-[#0E6B5E] hover:bg-[#0a5247] text-white text-xs font-semibold h-10 shadow-md"
             >
               <Send className="w-3.5 h-3.5 mr-1.5" /> Post Birthday Wish
             </Button>

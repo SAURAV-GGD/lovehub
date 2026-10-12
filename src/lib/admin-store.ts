@@ -44,6 +44,8 @@ export interface BirthdayRecord {
   photos: string[];
   photoCaptions?: string[];
   music?: string;
+  videoUrl?: string;
+  youtubeVideoId?: string;
   slug: string;
   createdByAdmin: boolean;
   status: "published" | "draft";
@@ -52,6 +54,18 @@ export interface BirthdayRecord {
     enableConfetti?: boolean;
     enableBalloons?: boolean;
     enableCandles?: boolean;
+    enableFlipbook?: boolean;
+    enableVideo?: boolean;
+    videoUrl?: string;
+    youtubeVideoId?: string;
+    youtubeUrl?: string;
+    musicType?: "preset" | "youtube" | "custom" | "none";
+    musicTitle?: string;
+    customMusicUrl?: string;
+    enableRunawayTreat?: boolean;
+    treatQuestion?: string;
+    treatYesText?: string;
+    treatNoText?: string;
     vipBadge?: string;
   };
 }
@@ -65,6 +79,51 @@ interface FallbackStore {
 
 const globalFallbackStore: FallbackStore = {
   birthdays: [
+    {
+      id: "bday_sakshi_13_10",
+      userId: "admin-master",
+      userName: "Admin Love Architect",
+      userEmail: "admin@lovehub.com",
+      personName: "Sakshi",
+      birthDate: "13 October",
+      relationship: "best-friend",
+      message: "Happy Birthday to my irreplaceable partner in crime, Sakshi! 🎉\n\nThrough thick and thin, bad jokes and midnight memories, you make this life extraordinary. May this year shower you with success and unstoppable joy!",
+      tone: "joyful",
+      language: "english",
+      photos: [
+        "https://images.unsplash.com/photo-1513151233558-d860c5398176?w=800&auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=800&auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1527529482837-4698179dc6ce?w=800&auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=800&auto=format&fit=crop&q=80",
+      ],
+      photoCaptions: [
+        "Our legendary memories ✨",
+        "Cake, wishes & endless laughs 🎂",
+        "Celebrating our favorite superstar 💖",
+        "Here's to another wonderful year! 🥂",
+      ],
+      music: "birthday-cheer",
+      videoUrl: "https://www.youtube.com/watch?v=nl62hhiBMOM",
+      youtubeVideoId: "nl62hhiBMOM",
+      slug: "sakshi-13-10",
+      createdByAdmin: true,
+      status: "published",
+      createdAt: new Date().toISOString(),
+      customConfig: {
+        enableConfetti: true,
+        enableBalloons: true,
+        enableCandles: true,
+        enableFlipbook: true,
+        enableVideo: true,
+        youtubeVideoId: "nl62hhiBMOM",
+        youtubeUrl: "https://www.youtube.com/watch?v=nl62hhiBMOM",
+        enableRunawayTreat: true,
+        treatQuestion: "Will you give us a birthday party treat today? 🍕🎂",
+        treatYesText: "Haan Bilkul! Party Pakki! 🎉",
+        treatNoText: "Nahi Dunga 🏃‍♂️💨",
+        vipBadge: "Executive VIP Bespoke Edition",
+      },
+    },
     {
       id: "bday_demo_1",
       userId: "cli_101",
@@ -90,6 +149,8 @@ const globalFallbackStore: FallbackStore = {
         enableConfetti: true,
         enableBalloons: true,
         enableCandles: true,
+        enableFlipbook: true,
+        enableRunawayTreat: true,
         vipBadge: "Signature Birthday Celebration",
       },
     },
@@ -727,6 +788,8 @@ export async function createAdminBirthday(data: {
   photos: string[];
   photoCaptions?: string[];
   music?: string;
+  videoUrl?: string;
+  youtubeVideoId?: string;
   customSlug?: string;
   createdByAdmin?: boolean;
   userId?: string;
@@ -738,6 +801,9 @@ export async function createAdminBirthday(data: {
     data.personName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") +
       "-birthday";
   const slug = baseSlug || "celebration-" + id;
+
+  const videoUrl = data.videoUrl || data.customConfig?.videoUrl;
+  const youtubeVideoId = data.youtubeVideoId || data.customConfig?.youtubeVideoId;
 
   const record: BirthdayRecord = {
     id,
@@ -753,6 +819,8 @@ export async function createAdminBirthday(data: {
     photos: data.photos || [],
     photoCaptions: data.photoCaptions || [],
     music: data.music || "birthday-cheer",
+    videoUrl,
+    youtubeVideoId,
     slug,
     createdByAdmin: data.createdByAdmin !== false,
     status: "published",
@@ -761,6 +829,14 @@ export async function createAdminBirthday(data: {
       enableConfetti: true,
       enableBalloons: true,
       enableCandles: true,
+      enableFlipbook: true,
+      enableVideo: Boolean(videoUrl || youtubeVideoId),
+      videoUrl,
+      youtubeVideoId,
+      enableRunawayTreat: true,
+      treatQuestion: "Will you give us a birthday party treat today? 🍕🎂",
+      treatYesText: "Haan Bilkul! Party Pakki! 🎉",
+      treatNoText: "Nahi Dunga 🏃‍♂️💨",
       vipBadge: data.createdByAdmin ? "VIP Executive Birthday Edition" : "Celebration Edition",
     },
   };
@@ -822,16 +898,32 @@ export async function deleteAdminBirthday(idOrSlug: string): Promise<boolean> {
 }
 
 /**
- * Get single birthday record by slug or id
+ * Get single birthday record by slug or id with decoded & normalized matching
  */
 export async function getBirthdayBySlug(slugOrId: string): Promise<BirthdayRecord | null> {
+  if (!slugOrId) return null;
+  let decoded = slugOrId;
+  try {
+    decoded = decodeURIComponent(slugOrId);
+  } catch {}
+  const cleanTarget = decoded.toLowerCase().trim().replace(/[\s_+]+/g, "-").replace(/[^a-z0-9-]/g, "");
+
   const all = await getAdminBirthdays();
   return (
-    all.find(
-      (b) =>
-        b.slug?.toLowerCase() === slugOrId.toLowerCase() ||
-        b.id.toLowerCase() === slugOrId.toLowerCase()
-    ) || null
+    all.find((b) => {
+      const bSlug = (b.slug || "").toLowerCase().trim();
+      const bId = (b.id || "").toLowerCase().trim();
+      const bSlugClean = bSlug.replace(/[\s_+]+/g, "-").replace(/[^a-z0-9-]/g, "");
+      const bIdClean = bId.replace(/[\s_+]+/g, "-").replace(/[^a-z0-9-]/g, "");
+
+      return (
+        bSlug === slugOrId.toLowerCase() ||
+        bId === slugOrId.toLowerCase() ||
+        bSlug === decoded.toLowerCase() ||
+        bSlugClean === cleanTarget ||
+        bIdClean === cleanTarget
+      );
+    }) || null
   );
 }
 
