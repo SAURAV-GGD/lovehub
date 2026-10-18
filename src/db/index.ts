@@ -122,6 +122,38 @@ export async function ensureDbTables(): Promise<void> {
             "created_at" timestamp DEFAULT now() NOT NULL,
             "updated_at" timestamp DEFAULT now() NOT NULL
           );
+
+          CREATE TABLE IF NOT EXISTS "subscriptions" (
+            "id" text PRIMARY KEY NOT NULL,
+            "user_id" text NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
+            "provider" text DEFAULT 'youpi' NOT NULL,
+            "provider_customer_id" text,
+            "plan" text DEFAULT 'free' NOT NULL,
+            "status" text DEFAULT 'active' NOT NULL,
+            "current_period_end" timestamp,
+            "created_at" timestamp DEFAULT now() NOT NULL
+          );
+
+          CREATE TABLE IF NOT EXISTS "webhook_events" (
+            "id" text PRIMARY KEY NOT NULL,
+            "type" text NOT NULL,
+            "processed_at" timestamp DEFAULT now() NOT NULL
+          );
+
+          CREATE TABLE IF NOT EXISTS "orders" (
+            "id" text PRIMARY KEY NOT NULL,
+            "user_id" text REFERENCES "user"("id") ON DELETE SET NULL,
+            "proposal_id" text,
+            "plan_id" text NOT NULL,
+            "amount_paise" integer NOT NULL,
+            "currency" text DEFAULT 'INR' NOT NULL,
+            "status" text DEFAULT 'pending' NOT NULL,
+            "payment_id" text,
+            "utr" text,
+            "checkout_url" text,
+            "created_at" timestamp DEFAULT now() NOT NULL,
+            "updated_at" timestamp DEFAULT now() NOT NULL
+          );
         `);
       } finally {
         client.release();

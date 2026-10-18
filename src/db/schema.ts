@@ -116,6 +116,28 @@ export const webhookEvents = pgTable("webhook_events", {
   processedAt: timestamp("processed_at").notNull().defaultNow(),
 });
 
+export const orders = pgTable(
+  "orders",
+  {
+    id: text("id").primaryKey(), // unique merchant orderId, e.g. "order_..."
+    userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
+    proposalId: text("proposal_id"),
+    planId: text("plan_id").notNull(),
+    amountPaise: integer("amount_paise").notNull(),
+    currency: text("currency").notNull().default("INR"),
+    status: text("status", { enum: ["pending", "paid", "failed", "cancelled"] }).notNull().default("pending"),
+    paymentId: text("payment_id"), // YouPI-PG session UUID
+    utr: text("utr"),
+    checkoutUrl: text("checkout_url"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("orders_proposal_id_idx").on(table.proposalId),
+    index("orders_user_id_idx").on(table.userId),
+  ]
+);
+
 // ==========================================
 // 4. Usage Limits
 // ==========================================

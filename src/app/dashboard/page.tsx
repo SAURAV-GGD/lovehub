@@ -27,6 +27,7 @@ import {
   Globe,
   Wand2,
   Music,
+  Receipt,
 } from "lucide-react";
 import { toast } from "sonner";
 import { BirthdayRecord } from "@/lib/admin-store";
@@ -41,12 +42,24 @@ interface ProposalItem {
   createdAt: string;
 }
 
+interface OrderItem {
+  id: string;
+  planId: string;
+  amountPaise: number;
+  currency: string;
+  status: "pending" | "paid" | "failed" | "cancelled";
+  utr: string | null;
+  proposalId: string | null;
+  createdAt: string;
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const { data: session, isPending: isSessionLoading } = useSession();
   const [proposals, setProposals] = useState<ProposalItem[]>([]);
   const [birthdays, setBirthdays] = useState<BirthdayRecord[]>([]);
-  const [activeTab, setActiveTab] = useState<"proposals" | "birthdays">("proposals");
+  const [orders, setOrders] = useState<OrderItem[]>([]);
+  const [activeTab, setActiveTab] = useState<"proposals" | "birthdays" | "orders">("proposals");
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -58,9 +71,10 @@ export default function DashboardPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const [propsRes, bdayRes] = await Promise.all([
+        const [propsRes, bdayRes, ordersRes] = await Promise.all([
           fetch("/api/proposals"),
           fetch("/api/birthdays"),
+          fetch("/api/orders"),
         ]);
 
         if (propsRes.ok) {
@@ -74,6 +88,13 @@ export default function DashboardPage() {
           const json = await bdayRes.json();
           if (json.success) {
             setBirthdays(json.data || []);
+          }
+        }
+
+        if (ordersRes.ok) {
+          const json = await ordersRes.json();
+          if (json.success) {
+            setOrders(json.data || []);
           }
         }
       } catch {
@@ -337,10 +358,21 @@ export default function DashboardPage() {
               <Cake className="w-4 h-4" />
               <span>Birthday Wishboards ({birthdays.length})</span>
             </button>
+            <button
+              onClick={() => setActiveTab("orders")}
+              className={`px-5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${
+                activeTab === "orders"
+                  ? "bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-md shadow-purple-500/30"
+                  : "text-slate-300 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              <Receipt className="w-4 h-4" />
+              <span>Orders & Receipts ({orders.length})</span>
+            </button>
           </div>
 
           <span className="text-xs text-slate-400">
-            Showing {activeTab === "proposals" ? proposals.length : birthdays.length} live {activeTab}
+            Showing {activeTab === "proposals" ? proposals.length : activeTab === "birthdays" ? birthdays.length : orders.length} {activeTab}
           </span>
         </div>
 
@@ -521,7 +553,7 @@ export default function DashboardPage() {
               ))}
             </div>
           )
-        ) : (
+        ) : activeTab === "birthdays" ? (
           /* Birthdays Tab */
           birthdays.length === 0 ? (
             /* Redesigned Luxury Empty State for Birthdays */
@@ -648,6 +680,67 @@ export default function DashboardPage() {
               ))}
             </div>
           )
+        ) : (
+          /* Orders & Receipts Tab */
+          orders.length === 0 ? (
+            <div className="backdrop-blur-2xl bg-white/[0.03] border border-white/15 rounded-3xl p-8 sm:p-14 text-center shadow-2xl relative overflow-hidden space-y-4">
+              <div className="w-16 h-16 mx-auto rounded-2xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400">
+                <Receipt className="w-8 h-8" />
+              </div>
+              <h3 className="text-xl font-bold text-white">No Orders Yet</h3>
+              <p className="text-slate-400 text-xs max-w-sm mx-auto">
+                When you unlock a proposal or plan via UPI, your official receipts and order IDs will appear here.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {orders.map((order) => (
+                <div
+                  key={order.id}
+                  className="backdrop-blur-xl bg-white/[0.03] border border-white/10 hover:border-purple-500/40 rounded-2xl p-5 shadow-lg transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+                >
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2.5">
+                      <span className="font-mono text-xs text-white font-bold">{order.id}</span>
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full capitalize ${
+                          order.status === "paid"
+                            ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                            : order.status === "failed"
+                            ? "bg-rose-500/20 text-rose-300 border border-rose-500/40"
+                            : "bg-amber-500/20 text-amber-300 border border-amber-500/40"
+                        }`}
+                      >
+                        {order.status === "paid" ? "Paid & Permanent" : order.status}
+                      </span>
+                    </div>
+
+                    <div className="text-xs text-slate-400 flex flex-wrap gap-x-4 gap-y-1">
+                      <span>Plan: <strong className="text-white capitalize">{order.planId}</strong></span>
+                      <span>Amount: <strong className="text-white">₹{order.amountPaise / 100}</strong></span>
+                      {order.utr && <span>UTR: <strong className="font-mono text-emerald-400">{order.utr}</strong></span>}
+                      <span>Date: {new Date(order.createdAt).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {order.proposalId && (
+                      <Button
+                        asChild
+                        size="sm"
+                        variant="outline"
+                        className="rounded-full border-white/20 bg-white/5 hover:bg-white/10 text-white text-xs"
+                      >
+                        <Link href={`/proposal/${order.proposalId}`} target="_blank">
+                          <ExternalLink className="w-3.5 h-3.5 mr-1" /> View Proposal
+                        </Link>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
         )}
 
         {/* Bottom VIP Upgrade Promo Card */}
@@ -661,7 +754,7 @@ export default function DashboardPage() {
               Elevate With Custom URLs & Priority AI Romance
             </h3>
             <p className="text-slate-300 text-sm max-w-xl">
-              Get unlimited photo uploads, custom link slugs (e.g., lovehub.site/p/alex-and-sam), and priority generation for just $19 one-time.
+              Get unlimited photo uploads, custom link slugs (e.g., lovehub.in/p/alex-and-sam), and priority generation for just ₹169 one-time.
             </p>
           </div>
           <Button

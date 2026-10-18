@@ -1,230 +1,211 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Heart, Check, ArrowLeft, CreditCard, Shield, Lock, Crown, Star } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Heart, Check, ArrowLeft, Shield, Lock, ArrowRight, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
-import { UpiPaymentSection } from "@/components/checkout/upi-payment-section";
-
-const plans = {
-  basic: {
-    name: "Basic",
-    price: 39,
-    icon: Heart,
-    features: ["3 photos", "Simple message page", "Basic theme"]
-  },
-  romantic: {
-    name: "Romantic",
-    price: 69,
-    icon: Star,
-    features: ["Animated YES/NO buttons", "5 photos", "Background music", "Confetti celebration"]
-  },
-  premium: {
-    name: "Premium",
-    price: 169,
-    icon: Crown,
-    features: ["Memory gallery slideshow", "Beautiful animations", "Custom URL slug", "Premium romantic theme"]
-  }
-};
+import { getPlanConfig } from "@/lib/plans";
+import { toast } from "sonner";
 
 function CheckoutContent() {
   const searchParams = useSearchParams();
-  const planKey = (searchParams.get("plan") || "romantic") as keyof typeof plans;
+  const rawPlanKey = searchParams.get("plan") || "starter";
   const proposalId = searchParams.get("proposalId") || searchParams.get("id") || undefined;
-  const plan = plans[planKey] || plans.romantic;
+  const plan = getPlanConfig(rawPlanKey);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const handlePayment = async (method: string = "cashfree") => {
+  const handleProceedPayment = async () => {
     setIsProcessing(true);
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          plan: planKey === "basic" ? "romantic" : planKey,
+          planId: plan.id,
+          pageId: proposalId,
         }),
       });
 
-      if (res.status === 401) {
-        window.location.href = `/login?callbackUrl=/checkout?plan=${planKey}`;
+      const json = await res.json().catch(() => ({}));
+
+      if (!res.ok || !json.success) {
+        toast.error(json.error?.message || "Could not start payment. Please try again.");
+        setIsProcessing(false);
         return;
       }
 
-      const json = await res.json();
-      if (json.success && json.data?.url) {
-        window.location.href = json.data.url;
-        return;
+      if (json.data?.checkoutUrl) {
+        window.location.href = json.data.checkoutUrl;
+      } else {
+        toast.error("Gateway URL not received. Please try again.");
+        setIsProcessing(false);
       }
-
-      window.location.href = `/create?plan=${planKey}&paid=true`;
-    } catch {
-      window.location.href = `/create?plan=${planKey}&paid=true`;
-    } finally {
+    } catch (err) {
+      console.error("Checkout initiation error:", err);
+      toast.error("Network error starting checkout. Please try again.");
       setIsProcessing(false);
     }
   };
 
   return (
     <div className="min-h-screen romantic-gradient py-12 px-4">
-      <div className="container mx-auto max-w-4xl">
-        {/* Header */}
+      <div className="container mx-auto max-w-3xl">
+        {/* Navigation */}
         <div className="mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 text-foreground/70 hover:text-primary transition-colors">
+          <Link
+            href={proposalId ? `/create` : "/"}
+            className="inline-flex items-center gap-2 text-foreground/70 hover:text-primary transition-colors text-sm min-h-[44px]"
+          >
             <ArrowLeft className="w-4 h-4" />
-            Back to Home
+            Back
           </Link>
         </div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-12"
+          transition={{ duration: 0.4 }}
+          className="text-center mb-10"
         >
-          <Heart className="w-12 h-12 text-primary fill-primary mx-auto mb-4 animate-pulse-heart" />
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
-            Complete Your Purchase
+          <div className="w-12 h-12 rounded-full bg-rose-100 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 flex items-center justify-center mx-auto mb-4 shadow-sm">
+            <Heart className="w-6 h-6 text-primary fill-primary" />
+          </div>
+          <h1 className="text-3xl font-extrabold text-foreground mb-2">
+            Unlock Permanent Proposal Link
           </h1>
-          <p className="text-foreground/70">
-            You are one step away from creating your magical proposal!
+          <p className="text-muted-foreground text-sm max-w-md mx-auto">
+            One-time payment for lifetime web hosting and permanent shareable link.
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 gap-8">
-          {/* Order Summary */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-          >
-            <Card className="h-fit">
-              <CardHeader>
-                <CardTitle className="text-xl">Order Summary</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-start gap-4 mb-6">
-                  <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center">
-                    <plan.icon className="w-7 h-7 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-lg">{plan.name} Plan</h3>
-                    <p className="text-foreground/60 text-sm">One-time purchase</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-2xl font-bold">₹{plan.price}</p>
-                  </div>
+        <div className="grid md:grid-cols-5 gap-8 items-start">
+          {/* Order Summary (3 cols) */}
+          <Card className="md:col-span-3 border-border shadow-sm">
+            <CardHeader className="border-b border-border/70 pb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Selected Plan
+                  </span>
+                  <CardTitle className="text-2xl mt-0.5">{plan.name} Plan</CardTitle>
                 </div>
-
-                <div className="border-t pt-4">
-                  <h4 className="font-medium mb-3">Includes:</h4>
-                  <ul className="space-y-2">
-                    {plan.features.map((feature, i) => (
-                      <li key={i} className="flex items-center gap-2 text-sm">
-                        <Check className="w-4 h-4 text-primary flex-shrink-0" />
-                        <span className="text-foreground/80">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
+                <div className="text-right">
+                  <div className="text-2xl font-black text-foreground">₹{plan.priceInRupees}</div>
+                  <span className="text-[11px] text-muted-foreground font-medium">one-time</span>
                 </div>
-
-                <div className="border-t mt-4 pt-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-foreground/60">Subtotal</span>
-                    <span>₹{plan.price}</span>
-                  </div>
-                  <div className="flex justify-between items-center mt-2">
-                    <span className="text-foreground/60">Tax</span>
-                    <span>₹0</span>
-                  </div>
-                  <div className="flex justify-between items-center mt-4 pt-4 border-t font-bold text-lg">
-                    <span>Total</span>
-                    <span className="text-primary">₹{plan.price}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Payment Options */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="space-y-6"
-          >
-            {/* Primary Zero-Commission Direct UPI via upipay */}
-            <UpiPaymentSection
-              planKey={planKey}
-              planPrice={plan.price}
-              planName={plan.name}
-              proposalId={proposalId}
-              onSuccess={(url) => {
-                window.location.href = url;
-              }}
-            />
-
-            {/* Alternative Payment Options (Cards / Netbanking) */}
-            <div className="bg-card/50 backdrop-blur-sm rounded-xl border border-border/60 p-4">
-              <p className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wider">
-                Or Pay With Cards / Netbanking:
-              </p>
-              <Button
-                variant="outline"
-                className="w-full py-3 h-auto flex items-center justify-between text-xs font-medium"
-                onClick={() => handlePayment("cashfree")}
-                disabled={isProcessing}
-              >
-                <div className="flex items-center gap-2.5">
-                  <CreditCard className="w-4 h-4 text-primary" />
-                  <span>Debit / Credit Cards &amp; Netbanking</span>
-                </div>
-                <span>₹{plan.price}</span>
-              </Button>
-            </div>
-
-            {/* Security & Testimonial */}
-            <div className="bg-card/40 backdrop-blur-sm rounded-xl border border-border/60 p-4 space-y-3">
-              <div className="flex items-center gap-2 text-xs text-foreground/70">
-                <Shield className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span>Zero commission • Direct bank settlement via UPI</span>
               </div>
-              <div className="flex items-center gap-2 text-xs text-foreground/70">
-                <Lock className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span>End-to-end encrypted bank payment</span>
-              </div>
+            </CardHeader>
 
-              <div className="pt-3 border-t border-border/60">
-                <div className="flex items-center gap-1 mb-1">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
+            <CardContent className="pt-5 space-y-5">
+              <div>
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                  What&apos;s Included:
+                </h4>
+                <ul className="space-y-2.5">
+                  {plan.perks.map((perk, i) => (
+                    <li key={i} className="flex items-start gap-2.5 text-sm text-foreground/85">
+                      <div className="w-4 h-4 rounded-full bg-rose-100 dark:bg-rose-950/60 flex items-center justify-center shrink-0 mt-0.5">
+                        <Check className="w-3 h-3 text-primary stroke-[2.5]" />
+                      </div>
+                      <span>{perk}</span>
+                    </li>
                   ))}
-                </div>
-                <p className="text-xs text-foreground/80 italic">
-                  &ldquo;She said YES! The proposal page was so beautiful and romantic. Worth every penny!&rdquo;
-                </p>
-                <p className="text-[11px] text-foreground/60 mt-1">— Happy Customer</p>
+                  <li className="flex items-start gap-2.5 text-sm text-foreground/85">
+                    <div className="w-4 h-4 rounded-full bg-rose-100 dark:bg-rose-950/60 flex items-center justify-center shrink-0 mt-0.5">
+                      <Check className="w-3 h-3 text-primary stroke-[2.5]" />
+                    </div>
+                    <span>Permanent link active immediately (120s timer removed)</span>
+                  </li>
+                </ul>
               </div>
+
+              <div className="border-t border-border/70 pt-4 space-y-2 text-sm">
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Plan price</span>
+                  <span>₹{plan.priceInRupees}</span>
+                </div>
+                <div className="flex justify-between text-muted-foreground">
+                  <span>GST / Gateway Fee</span>
+                  <span>₹0.00</span>
+                </div>
+                <div className="flex justify-between font-bold text-base text-foreground pt-2 border-t border-border/70">
+                  <span>Total Amount</span>
+                  <span className="text-primary">₹{plan.priceInRupees}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Payment Action & Security (2 cols) */}
+          <div className="md:col-span-2 space-y-4">
+            <Card className="border-border shadow-sm p-5 space-y-4">
+              <div className="space-y-1">
+                <h3 className="font-bold text-foreground text-sm">Instant UPI Payment</h3>
+                <p className="text-xs text-muted-foreground">
+                  Pay directly via any UPI app. Bank-to-bank settlement.
+                </p>
+              </div>
+
+              <Button
+                type="button"
+                onClick={handleProceedPayment}
+                disabled={isProcessing}
+                className="w-full min-h-[48px] bg-primary hover:bg-primary/90 text-white font-bold text-sm shadow-md shadow-rose-500/20 gap-2 cursor-pointer"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Connecting to Gateway...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Pay ₹{plan.priceInRupees} via UPI</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </Button>
+
+              <div className="flex items-center justify-center gap-2 pt-2 border-t border-border/60 text-[11px] text-muted-foreground">
+                <span className="font-semibold text-foreground/75">Supports:</span>
+                <span>GPay</span>
+                <span>•</span>
+                <span>PhonePe</span>
+                <span>•</span>
+                <span>Paytm</span>
+                <span>•</span>
+                <span>BHIM</span>
+              </div>
+            </Card>
+
+            {/* Trust and Safety Badges */}
+            <div className="rounded-xl border border-border/70 bg-card/60 p-4 space-y-2.5 text-xs text-muted-foreground">
+              <div className="flex items-center gap-2 text-foreground/80 font-medium">
+                <Shield className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Zero Gateway Intermediary Fees</span>
+              </div>
+              <div className="flex items-center gap-2 text-foreground/80 font-medium">
+                <Lock className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Encrypted NPCI UPI Settlement</span>
+              </div>
+              <p className="text-[11px] text-muted-foreground pt-1 leading-relaxed">
+                Your draft is saved securely. If payment is interrupted, no money is lost and you can resume anytime.
+              </p>
             </div>
-          </motion.div>
+          </div>
         </div>
 
-        {/* Change Plan */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="text-center mt-8"
-        >
-          <p className="text-foreground/60">
-            Want a different plan?{" "}
-            <Link href="/#pricing" className="text-primary hover:underline font-medium">
-              View all plans
-            </Link>
-          </p>
-        </motion.div>
+        {/* Change Plan Link */}
+        <div className="text-center mt-8">
+          <Link
+            href="/#pricing"
+            className="text-xs text-muted-foreground hover:text-foreground underline min-h-[44px] inline-flex items-center"
+          >
+            Need a different tier? View all 3 plans
+          </Link>
+        </div>
       </div>
     </div>
   );
@@ -232,14 +213,16 @@ function CheckoutContent() {
 
 export default function CheckoutPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen romantic-gradient flex items-center justify-center">
-        <div className="text-center">
-          <Heart className="w-12 h-12 text-primary fill-primary mx-auto mb-4 animate-pulse-heart" />
-          <p className="text-foreground/70">Loading checkout...</p>
+    <Suspense
+      fallback={
+        <div className="min-h-screen romantic-gradient flex items-center justify-center">
+          <div className="text-center">
+            <Heart className="w-10 h-10 text-primary fill-primary mx-auto mb-3 animate-pulse" />
+            <p className="text-sm text-muted-foreground">Loading checkout...</p>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <CheckoutContent />
     </Suspense>
   );
