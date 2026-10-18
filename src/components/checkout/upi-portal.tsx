@@ -116,9 +116,18 @@ export function UpiCheckoutPortal({
 
       if (res.ok && json.success) {
         toast.success("Payment verified! Unlocking your permanent link...");
-        router.push(`/checkout/callback?orderId=${encodeURIComponent(orderId)}`);
+        const targetUrl =
+          json.data?.url ||
+          `/checkout/callback?orderId=${encodeURIComponent(orderId)}`;
+        router.push(targetUrl);
       } else {
-        toast.error(json.error?.message || "Could not verify UTR. Please check and try again.");
+        const errorMsg =
+          typeof json.error === "string"
+            ? json.error
+            : json.error?.message ||
+              json.message ||
+              "Could not verify UTR. Please check and try again.";
+        toast.error(errorMsg);
         setIsSubmitting(false);
       }
     } catch (err) {

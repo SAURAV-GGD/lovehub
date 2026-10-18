@@ -62,7 +62,9 @@ describe("Zod Validators", () => {
   });
 
   it("validates checkout input", () => {
+    expect(() => checkoutSchema.parse({ plan: "starter" })).not.toThrow();
     expect(() => checkoutSchema.parse({ plan: "romantic" })).not.toThrow();
+    expect(() => checkoutSchema.parse({ plan: "premium" })).not.toThrow();
     expect(() => checkoutSchema.parse({ plan: "invalid" })).toThrow();
   });
 });

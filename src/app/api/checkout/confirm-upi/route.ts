@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { subscriptions, webhookEvents, proposals } from "@/db/schema";
 import { checkoutSchema } from "@/lib/validators";
-import { updateOrderStatus } from "@/lib/orders";
+import { updateOrderStatus, getOrderById } from "@/lib/orders";
 import { markProposalPaid } from "@/lib/proposal-storage";
 import { eq, or } from "drizzle-orm";
 import { apiSuccess, apiError, handleApiError } from "@/lib/api-response";
@@ -12,60 +12,78 @@ import { logger } from "@/lib/logger";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
+
+    const rawOrderId = typeof body.orderId === "string" ? body.orderId.trim() : "";
+    const orderId = rawOrderId || `upi_${Date.now()}`;
+    const existingOrder = rawOrderId ? await getOrderById(rawOrderId) : null;
+
+    const rawPlan = body.plan || existingOrder?.planId || "starter";
     const validated = checkoutSchema.parse({
-      plan: body.plan,
-      proposalId: body.proposalId,
+      plan: rawPlan,
+      proposalId: body.proposalId || existingOrder?.proposalId || undefined,
     });
 
     const utr = typeof body.utr === "string" ? body.utr.trim() : "";
-    const orderId = typeof body.orderId === "string" ? body.orderId.trim() : `upi_${Date.now()}`;
 
     if (!utr || utr.length < 6) {
-      return apiError("Please provide a valid 12-digit UPI UTR / Reference number from your bank payment.", "BAD_REQUEST", 400);
+      return apiError(
+        "Please provide a valid 12-digit UPI UTR / Reference number from your bank payment.",
+        "BAD_REQUEST",
+        400
+      );
     }
 
     // 1. Update order status in orders table/cache
     await updateOrderStatus(orderId, "paid", { utr });
 
     // 2. Get current session if user is logged in
-    const session = await auth.api.getSession({ headers: request.headers });
+    try {
+      const session = await auth.api.getSession({ headers: request.headers });
 
-    if (session?.user?.id) {
-      const userId = session.user.id;
-      await db
-        .insert(subscriptions)
-        .values({
-          id: `sub_${orderId}`,
+      if (session?.user?.id) {
+        const userId = session.user.id;
+        await db
+          .insert(subscriptions)
+          .values({
+            id: `sub_${orderId}`,
+            userId,
+            provider: "upipay",
+            providerCustomerId: utr || orderId,
+            plan: validated.plan === "premium" ? "premium" : "pro",
+            status: "active",
+            currentPeriodEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year access
+          })
+          .onConflictDoNothing();
+
+        logger.info("UPI Payment confirmed for user", {
           userId,
-          provider: "upipay",
-          providerCustomerId: utr || orderId,
-          plan: validated.plan === "premium" ? "premium" : "pro",
-          status: "active",
-          currentPeriodEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year access
-        })
-        .onConflictDoNothing();
-
-      logger.info("UPI Payment confirmed for user", {
-        userId,
-        plan: validated.plan,
-        orderId,
-        utr,
-      });
+          plan: validated.plan,
+          orderId,
+          utr,
+        });
+      }
+    } catch (authErr) {
+      logger.warn("Could not record subscription in DB (non-fatal):", { authErr });
     }
 
     // 3. Record payment reference in webhookEvents table for accounting / audit
-    await db
-      .insert(webhookEvents)
-      .values({
-        id: `upi_evt_${orderId}`,
-        type: `upi.payment.confirmed.${validated.plan}`,
-        processedAt: new Date(),
-      })
-      .onConflictDoNothing();
+    try {
+      await db
+        .insert(webhookEvents)
+        .values({
+          id: `upi_evt_${orderId}`,
+          type: `upi.payment.confirmed.${validated.plan}`,
+          processedAt: new Date(),
+        })
+        .onConflictDoNothing();
+    } catch (evtErr) {
+      logger.warn("Could not record webhook event in DB (non-fatal):", { evtErr });
+    }
 
-    // 4. Update proposal if proposalId is provided
-    if (validated.proposalId) {
-      markProposalPaid(validated.proposalId);
+    // 4. Update proposal if proposalId is provided or found from order
+    const effectiveProposalId = validated.proposalId || existingOrder?.proposalId;
+    if (effectiveProposalId) {
+      markProposalPaid(effectiveProposalId);
 
       try {
         const [existing] = await db
@@ -73,8 +91,8 @@ export async function POST(request: NextRequest) {
           .from(proposals)
           .where(
             or(
-              eq(proposals.id, validated.proposalId),
-              eq(proposals.slug, validated.proposalId)
+              eq(proposals.id, effectiveProposalId),
+              eq(proposals.slug, effectiveProposalId)
             )
           );
 
@@ -111,7 +129,7 @@ export async function POST(request: NextRequest) {
       success: true,
       orderId,
       plan: validated.plan,
-      proposalId: validated.proposalId,
+      proposalId: effectiveProposalId,
       url: redirectUrl,
     });
   } catch (err) {

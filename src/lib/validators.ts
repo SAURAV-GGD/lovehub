@@ -49,8 +49,8 @@ export const proposalSchema = z.object({
 export type ProposalInput = z.infer<typeof proposalSchema>;
 
 export const checkoutSchema = z.object({
-  plan: z.enum(["basic", "romantic", "premium"]),
-  proposalId: z.string().optional(),
+  plan: z.enum(["starter", "basic", "romantic", "premium"]).default("starter"),
+  proposalId: z.string().optional().nullable(),
 });
 
 export type CheckoutInput = z.infer<typeof checkoutSchema>;
