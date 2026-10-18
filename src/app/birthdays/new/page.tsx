@@ -107,18 +107,41 @@ export default function NewBirthdayPage() {
 
     try {
       const fileArr = Array.from(files);
-      const compressedList = await Promise.all(
-        fileArr.map((f) => compressImageFile(f, 1280, 0.8))
-      );
+      const uploadedUrls: string[] = [];
+      for (const f of fileArr) {
+        const compressed = await compressImageFile(f, 1280, 0.8);
+        if (!compressed) continue;
 
-      const valid = compressedList.filter(Boolean);
-      setPhotos((prev) => [...prev, ...valid]);
+        try {
+          const res = await fetch("/api/upload", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              image: compressed,
+              filename: f.name,
+              folder: "birthdays",
+            }),
+          });
+          if (res.ok) {
+            const json = await res.json();
+            if (json.success && json.data?.url) {
+              uploadedUrls.push(json.data.url);
+              continue;
+            }
+          }
+        } catch {
+          // fallback
+        }
+        uploadedUrls.push(compressed);
+      }
+
+      setPhotos((prev) => [...prev, ...uploadedUrls]);
       setPhotoCaptions((prev) => [
         ...prev,
-        ...valid.map((_, i) => `Unforgettable memory #${prev.length + i + 1}`),
+        ...uploadedUrls.map((_, i) => `Unforgettable memory #${prev.length + i + 1}`),
       ]);
 
-      toast.success(`Added ${valid.length} photo(s) successfully!`, { id: toastId });
+      toast.success(`Added ${uploadedUrls.length} photo(s) to cloud storage successfully!`, { id: toastId });
     } catch {
       toast.error("Failed to process photos", { id: toastId });
     } finally {
@@ -136,6 +159,10 @@ export default function NewBirthdayPage() {
   };
 
   const removePhoto = (index: number) => {
+    const photoToRemove = photos[index];
+    if (photoToRemove && (photoToRemove.startsWith("http://") || photoToRemove.startsWith("https://"))) {
+      fetch(`/api/upload?url=${encodeURIComponent(photoToRemove)}`, { method: "DELETE" }).catch(() => {});
+    }
     setPhotos(photos.filter((_, i) => i !== index));
     setPhotoCaptions(photoCaptions.filter((_, i) => i !== index));
   };

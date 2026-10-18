@@ -331,15 +331,41 @@ function CreateContent() {
     if (filesToProcess.length === 0) return;
 
     setIsCompressingPhotos(true);
+    const toastId = toast.loading(`Uploading ${filesToProcess.length} picture(s) to cloud storage...`);
     try {
-      const compressedList = await Promise.all(
-        filesToProcess.map((file) => compressImageFile(file))
-      );
-      const valid = compressedList.filter((item) => Boolean(item));
-      setPhotos((prev) => [...prev, ...valid]);
-      setPhotoCaptions((prev) => [...prev, ...valid.map(() => "")]);
+      const uploadedUrls: string[] = [];
+      for (const file of filesToProcess) {
+        const compressed = await compressImageFile(file);
+        if (!compressed) continue;
+
+        try {
+          const res = await fetch("/api/upload", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              image: compressed,
+              filename: file.name,
+              folder: "proposals",
+            }),
+          });
+          if (res.ok) {
+            const json = await res.json();
+            if (json.success && json.data?.url) {
+              uploadedUrls.push(json.data.url);
+              continue;
+            }
+          }
+        } catch {
+          // fallback to compressed data URL
+        }
+        uploadedUrls.push(compressed);
+      }
+
+      setPhotos((prev) => [...prev, ...uploadedUrls]);
+      setPhotoCaptions((prev) => [...prev, ...uploadedUrls.map(() => "")]);
+      toast.success(`Successfully uploaded ${uploadedUrls.length} picture(s)!`, { id: toastId });
     } catch {
-      toast.error("Could not process some photos");
+      toast.error("Could not process some photos", { id: toastId });
     } finally {
       setIsCompressingPhotos(false);
     }
@@ -355,6 +381,10 @@ function CreateContent() {
   });
 
   const removePhoto = (index: number) => {
+    const photoToRemove = photos[index];
+    if (photoToRemove && (photoToRemove.startsWith("http://") || photoToRemove.startsWith("https://"))) {
+      fetch(`/api/upload?url=${encodeURIComponent(photoToRemove)}`, { method: "DELETE" }).catch(() => {});
+    }
     setPhotos((prev) => prev.filter((_, i) => i !== index));
     setPhotoCaptions((prev) => prev.filter((_, i) => i !== index));
   };
