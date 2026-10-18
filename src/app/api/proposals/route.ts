@@ -34,36 +34,14 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await auth.api.getSession({ headers: request.headers });
-    
-    // Resolve user ID: authenticated user or guest creator
-    let userId = session?.user?.id;
-    if (!userId) {
-      const GUEST_ID = "guest-creator-user";
-      try {
-        const [existingGuest] = await db
-          .select()
-          .from(user)
-          .where(eq(user.id, GUEST_ID))
-          .limit(1);
-
-        if (existingGuest) {
-          userId = existingGuest.id;
-        } else {
-          const [newGuest] = await db
-            .insert(user)
-            .values({
-              id: GUEST_ID,
-              name: "LoveHub Guest",
-              email: "guest@lovehub.in",
-              role: "user",
-            })
-            .returning();
-          userId = newGuest.id;
-        }
-      } catch {
-        userId = GUEST_ID;
-      }
+    if (!session?.user?.id) {
+      return apiError(
+        "Please connect your Google account or email before creating a proposal",
+        "UNAUTHORIZED",
+        401
+      );
     }
+    const userId = session.user.id;
 
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || request.headers.get("x-real-ip") || "127.0.0.1";
     const { rateLimit } = await import("@/lib/rate-limit");
