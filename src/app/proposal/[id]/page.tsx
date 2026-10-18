@@ -12,6 +12,7 @@ import { useParams } from "next/navigation";
 import { YouTubeAudioPlayer } from "@/components/music/youtube-audio-player";
 import { getPresetAudioUrl, extractYouTubeVideoId } from "@/lib/music";
 import { CardsFlipbook } from "@/components/proposal/cards-flipbook";
+import { StoryPlayer } from "@/components/story/StoryPlayer";
 import { toast } from "sonner";
 
 // Floating hearts component
@@ -297,6 +298,7 @@ export default function ProposalPage() {
   const [hasInteracted, setHasInteracted] = useState(false);
   const [dodgeCount, setDodgeCount] = useState(0);
   const [secondsRemaining, setSecondsRemaining] = useState<number | null>(null);
+  const [viewMode, setViewMode] = useState<"story" | "classic">("story");
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
@@ -572,6 +574,60 @@ export default function ProposalPage() {
   const rawPlan = proposal.plan || "starter";
   const planConfig = getPlanConfig(rawPlan);
 
+  if (viewMode === "story") {
+    return (
+      <div className="min-h-screen bg-black text-white relative">
+        {/* Visible Countdown Timer Banner (120s preview) */}
+        {secondsRemaining !== null && secondsRemaining > 0 && (
+          <div className="fixed top-0 inset-x-0 z-50 bg-black/90 backdrop-blur-md border-b border-rose-500/30 px-4 py-2 flex items-center justify-between text-white shadow-xl">
+            <div className="flex items-center gap-2 text-xs">
+              <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+              <span className="font-semibold text-rose-300 hidden sm:inline">
+                Live Preview:
+              </span>
+              <span className="font-mono bg-rose-500/20 border border-rose-500/30 px-2 py-0.5 rounded text-white font-bold">
+                {Math.floor(secondsRemaining / 60)
+                  .toString()
+                  .padStart(2, "0")}
+                :
+                {(secondsRemaining % 60).toString().padStart(2, "0")}
+              </span>
+              <span className="text-slate-300 text-[11px] hidden md:inline">
+                remaining • Draft preserved upon expiry
+              </span>
+            </div>
+
+            <Link
+              href={`/checkout?plan=${planConfig.id}&proposalId=${proposal?.id || id}`}
+            >
+              <Button
+                size="sm"
+                className="h-8 px-3 bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs gap-1.5 rounded-lg shadow-sm"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Unlock Link (₹{planConfig.priceRupees})</span>
+              </Button>
+            </Link>
+          </div>
+        )}
+
+        {/* View mode toggle pill in bottom corner */}
+        <div className="fixed bottom-3 right-3 z-50">
+          <button
+            onClick={() => setViewMode("classic")}
+            className="text-[11px] px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/20 text-white/60 hover:text-white backdrop-blur-md border border-white/10 transition-colors cursor-pointer"
+          >
+            Classic View 📜
+          </button>
+        </div>
+
+        <div className={secondsRemaining !== null && secondsRemaining > 0 ? "pt-12" : ""}>
+          <StoryPlayer proposal={proposal} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-950 via-rose-950 to-slate-950 relative overflow-hidden">
       {/* Visible Countdown Timer Banner (120s preview) */}
@@ -836,6 +892,16 @@ export default function ProposalPage() {
             </motion.div>
           )}
         </AnimatePresence>
+      </div>
+
+      {/* View mode toggle pill in bottom corner */}
+      <div className="fixed bottom-3 right-3 z-50">
+        <button
+          onClick={() => setViewMode("story")}
+          className="text-[11px] px-2.5 py-1 rounded-full bg-pink-500/20 hover:bg-pink-500/40 text-pink-300 hover:text-white backdrop-blur-md border border-pink-500/30 transition-colors cursor-pointer"
+        >
+          Story Mode ✨
+        </button>
       </div>
     </div>
   );
