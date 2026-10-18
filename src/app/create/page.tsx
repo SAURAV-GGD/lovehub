@@ -29,6 +29,7 @@ import {
   toneLabels,
   languageLabels,
   musicOptions,
+  ensureStoryConfig,
 } from "@/lib/proposal-types";
 import { getPlanConfig } from "@/lib/plans";
 import { MusicSelector, MusicSelectionState } from "@/components/music/music-selector";
@@ -61,6 +62,10 @@ function CreateContent() {
   });
   const [customSlug, setCustomSlug] = useState("");
   const [slugError, setSlugError] = useState("");
+  const [enableRunawayNo, setEnableRunawayNo] = useState(true);
+  const [relationshipStartDate, setRelationshipStartDate] = useState(
+    new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
+  );
   const [proposalId, setProposalId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCompressingPhotos, setIsCompressingPhotos] = useState(false);
@@ -351,6 +356,30 @@ function CreateContent() {
           youtubeVideoId: musicSelection.youtubeVideoId,
           customMusicUrl: musicSelection.customAudioUrl,
           musicTitle: musicSelection.musicTitle,
+          enableRunawayButton: enableRunawayNo,
+          enableSlideshow: true,
+        },
+        storyConfig: {
+          ...ensureStoryConfig({
+            yourName,
+            partnerName,
+            relationshipType,
+            message,
+            photos,
+            photoCaptions,
+            backgroundMusic: finalMusicValue,
+            customConfig: {
+              musicType: musicSelection.type,
+              youtubeUrl: musicSelection.youtubeUrl,
+              youtubeVideoId: musicSelection.youtubeVideoId,
+              customMusicUrl: musicSelection.customAudioUrl,
+              musicTitle: musicSelection.musicTitle,
+              enableRunawayButton: enableRunawayNo,
+            },
+          }),
+          relationshipStartDate: relationshipStartDate
+            ? new Date(relationshipStartDate).toISOString()
+            : undefined,
         },
       };
 
@@ -1136,6 +1165,57 @@ function CreateContent() {
                       </p>
                     </div>
                   )}
+
+                  {/* Story Experience Settings */}
+                  <div className="border border-pink-200 dark:border-pink-900/40 bg-pink-50/50 dark:bg-pink-950/20 rounded-2xl p-5 space-y-4">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-pink-500" />
+                      <h4 className="text-sm font-bold text-foreground">
+                        Interactive Story Experience Settings
+                      </h4>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* Relationship Start Date for Live Forever Timer */}
+                      <div className="space-y-1.5">
+                        <Label htmlFor="relationshipStartDate" className="text-xs font-semibold text-foreground/80">
+                          Relationship Start Date (Forever Counter ♾️)
+                        </Label>
+                        <Input
+                          id="relationshipStartDate"
+                          type="date"
+                          value={relationshipStartDate}
+                          onChange={(e) => setRelationshipStartDate(e.target.value)}
+                          className="h-9 text-xs bg-background"
+                        />
+                        <p className="text-[11px] text-muted-foreground">
+                          Powers the real-time live ticker in the finale scene
+                        </p>
+                      </div>
+
+                      {/* Playful Runaway NO Button Toggle */}
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-semibold text-foreground/80 block">
+                          Playful Runaway &ldquo;NO&rdquo; Button
+                        </Label>
+                        <button
+                          type="button"
+                          onClick={() => setEnableRunawayNo((prev) => !prev)}
+                          className={`w-full h-9 px-3 rounded-lg border text-xs font-medium flex items-center justify-between transition-colors ${
+                            enableRunawayNo
+                              ? "bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-300"
+                              : "bg-muted border-border text-muted-foreground"
+                          }`}
+                        >
+                          <span>{enableRunawayNo ? "Enabled (Playfully hops away)" : "Disabled (Static button)"}</span>
+                          <span className={`w-2 h-2 rounded-full ${enableRunawayNo ? "bg-rose-500 animate-pulse" : "bg-gray-400"}`} />
+                        </button>
+                        <p className="text-[11px] text-muted-foreground">
+                          Playfully evades clicks when your partner tries to decline
+                        </p>
+                      </div>
+                    </div>
+                  </div>
 
                   {/* Preview Summary */}
                   <div className="bg-muted/50 rounded-xl p-6 space-y-4">
