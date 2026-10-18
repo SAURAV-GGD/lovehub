@@ -71,6 +71,7 @@ import {
   toneLabels,
   languageLabels,
   musicOptions,
+  ensureStoryConfig,
 } from "@/lib/proposal-types";
 import { MusicSelector, MusicSelectionState } from "@/components/music/music-selector";
 import { saveProposal } from "@/lib/proposal-storage";
@@ -502,6 +503,19 @@ export default function AdminDashboardPage() {
         customMusicUrl: musicSelection.customAudioUrl,
         musicTitle: musicSelection.musicTitle,
       },
+      storyConfig: ensureStoryConfig({
+        yourName: yourName || "Your Love",
+        partnerName,
+        relationshipType,
+        message,
+        photos,
+        photoCaptions,
+        backgroundMusic: musicSelection.type === "none"
+          ? "none"
+          : musicSelection.type === "preset"
+          ? (musicSelection.presetId || "romantic-piano")
+          : musicSelection.type,
+      }),
       status: "final" as const,
       isPublic: true,
     };
@@ -533,6 +547,7 @@ export default function AdminDashboardPage() {
             plan: creatorPlan,
             createdByAdmin: true,
             customConfig: payload.customConfig,
+            storyConfig: payload.storyConfig,
           });
         } catch {
           // Local storage fallback
@@ -717,7 +732,7 @@ export default function AdminDashboardPage() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-rose-500 selection:text-white">
       {/* Top Executive Navigation Bar */}
-      <header className="sticky top-0 z-40 bg-slate-900/90 border-b border-slate-800 backdrop-blur-md">
+      <header className="sticky top-0 z-40 bg-slate-900/90 border-b border-slate-800 backdrop-blur-md pt-[env(safe-area-inset-top,0px)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-600 to-pink-500 flex items-center justify-center shadow-md shadow-rose-500/20 border border-rose-400/30">
@@ -2416,6 +2431,27 @@ export default function AdminDashboardPage() {
                   </div>
                 </div>
               )}
+
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 rounded-xl bg-slate-950 border border-slate-800">
+                <div className="space-y-0.5">
+                  <span className="font-semibold text-slate-200 flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-pink-400" /> 7-Scene Interactive Story Experience
+                  </span>
+                  <p className="text-[11px] text-slate-400">
+                    Includes cinematic intro, quiz, runaway NO button, memories timeline, typewriter letter &amp; surprise gift vault
+                  </p>
+                </div>
+                <Button
+                  asChild
+                  size="sm"
+                  className="bg-rose-600 hover:bg-rose-700 text-white text-xs gap-1.5 shrink-0"
+                >
+                  <Link href={`/proposal/${inspectProposal.slug || inspectProposal.id}`} target="_blank">
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>Open Live Story</span>
+                  </Link>
+                </Button>
+              </div>
 
               <div className="space-y-1">
                 <span className="font-semibold text-slate-300">Raw JSON Payload:</span>

@@ -147,6 +147,8 @@ describe("Admin Multi-Version Plans & Unlimited Studio", () => {
     expect(created.slug).toBe("romeo-and-juliet-vip-test");
     expect(created.plan).toBe("custom");
     expect(created.createdByAdmin).toBe(true);
+    expect((created.content as any).storyConfig).toBeDefined();
+    expect((created.content as any).storyConfig.enabledScenes.length).toBe(7);
 
     // Verify lookup by slug or id
     const retrieved = await getProposalByIdOrSlug("romeo-and-juliet-vip-test");

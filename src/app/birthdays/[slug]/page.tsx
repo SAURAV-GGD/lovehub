@@ -193,7 +193,7 @@ export default function BirthdayCelebrationPage({
       />
 
       {/* Top Navbar */}
-      <header className="sticky top-0 z-40 bg-[#FDF4E7]/90 backdrop-blur-md border-b border-[#E6DCC6]">
+      <header className="sticky top-0 z-40 bg-[#FDF4E7]/90 backdrop-blur-md border-b border-[#E6DCC6] pt-[env(safe-area-inset-top,0px)]">
         <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link
             href="/birthdays"

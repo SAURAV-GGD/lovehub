@@ -92,7 +92,7 @@ export function StoryPlayer({ proposal, onResponseLogged }: StoryPlayerProps) {
   const activeChapter = storyConfig.chapters?.find((ch) => ch.scenes.includes(currentSceneId));
 
   return (
-    <div className="relative min-h-screen bg-black text-white selection:bg-pink-500 selection:text-white flex flex-col justify-between overflow-x-hidden">
+    <div className="relative min-h-screen bg-black text-white selection:bg-pink-500 selection:text-white flex flex-col justify-between overflow-x-hidden pb-[max(1rem,env(safe-area-inset-bottom,1rem))]">
       {/* Background Ambience */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-pink-900/10 blur-[120px] rounded-full" />
@@ -114,7 +114,7 @@ export function StoryPlayer({ proposal, onResponseLogged }: StoryPlayerProps) {
       />
 
       {/* Top Scene Progress Navigation */}
-      <header className="sticky top-0 z-40 w-full py-3 px-4 bg-black/50 backdrop-blur-md border-b border-white/5">
+      <header className="sticky top-0 z-40 w-full pt-[max(0.75rem,env(safe-area-inset-top,0.75rem))] pb-3 px-4 bg-black/60 backdrop-blur-md border-b border-white/5">
         <div className="max-w-xl mx-auto space-y-2">
           {activeChapter && (
             <div className="flex items-center justify-between text-[11px] text-pink-300 font-medium px-1">

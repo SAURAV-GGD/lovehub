@@ -945,7 +945,7 @@ function CreateContent() {
   }
 
   return (
-    <div className="min-h-screen romantic-gradient py-12 px-4">
+    <div className="min-h-screen romantic-gradient pt-[max(2.5rem,calc(env(safe-area-inset-top,0px)+1.5rem))] pb-[max(3rem,calc(env(safe-area-inset-bottom,0px)+1.5rem))] px-4">
       <div className="container mx-auto max-w-6xl">
         {/* Header */}
         <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -1673,7 +1673,7 @@ function CreateContent() {
         </div>
 
         {/* Floating Mobile Live Preview Button */}
-        <div className="lg:hidden fixed bottom-5 right-5 z-40">
+        <div className="lg:hidden fixed bottom-[max(1.25rem,env(safe-area-inset-bottom,1.25rem))] right-[max(1.25rem,env(safe-area-inset-right,1.25rem))] z-40">
           <Button
             type="button"
             onClick={() => setIsMobilePreviewOpen(true)}

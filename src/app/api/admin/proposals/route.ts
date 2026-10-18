@@ -66,6 +66,7 @@ export async function POST(request: NextRequest) {
       backgroundMusic: body.backgroundMusic || "romantic-piano",
       customSlug: body.customSlug,
       customConfig: body.customConfig || {},
+      storyConfig: body.storyConfig,
       status: body.status || "final",
       isPublic: body.isPublic !== false,
     };

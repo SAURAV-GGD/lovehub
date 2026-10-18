@@ -359,6 +359,7 @@ export default function ProposalPage() {
               isPaid: serverIsPaid,
               expiresAt: content.expiresAt,
               customConfig: content.customConfig,
+              storyConfig: content.storyConfig,
               createdByAdmin: content.createdByAdmin || row.createdByAdmin,
             });
             setLoading(false);
@@ -579,7 +580,7 @@ export default function ProposalPage() {
       <div className="min-h-screen bg-black text-white relative">
         {/* Visible Countdown Timer Banner (120s preview) */}
         {secondsRemaining !== null && secondsRemaining > 0 && (
-          <div className="fixed top-0 inset-x-0 z-50 bg-black/90 backdrop-blur-md border-b border-rose-500/30 px-4 py-2 flex items-center justify-between text-white shadow-xl">
+          <div className="fixed top-0 inset-x-0 z-50 bg-black/90 backdrop-blur-md border-b border-rose-500/30 px-4 pt-[max(0.5rem,env(safe-area-inset-top,0.5rem))] pb-2 flex items-center justify-between text-white shadow-xl">
             <div className="flex items-center gap-2 text-xs">
               <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
               <span className="font-semibold text-rose-300 hidden sm:inline">
@@ -612,7 +613,7 @@ export default function ProposalPage() {
         )}
 
         {/* View mode toggle pill in bottom corner */}
-        <div className="fixed bottom-3 right-3 z-50">
+        <div className="fixed bottom-[max(0.75rem,env(safe-area-inset-bottom,0.75rem))] right-3 z-50">
           <button
             onClick={() => setViewMode("classic")}
             className="text-[11px] px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/20 text-white/60 hover:text-white backdrop-blur-md border border-white/10 transition-colors cursor-pointer"
@@ -621,7 +622,7 @@ export default function ProposalPage() {
           </button>
         </div>
 
-        <div className={secondsRemaining !== null && secondsRemaining > 0 ? "pt-12" : ""}>
+        <div className={secondsRemaining !== null && secondsRemaining > 0 ? "pt-[max(3.5rem,calc(env(safe-area-inset-top,0px)+3rem))]" : ""}>
           <StoryPlayer proposal={proposal} />
         </div>
       </div>

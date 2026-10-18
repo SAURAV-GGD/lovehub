@@ -1,7 +1,7 @@
 import { db } from "@/db";
 import { user, proposals, subscriptions } from "@/db/schema";
 import { desc, eq, or } from "drizzle-orm";
-import { PlanType, ProposalData } from "./proposal-types";
+import { PlanType, ProposalData, StoryConfig, ensureStoryConfig } from "./proposal-types";
 
 export interface ClientItem {
   id: string;
@@ -535,6 +535,7 @@ export interface CreateAdminProposalInput {
   backgroundMusic: string;
   customSlug?: string;
   customConfig?: Record<string, unknown>;
+  storyConfig?: StoryConfig;
   status?: "draft" | "final";
   isPublic?: boolean;
 }
@@ -579,6 +580,8 @@ export async function createAdminProposal(
       ...input.customConfig,
     },
   };
+
+  fullContent.storyConfig = input.storyConfig || ensureStoryConfig(fullContent);
 
   const newRecord: ProposalRecord = {
     id: proposalId,

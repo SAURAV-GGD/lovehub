@@ -42,7 +42,7 @@ export function SiteHeader({
 
   if (isBirthday) {
     return (
-      <header className="sticky top-0 z-50 bg-[#FDF4E7]/90 backdrop-blur-md border-b border-[#E6DCC6]/60 transition-colors">
+      <header className="sticky top-0 z-50 bg-[#FDF4E7]/90 backdrop-blur-md border-b border-[#E6DCC6]/60 transition-colors pt-[env(safe-area-inset-top,0px)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
@@ -184,7 +184,7 @@ export function SiteHeader({
 
   // Default LoveHub Proposals Header
   return (
-    <header className="sticky top-0 z-50 backdrop-blur-md bg-white/85 border-b border-gray-100">
+    <header className="sticky top-0 z-50 backdrop-blur-md bg-white/85 border-b border-gray-100 pt-[env(safe-area-inset-top,0px)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
           <Heart className="h-7 w-7 text-rose-500 fill-rose-500" />

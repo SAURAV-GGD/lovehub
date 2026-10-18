@@ -181,7 +181,7 @@ export default function DashboardPage() {
       <div className="absolute bottom-[-10%] left-[25%] w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[180px] pointer-events-none" />
 
       {/* Floating Glassmorphic Top Navbar */}
-      <header className="sticky top-0 z-40 backdrop-blur-xl bg-slate-950/65 border-b border-white/10 shadow-2xl">
+      <header className="sticky top-0 z-40 backdrop-blur-xl bg-slate-950/65 border-b border-white/10 shadow-2xl pt-[env(safe-area-inset-top,0px)]">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 h-20 flex items-center justify-between">
           {/* Brand Logo */}
           <Link href="/" className="flex items-center gap-3 group">

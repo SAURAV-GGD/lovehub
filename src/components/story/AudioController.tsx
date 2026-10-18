@@ -123,7 +123,7 @@ export function AudioController({
   if (musicType === "none") return null;
 
   return (
-    <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
+    <div className="fixed top-[max(1rem,env(safe-area-inset-top,1rem))] right-[max(1rem,env(safe-area-inset-right,1rem))] z-50 flex items-center gap-2">
       {/* HTML Audio element for preset/custom MP3 */}
       {audioSrc && (
         <audio
