@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Heart, ArrowLeft, Wand2, Camera, Music, X, Upload, ArrowRight, Sparkles, Shield, AlertTriangle, CheckCircle2, ExternalLink, Clock, Lock, ShoppingBag, User, Loader2, Eye, Smartphone } from "lucide-react";
+import { Heart, ArrowLeft, Wand2, Camera, Music, X, Upload, ArrowRight, Sparkles, Shield, AlertTriangle, CheckCircle2, ExternalLink, Clock, Lock, ShoppingBag, User, Loader2, Eye, Smartphone, Gift } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -31,6 +31,8 @@ import {
   musicOptions,
   ensureStoryConfig,
   StoryQuizQuestion,
+  StoryPromiseCard,
+  StoryChapterConfig,
   ProposalData,
 } from "@/lib/proposal-types";
 import { getPlanConfig } from "@/lib/plans";
@@ -39,7 +41,8 @@ import { generateProposalMessage } from "@/lib/ai-generator";
 import { saveProposal, isSlugAvailable, getProposalUrl } from "@/lib/proposal-storage";
 import { PhonePreview } from "@/components/story/PhonePreview";
 import { QuizEditor } from "@/components/story/QuizEditor";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { GiftEditor } from "@/components/story/GiftEditor";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { trackEvent } from "@/lib/analytics";
 import { toast } from "sonner";
 
@@ -56,6 +59,7 @@ function CreateContent() {
   const [relationshipType, setRelationshipType] = useState<RelationshipType>("girlfriend");
   const [tone, setTone] = useState<ToneType>("cute");
   const [language, setLanguage] = useState<LanguageType>("english");
+  const [letterFontStyle, setLetterFontStyle] = useState<"playfair" | "poppins" | "serif" | "cursive" | "vintage">("playfair");
   const [message, setMessage] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [photos, setPhotos] = useState<string[]>([]);
@@ -65,6 +69,8 @@ function CreateContent() {
     presetId: "romantic-piano",
     musicTitle: "Romantic Piano Melody",
   });
+  const [audioStartSec, setAudioStartSec] = useState<number>(0);
+  const [audioEndSec, setAudioEndSec] = useState<number | undefined>(undefined);
   const [customSlug, setCustomSlug] = useState("");
   const [slugError, setSlugError] = useState("");
   const [enableRunawayNo, setEnableRunawayNo] = useState(true);
@@ -75,15 +81,24 @@ function CreateContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCompressingPhotos, setIsCompressingPhotos] = useState(false);
   const [customQuestions, setCustomQuestions] = useState<StoryQuizQuestion[]>([]);
+  const [giftType, setGiftType] = useState<"box" | "envelope" | "promise_cards" | "bouquet">("box");
+  const [customGiftCards, setCustomGiftCards] = useState<StoryPromiseCard[]>([]);
   const [isMobilePreviewOpen, setIsMobilePreviewOpen] = useState(false);
+  const [isExtractModalOpen, setIsExtractModalOpen] = useState(false);
+  const [chatNotesText, setChatNotesText] = useState("");
+  const [isExtractingMemories, setIsExtractingMemories] = useState(false);
 
-  // Initialize or update default quiz questions when names change if creator hasn't manually edited
+  // Initialize or update default quiz questions and gift cards
   useEffect(() => {
     if (customQuestions.length === 0) {
       const initial = ensureStoryConfig({ yourName, partnerName }).quiz.questions;
       setCustomQuestions(initial);
     }
-  }, [yourName, partnerName, customQuestions.length]);
+    if (customGiftCards.length === 0) {
+      const initialCards = ensureStoryConfig({ yourName, partnerName }).gift.cards;
+      setCustomGiftCards(initialCards);
+    }
+  }, [yourName, partnerName, customQuestions.length, customGiftCards.length]);
 
   const previewProposal: ProposalData = useMemo(() => {
     const finalMusic =
@@ -106,12 +121,32 @@ function CreateContent() {
       },
     });
 
+    base.letter.fontStyle = letterFontStyle;
+    base.gift.giftType = giftType;
+    if (customGiftCards.length > 0) {
+      base.gift.cards = customGiftCards;
+    }
+    if (audioStartSec > 0 && base.audio) {
+      base.audio.startTimestampSeconds = audioStartSec;
+    }
+    if (audioEndSec && base.audio) {
+      base.audio.endTimestampSeconds = audioEndSec;
+    }
+
     if (customQuestions.length > 0) {
       base.quiz.questions = customQuestions;
     }
     if (relationshipStartDate) {
       base.relationshipStartDate = new Date(relationshipStartDate).toISOString();
       base.finale.startDate = new Date(relationshipStartDate).toISOString();
+    }
+
+    if (planKey === "romantic" || planKey === "premium" || planKey === "pro" || planKey === "custom") {
+      base.chapters = [
+        { id: "ch_1", title: "Chapter 1: The Spark", subtitle: "Where our hearts aligned", scenes: ["intro", "quiz"] },
+        { id: "ch_2", title: "Chapter 2: Beautiful Us", subtitle: "Our memories & devotion", scenes: ["question", "memories", "letter"] },
+        { id: "ch_3", title: "Chapter 3: Forever & Beyond", subtitle: "The infinite promise", scenes: ["gift", "finale"] },
+      ] as StoryChapterConfig[];
     }
 
     return {
@@ -144,10 +179,15 @@ function CreateContent() {
     relationshipType,
     tone,
     language,
+    letterFontStyle,
     message,
     photos,
     photoCaptions,
     musicSelection,
+    audioStartSec,
+    audioEndSec,
+    giftType,
+    customGiftCards,
     planKey,
     enableRunawayNo,
     customQuestions,
@@ -379,6 +419,50 @@ function CreateContent() {
     }
   };
 
+  const handleExtractMemories = async () => {
+    if (!chatNotesText.trim()) {
+      toast.error("Please enter some chat notes or conversation snippets");
+      return;
+    }
+    setIsExtractingMemories(true);
+    try {
+      const res = await fetch("/api/ai/extract-memories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: chatNotesText,
+          yourName: yourName || "Me",
+          partnerName: partnerName || "My Love",
+          language: language === "hinglish" ? "hinglish" : "english",
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.data) {
+        if (data.data.memories && data.data.memories.length > 0) {
+          const newCaptions = data.data.memories.map((m: { caption?: string; title?: string }) => m.caption || m.title || "");
+          setPhotoCaptions((prev) => {
+            const merged = [...newCaptions];
+            for (let i = 0; i < photos.length; i++) {
+              if (!merged[i] && prev[i]) merged[i] = prev[i];
+            }
+            return merged;
+          });
+        }
+        if (data.data.suggestedQuestions && data.data.suggestedQuestions.length > 0) {
+          setCustomQuestions(data.data.suggestedQuestions);
+        }
+        toast.success("Memories & Quiz successfully crafted from your conversations! ✨");
+        setIsExtractModalOpen(false);
+      } else {
+        toast.error("Failed to extract memories. Please try again.");
+      }
+    } catch {
+      toast.error("An error occurred during extraction.");
+    } finally {
+      setIsExtractingMemories(false);
+    }
+  };
+
   const validateSlug = (slug: string) => {
     if (!slug) {
       setSlugError("");
@@ -461,12 +545,43 @@ function CreateContent() {
               enableRunawayButton: enableRunawayNo,
             },
           }),
+          letter: {
+            ...ensureStoryConfig({ yourName, partnerName }).letter,
+            content: message,
+            fontStyle: letterFontStyle,
+          },
+          gift: {
+            ...ensureStoryConfig({ yourName, partnerName }).gift,
+            giftType: giftType,
+            cards: customGiftCards.length > 0 ? customGiftCards : ensureStoryConfig({ yourName, partnerName }).gift.cards,
+          },
+          audio: {
+            enabled: finalMusicValue !== "none",
+            musicType: musicSelection.type,
+            presetName: finalMusicValue,
+            customMusicUrl: musicSelection.customAudioUrl,
+            youtubeUrl: musicSelection.youtubeUrl,
+            youtubeVideoId: musicSelection.youtubeVideoId,
+            musicTitle: musicSelection.musicTitle,
+            earphonesNotice: true,
+            startTimestampSeconds: audioStartSec > 0 ? audioStartSec : undefined,
+            endTimestampSeconds: audioEndSec,
+          },
           ...(customQuestions.length > 0
             ? {
                 quiz: {
                   ...ensureStoryConfig({ yourName, partnerName }).quiz,
                   questions: customQuestions,
                 },
+              }
+            : {}),
+          ...(planKey === "romantic" || planKey === "premium" || planKey === "pro" || planKey === "custom"
+            ? {
+                chapters: [
+                  { id: "ch_1", title: "Chapter 1: The Spark", subtitle: "Where our hearts aligned", scenes: ["intro", "quiz"] },
+                  { id: "ch_2", title: "Chapter 2: Beautiful Us", subtitle: "Our memories & devotion", scenes: ["question", "memories", "letter"] },
+                  { id: "ch_3", title: "Chapter 3: Forever & Beyond", subtitle: "The infinite promise", scenes: ["gift", "finale"] },
+                ] as StoryChapterConfig[],
               }
             : {}),
           relationshipStartDate: relationshipStartDate
@@ -1074,6 +1189,27 @@ function CreateContent() {
                     </p>
                   </div>
 
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-pink-500" />
+                      <span>Love Letter Typography Style (Scene 5)</span>
+                    </Label>
+                    <Select
+                      value={letterFontStyle}
+                      onValueChange={(v) => setLetterFontStyle(v as "playfair" | "poppins" | "serif" | "cursive" | "vintage")}
+                    >
+                      <SelectTrigger className="text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="playfair">Playfair Serif (Romantic & Classic) 📜</SelectItem>
+                        <SelectItem value="cursive">Romantic Cursive (Intimate & Flowing) ✍️</SelectItem>
+                        <SelectItem value="poppins">Modern Sans (Clean & Contemporary) 🌸</SelectItem>
+                        <SelectItem value="vintage">Vintage Typewriter (Old-School Parchment) ⏳</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   <div className="flex justify-end">
                     <Button
                       onClick={() => setStep(2)}
@@ -1121,6 +1257,73 @@ function CreateContent() {
                       </p>
                     </div>
                   </div>
+
+                  {/* AI Chat & Memory Smart Extractor Trigger */}
+                  <div className="flex items-center justify-between p-3.5 rounded-xl border border-pink-500/30 bg-pink-500/5">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-pink-500/20 flex items-center justify-center text-pink-500">
+                        <Sparkles className="w-4 h-4" />
+                      </div>
+                      <div className="text-left">
+                        <h4 className="text-xs font-semibold text-foreground">AI Chat &amp; Conversation Memory Extractor</h4>
+                        <p className="text-[11px] text-muted-foreground">Paste WhatsApp / chat notes to auto-generate romantic captions &amp; quiz questions</p>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsExtractModalOpen(true)}
+                      className="border-pink-500/30 hover:bg-pink-500/10 text-xs shrink-0"
+                    >
+                      Extract Memories ✨
+                    </Button>
+                  </div>
+
+                  {/* Dialog for Smart Memory Extraction */}
+                  <Dialog open={isExtractModalOpen} onOpenChange={setIsExtractModalOpen}>
+                    <DialogContent className="max-w-md bg-stone-900 text-white border border-pink-500/30">
+                      <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 font-serif text-lg">
+                          <Sparkles className="w-4 h-4 text-pink-400" />
+                          AI Chat &amp; Memory Smart Extractor
+                        </DialogTitle>
+                        <DialogDescription className="text-xs text-pink-200/70">
+                          Paste a few lines of your chat messages, inside jokes, or memories. Our private AI extracts relationship milestones and creates tailored quiz questions. (Your chat text is never stored).
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4 pt-2">
+                        <Textarea
+                          value={chatNotesText}
+                          onChange={(e) => setChatNotesText(e.target.value)}
+                          placeholder={"e.g.\n[12/04, 11:30 PM] Her: Remember that rainy night at Marine Drive?\n[12/04, 11:32 PM] Me: When we shared one umbrella and had cutting chai!\nOr bullet points of your favourite moments together..."}
+                          rows={6}
+                          className="bg-black/60 border-white/20 text-xs text-white resize-none"
+                        />
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setIsExtractModalOpen(false)}
+                            className="text-xs text-white/70"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            disabled={isExtractingMemories || !chatNotesText.trim()}
+                            onClick={handleExtractMemories}
+                            className="bg-gradient-to-r from-pink-500 to-rose-500 text-white text-xs gap-1.5"
+                          >
+                            {isExtractingMemories ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                            <span>{isExtractingMemories ? "Extracting..." : "Extract & Sync Memories"}</span>
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
 
                   <div
                     {...getRootProps()}
@@ -1325,6 +1528,58 @@ function CreateContent() {
                         onChange={setCustomQuestions}
                       />
                     </div>
+
+                    {/* Surprise Gift & Love Coupons Editor */}
+                    <div className="pt-4 border-t border-pink-200/60 dark:border-pink-900/40 space-y-2">
+                      <Label className="text-xs font-semibold text-foreground/80 flex items-center gap-1.5">
+                        <Gift className="w-3.5 h-3.5 text-pink-500" />
+                        <span>Customize Surprise Gift &amp; Love Coupons (Scene 6)</span>
+                      </Label>
+                      <GiftEditor
+                        giftType={giftType}
+                        cards={customGiftCards}
+                        onChange={({ giftType: newType, cards: newCards }) => {
+                          setGiftType(newType);
+                          setCustomGiftCards(newCards);
+                        }}
+                      />
+                    </div>
+
+                    {/* Audio Precision Trimmer */}
+                    {limits.hasMusic && musicSelection.type !== "none" && (
+                      <div className="pt-4 border-t border-pink-200/60 dark:border-pink-900/40 space-y-2">
+                        <Label className="text-xs font-semibold text-foreground/80 flex items-center gap-1.5">
+                          <Music className="w-3.5 h-3.5 text-pink-500" />
+                          <span>Soundtrack Start &amp; End Trimming (Optional)</span>
+                        </Label>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-[11px] text-muted-foreground block mb-1">Start Time (seconds)</label>
+                            <Input
+                              type="number"
+                              min={0}
+                              value={audioStartSec}
+                              onChange={(e) => setAudioStartSec(Math.max(0, parseInt(e.target.value) || 0))}
+                              className="h-8 text-xs"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[11px] text-muted-foreground block mb-1">End Time (seconds, optional)</label>
+                            <Input
+                              type="number"
+                              min={0}
+                              value={audioEndSec ?? ""}
+                              placeholder="e.g. 180"
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value);
+                                setAudioEndSec(val > 0 ? val : undefined);
+                              }}
+                              className="h-8 text-xs"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Preview Summary */}

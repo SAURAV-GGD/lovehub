@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { Volume2, VolumeX, Music } from "lucide-react";
+import { Volume2, VolumeX, Music, Sparkles } from "lucide-react";
 import { getPresetAudioUrl, extractYouTubeVideoId } from "@/lib/music";
 import { YouTubeAudioPlayer } from "@/components/music/youtube-audio-player";
 
@@ -13,6 +13,9 @@ interface AudioControllerProps {
   youtubeUrl?: string;
   musicTitle?: string;
   autoStart?: boolean;
+  startTimestampSeconds?: number;
+  endTimestampSeconds?: number;
+  volume?: number;
 }
 
 export function AudioController({
@@ -23,9 +26,13 @@ export function AudioController({
   youtubeUrl,
   musicTitle = "Romantic Melody",
   autoStart = false,
+  startTimestampSeconds = 0,
+  endTimestampSeconds,
+  volume = 0.5,
 }: AudioControllerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [autoplayBlocked, setAutoplayBlocked] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const resolvedVideoId =
@@ -38,8 +45,28 @@ export function AudioController({
       ? getPresetAudioUrl(presetName)
       : null;
 
+  const playAudio = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = Math.max(0, Math.min(1, volume));
+      if (startTimestampSeconds > 0 && audioRef.current.currentTime < startTimestampSeconds) {
+        audioRef.current.currentTime = startTimestampSeconds;
+      }
+      audioRef.current
+        .play()
+        .then(() => {
+          setIsPlaying(true);
+          setAutoplayBlocked(false);
+        })
+        .catch(() => {
+          setIsPlaying(false);
+          setAutoplayBlocked(true);
+        });
+    }
+  }, [volume, startTimestampSeconds]);
+
   const togglePlay = useCallback(() => {
     setHasInteracted(true);
+    setAutoplayBlocked(false);
     if (!audioRef.current && musicType !== "youtube") return;
 
     if (musicType === "youtube") {
@@ -52,29 +79,46 @@ export function AudioController({
         audioRef.current.pause();
         setIsPlaying(false);
       } else {
-        audioRef.current.volume = 0.5;
-        audioRef.current
-          .play()
-          .then(() => setIsPlaying(true))
-          .catch(() => setIsPlaying(false));
+        playAudio();
       }
     }
-  }, [isPlaying, musicType]);
+  }, [isPlaying, musicType, playAudio]);
 
+  // Handle timestamp limits and looping
+  useEffect(() => {
+    const el = audioRef.current;
+    if (!el || !endTimestampSeconds) return;
+
+    const onTimeUpdate = () => {
+      if (endTimestampSeconds && el.currentTime >= endTimestampSeconds) {
+        el.currentTime = startTimestampSeconds || 0;
+      }
+    };
+
+    el.addEventListener("timeupdate", onTimeUpdate);
+    return () => el.removeEventListener("timeupdate", onTimeUpdate);
+  }, [endTimestampSeconds, startTimestampSeconds]);
+
+  // Autoplay attempt on mount or interaction
   useEffect(() => {
     if (autoStart && !hasInteracted && audioRef.current) {
-      audioRef.current.volume = 0.4;
-      audioRef.current
-        .play()
-        .then(() => {
-          setIsPlaying(true);
-          setHasInteracted(true);
-        })
-        .catch(() => {
-          // Autoplay policy prevented playback, waits for user interaction
-        });
+      playAudio();
     }
-  }, [autoStart, hasInteracted]);
+  }, [autoStart, hasInteracted, playAudio]);
+
+  // Global one-time interaction listener to unblock autoplay if blocked
+  useEffect(() => {
+    if (!autoplayBlocked) return;
+
+    const handleFirstTap = () => {
+      if (autoplayBlocked && audioRef.current) {
+        playAudio();
+      }
+    };
+
+    window.addEventListener("pointerdown", handleFirstTap, { once: true });
+    return () => window.removeEventListener("pointerdown", handleFirstTap);
+  }, [autoplayBlocked, playAudio]);
 
   if (musicType === "none") return null;
 
@@ -87,7 +131,14 @@ export function AudioController({
           src={audioSrc}
           loop
           preload="auto"
-          onEnded={() => setIsPlaying(false)}
+          onEnded={() => {
+            if (audioRef.current && startTimestampSeconds > 0) {
+              audioRef.current.currentTime = startTimestampSeconds;
+              audioRef.current.play().catch(() => {});
+            } else {
+              setIsPlaying(false);
+            }
+          }}
         />
       )}
 
@@ -102,6 +153,18 @@ export function AudioController({
         </div>
       )}
 
+      {/* Autoplay blocked notification pill */}
+      {autoplayBlocked && !isPlaying && (
+        <button
+          onClick={togglePlay}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-pink-600/90 hover:bg-pink-500 text-white shadow-lg text-xs font-medium animate-pulse"
+        >
+          <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
+          <span>Tap for music 🎵</span>
+        </button>
+      )}
+
+      {/* Audio toggle button */}
       <button
         onClick={togglePlay}
         className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md border border-pink-500/30 text-white shadow-lg transition-all hover:scale-105 active:scale-95 group"
@@ -118,7 +181,9 @@ export function AudioController({
         ) : (
           <>
             <VolumeX className="w-4 h-4 text-gray-400 group-hover:text-pink-300" />
-            <span className="text-xs text-gray-300 hidden sm:inline">Play Music</span>
+            <span className="text-xs text-gray-400 group-hover:text-pink-200 hidden sm:inline">
+              Music
+            </span>
           </>
         )}
       </button>

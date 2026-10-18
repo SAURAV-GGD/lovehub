@@ -89,6 +89,8 @@ export function StoryPlayer({ proposal, onResponseLogged }: StoryPlayerProps) {
     });
   };
 
+  const activeChapter = storyConfig.chapters?.find((ch) => ch.scenes.includes(currentSceneId));
+
   return (
     <div className="relative min-h-screen bg-black text-white selection:bg-pink-500 selection:text-white flex flex-col justify-between overflow-x-hidden">
       {/* Background Ambience */}
@@ -105,32 +107,43 @@ export function StoryPlayer({ proposal, onResponseLogged }: StoryPlayerProps) {
         youtubeVideoId={storyConfig.audio?.youtubeVideoId}
         youtubeUrl={storyConfig.audio?.youtubeUrl}
         musicTitle={storyConfig.audio?.musicTitle}
+        startTimestampSeconds={storyConfig.audio?.startTimestampSeconds}
+        endTimestampSeconds={storyConfig.audio?.endTimestampSeconds}
+        volume={storyConfig.audio?.volume}
         autoStart={audioAutoStart}
       />
 
       {/* Top Scene Progress Navigation */}
-      <header className="sticky top-0 z-40 w-full py-4 px-4 bg-black/40 backdrop-blur-md border-b border-white/5">
-        <div className="max-w-xl mx-auto flex items-center justify-between gap-1">
-          {enabledScenes.map((sceneId, idx) => {
-            const isActive = idx === currentSceneIndex;
-            const isCompleted = idx < currentSceneIndex;
+      <header className="sticky top-0 z-40 w-full py-3 px-4 bg-black/50 backdrop-blur-md border-b border-white/5">
+        <div className="max-w-xl mx-auto space-y-2">
+          {activeChapter && (
+            <div className="flex items-center justify-between text-[11px] text-pink-300 font-medium px-1">
+              <span>{activeChapter.title}</span>
+              {activeChapter.subtitle && <span className="text-white/50">{activeChapter.subtitle}</span>}
+            </div>
+          )}
+          <div className="flex items-center justify-between gap-1">
+            {enabledScenes.map((sceneId, idx) => {
+              const isActive = idx === currentSceneIndex;
+              const isCompleted = idx < currentSceneIndex;
 
-            return (
-              <button
-                key={sceneId}
-                onClick={() => goToScene(idx)}
-                className={`flex-1 h-1.5 rounded-full transition-all duration-300 ${
-                  isActive
-                    ? "bg-gradient-to-r from-pink-500 to-rose-400 scale-y-125"
-                    : isCompleted
-                    ? "bg-pink-500/50 hover:bg-pink-500/80"
-                    : "bg-white/10 hover:bg-white/20"
-                }`}
-                title={`Scene ${idx + 1}`}
-                aria-label={`Jump to scene ${idx + 1}`}
-              />
-            );
-          })}
+              return (
+                <button
+                  key={sceneId}
+                  onClick={() => goToScene(idx)}
+                  className={`flex-1 h-1.5 rounded-full transition-all duration-300 ${
+                    isActive
+                      ? "bg-gradient-to-r from-pink-500 to-rose-400 scale-y-125"
+                      : isCompleted
+                      ? "bg-pink-500/50 hover:bg-pink-500/80"
+                      : "bg-white/10 hover:bg-white/20"
+                  }`}
+                  title={`Scene ${idx + 1}`}
+                  aria-label={`Jump to scene ${idx + 1}`}
+                />
+              );
+            })}
+          </div>
         </div>
       </header>
 
@@ -214,6 +227,7 @@ export function StoryPlayer({ proposal, onResponseLogged }: StoryPlayerProps) {
                 items={storyConfig.memories.items}
                 autoPlay={storyConfig.memories.slideshowAutoPlay}
                 intervalSec={storyConfig.memories.slideshowIntervalSec}
+                layoutMode={storyConfig.memories.layoutMode}
                 onProceed={goToNextScene}
               />
             </motion.div>
@@ -233,6 +247,8 @@ export function StoryPlayer({ proposal, onResponseLogged }: StoryPlayerProps) {
                 content={storyConfig.letter.content}
                 typingSpeedMs={storyConfig.letter.typingSpeedMs}
                 showTypewriter={storyConfig.letter.showTypewriter}
+                fontStyle={storyConfig.letter.fontStyle}
+                waxSealText={storyConfig.letter.waxSealText}
                 onProceed={goToNextScene}
               />
             </motion.div>
@@ -252,6 +268,7 @@ export function StoryPlayer({ proposal, onResponseLogged }: StoryPlayerProps) {
                 boxSubtitle={storyConfig.gift.boxSubtitle}
                 revealTitle={storyConfig.gift.revealTitle}
                 revealMessage={storyConfig.gift.revealMessage}
+                giftType={storyConfig.gift.giftType}
                 cards={storyConfig.gift.cards}
                 onProceed={goToNextScene}
               />

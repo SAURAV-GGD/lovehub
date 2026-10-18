@@ -163,6 +163,9 @@ export interface StoryMemoryItem {
   caption?: string;
   photoUrl: string;
   location?: string;
+  type?: "photo" | "chat";
+  sender?: string;
+  timestamp?: string;
 }
 
 export interface StoryPromiseCard {
@@ -172,10 +175,18 @@ export interface StoryPromiseCard {
   icon?: string;
 }
 
+export interface StoryChapterConfig {
+  id: string;
+  title: string;
+  subtitle?: string;
+  scenes: StorySceneId[];
+}
+
 export interface StoryConfig {
   version: 2;
   enabledScenes: StorySceneId[];
   relationshipStartDate?: string;
+  chapters?: StoryChapterConfig[];
   audio?: {
     enabled: boolean;
     musicType: "preset" | "youtube" | "custom" | "none";
@@ -185,6 +196,9 @@ export interface StoryConfig {
     youtubeVideoId?: string;
     musicTitle?: string;
     earphonesNotice?: boolean;
+    startTimestampSeconds?: number;
+    endTimestampSeconds?: number;
+    volume?: number;
   };
   intro: {
     headline?: string;
@@ -211,13 +225,15 @@ export interface StoryConfig {
     items: StoryMemoryItem[];
     slideshowAutoPlay?: boolean;
     slideshowIntervalSec?: number;
+    layoutMode?: "slideshow" | "grid" | "chat_timeline";
   };
   letter: {
     title?: string;
     content: string;
     typingSpeedMs?: number;
     showTypewriter: boolean;
-    fontStyle?: "playfair" | "poppins" | "serif" | "cursive";
+    fontStyle?: "playfair" | "poppins" | "serif" | "cursive" | "vintage";
+    waxSealText?: string;
   };
   gift: {
     giftType: "box" | "envelope" | "promise_cards" | "bouquet";
@@ -354,6 +370,7 @@ export function ensureStoryConfig(proposal: Partial<ProposalData>): StoryConfig 
       items: memoryItems,
       slideshowAutoPlay: proposal.customConfig?.enableSlideshow ?? true,
       slideshowIntervalSec: proposal.customConfig?.slideshowSpeed || 4,
+      layoutMode: "slideshow",
     },
     letter: {
       title: "A Letter Straight From My Heart 💌",
@@ -361,6 +378,7 @@ export function ensureStoryConfig(proposal: Partial<ProposalData>): StoryConfig 
       typingSpeedMs: 25,
       showTypewriter: true,
       fontStyle: "playfair",
+      waxSealText: "Sealed with Love 🤍",
     },
     gift: {
       giftType: "box",

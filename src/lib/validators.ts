@@ -55,3 +55,13 @@ export const checkoutSchema = z.object({
 });
 
 export type CheckoutInput = z.infer<typeof checkoutSchema>;
+
+export const extractMemoriesSchema = z.object({
+  text: z.string().min(5, "Chat text or memory notes required").max(10000),
+  yourName: z.string().max(100).optional(),
+  partnerName: z.string().max(100).optional(),
+  language: z.enum(["english", "hinglish"]).default("hinglish"),
+});
+
+export type ExtractMemoriesInput = z.infer<typeof extractMemoriesSchema>;
+
