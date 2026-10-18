@@ -65,11 +65,27 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || request.headers.get("x-real-ip") || "127.0.0.1";
+    const { rateLimit } = await import("@/lib/rate-limit");
+    const rateLimitKey = `preview_create_${session?.user?.id || ip}`;
+    const limit = rateLimit(rateLimitKey, { interval: 60 * 1000, maxRequests: 5 });
+    if (!limit.success) {
+      return apiError("Too many preview creation requests. Please wait a minute.", "RATE_LIMITED", 429);
+    }
+
     const body = await request.json();
     const validated = proposalSchema.parse(body);
 
     const proposalId = createId();
     const slug = validated.slug || createId();
+
+    const isPaid = Boolean((validated.content as any)?.isPaid);
+    const expiresAt = isPaid ? undefined : Date.now() + 120 * 1000; // 120-second preview window
+    const contentWithExpiry = {
+      ...((validated.content as Record<string, unknown>) || {}),
+      isPaid,
+      expiresAt,
+    };
 
     let created = null;
     try {
@@ -81,8 +97,8 @@ export async function POST(request: NextRequest) {
           title: validated.title,
           clientName: validated.clientName || null,
           input: validated.input,
-          content: validated.content,
-          status: validated.status,
+          content: contentWithExpiry,
+          status: isPaid ? "final" : "draft",
           isPublic: validated.isPublic,
           slug,
         })

@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import { Heart, Volume2, VolumeX, ChevronLeft, ChevronRight, Music, Sparkles, Lock } from "lucide-react";
+import { Heart, Volume2, VolumeX, ChevronLeft, ChevronRight, Music, Sparkles, Lock, Clock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { getProposal } from "@/lib/proposal-storage";
+import { getProposal, isProposalExpired } from "@/lib/proposal-storage";
 import { ProposalData, planLimits } from "@/lib/proposal-types";
+import { getPlanConfig } from "@/lib/plans";
 import { useParams } from "next/navigation";
 import { YouTubeAudioPlayer } from "@/components/music/youtube-audio-player";
 import { getPresetAudioUrl, extractYouTubeVideoId } from "@/lib/music";
@@ -286,6 +287,8 @@ export default function ProposalPage() {
   
   const [proposal, setProposal] = useState<ProposalData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isExpired, setIsExpired] = useState(false);
+  const [expiredInfo, setExpiredInfo] = useState<{ plan?: string; partnerName?: string; proposalId?: string } | null>(null);
   const [showResponse, setShowResponse] = useState(false);
   const [saidYes, setSaidYes] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
@@ -300,13 +303,31 @@ export default function ProposalPage() {
     async function load() {
       const local = getProposal(id);
       if (local) {
+        if (!local.isPaid && isProposalExpired(local)) {
+          setIsExpired(true);
+          setExpiredInfo({
+            plan: local.plan || "starter",
+            partnerName: local.partnerName,
+            proposalId: local.id,
+          });
+          setLoading(false);
+          return;
+        }
         setProposal(local);
         setLoading(false);
         return;
       }
 
       try {
-        const res = await fetch(`/api/proposals/${id}`);
+        const res = await fetch(`/api/proposals/${id}`, { cache: "no-store" });
+        if (res.status === 410) {
+          const expiredJson = await res.json().catch(() => ({}));
+          setIsExpired(true);
+          setExpiredInfo(expiredJson.error || { proposalId: id, plan: "starter" });
+          setLoading(false);
+          return;
+        }
+
         if (res.ok) {
           const json = await res.json();
           if (json.success && json.data) {
@@ -352,11 +373,14 @@ export default function ProposalPage() {
 
     const expiresAt =
       proposal.expiresAt ||
-      new Date(proposal.createdAt).getTime() + 4 * 60 * 1000;
+      new Date(proposal.createdAt).getTime() + 120 * 1000; // 120 seconds
 
     const updateTimer = () => {
       const left = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
       setSecondsRemaining(left);
+      if (left <= 0) {
+        setIsExpired(true);
+      }
     };
 
     updateTimer();
@@ -453,83 +477,80 @@ export default function ProposalPage() {
     );
   }
 
-  if (!proposal) {
+  if (!proposal && !isExpired) {
     return (
       <div className="min-h-screen romantic-gradient-dark flex items-center justify-center">
         <div className="text-center text-white">
-          <Heart className="w-16 h-16 text-pink-400 mx-auto mb-4 opacity-50" />
+          <Heart className="w-16 h-16 text-rose-500/50 mx-auto mb-4" />
           <h1 className="text-2xl font-bold mb-2">Proposal Not Found</h1>
-          <p className="text-white/70">This proposal link may have expired or doesn&apos;t exist.</p>
+          <p className="text-white/70">This proposal link may not exist or has expired.</p>
         </div>
       </div>
     );
   }
 
-  // If temporary preview has expired (after 4 minutes) and proposal is unpaid
-  if (proposal && secondsRemaining !== null && secondsRemaining <= 0) {
-    const planPrices: Record<string, number> = {
-      basic: 39,
-      romantic: 69,
-      premium: 169,
-      starter: 39,
-      pro: 69,
-      custom: 169,
-    };
-    const price = planPrices[proposal.plan] || 69;
+  // If temporary preview has expired (120 seconds) and proposal is unpaid
+  if (isExpired || (proposal && secondsRemaining !== null && secondsRemaining <= 0)) {
+    const rawPlan = proposal?.plan || expiredInfo?.plan || "starter";
+    const planConfig = getPlanConfig(rawPlan);
+    const price = planConfig.priceRupees;
+    const targetProposalId = proposal?.id || expiredInfo?.proposalId || id;
+    const partner = proposal?.partnerName || expiredInfo?.partnerName || "your partner";
 
     return (
-      <div className="min-h-screen romantic-gradient-dark flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#0E0D11] text-white flex items-center justify-center p-4">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
+          initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="max-w-md w-full bg-black/85 backdrop-blur-2xl border border-white/15 rounded-3xl p-8 text-center text-white shadow-2xl space-y-6"
+          className="max-w-md w-full glass border border-white/15 rounded-2xl p-8 text-center text-white shadow-2xl space-y-6"
         >
-          <div className="w-20 h-20 bg-rose-500/20 border border-rose-500/40 rounded-full flex items-center justify-center mx-auto shadow-inner">
-            <Lock className="w-9 h-9 text-rose-400" />
+          <div className="w-16 h-16 bg-rose-500/15 border border-rose-500/30 rounded-full flex items-center justify-center mx-auto">
+            <Lock className="w-8 h-8 text-rose-400" />
           </div>
 
           <div className="space-y-2">
-            <span className="inline-block px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-semibold">
-              ⏳ 4-Minute Temporary Preview Ended
-            </span>
-            <h1 className="text-2xl sm:text-3xl font-black text-white">
-              Temporary Preview Expired
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-semibold">
+              <Clock className="w-3.5 h-3.5" />
+              <span>120-Second Preview Expired</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+              Preview Link Expired
             </h1>
-            <p className="text-sm text-white/70 leading-relaxed">
-              This temporary preview link for <strong>{proposal.partnerName}</strong> was active for 4 minutes and has now terminated.
+            <p className="text-sm text-slate-300 leading-relaxed">
+              The live preview for <strong>{partner}</strong> was active for 120 seconds. Your draft has been safely preserved.
             </p>
           </div>
 
-          <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-left space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-white/60">Proposal Plan:</span>
-              <span className="font-semibold text-pink-300 uppercase">{proposal.plan}</span>
+          <div className="p-4 bg-white/5 rounded-xl border border-white/10 text-left space-y-2 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-slate-400">Selected Plan:</span>
+              <span className="font-semibold text-rose-300 uppercase">{planConfig.name} Plan</span>
             </div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-white/60">One-Time Activation:</span>
-              <span className="text-lg font-bold text-white">₹{price}</span>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-400">One-Time Activation:</span>
+              <span className="text-base font-bold text-white">₹{price}</span>
             </div>
-            <p className="text-[11px] text-white/50 pt-1 border-t border-white/10">
-              Includes permanent web hosting, interactive 3D flipbook memory deck, and WhatsApp share link.
+            <p className="text-[11px] text-slate-400 pt-1.5 border-t border-white/10">
+              Unlocks your permanent, unguessable private link with lifetime hosting.
             </p>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-3 pt-2">
             <Link
-              href={`/checkout?plan=${proposal.plan}&proposalId=${proposal.id}`}
+              href={`/checkout?plan=${planConfig.id}&proposalId=${targetProposalId}`}
               className="block w-full"
             >
               <Button
                 size="lg"
-                className="w-full bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white font-bold text-sm shadow-xl shadow-pink-500/30 h-12 gap-2"
+                className="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm h-12 rounded-xl gap-2 shadow-lg cursor-pointer"
               >
                 <Sparkles className="w-4 h-4" />
-                <span>Pay ₹{price} via UPI &amp; Unlock Permanent Link</span>
+                <span>Pay ₹{price} to Unlock Permanent Link</span>
               </Button>
             </Link>
 
-            <Link href="/" className="inline-block text-xs text-white/50 hover:text-white">
-              Return to LoveHub Home
+            <Link href="/" className="inline-block text-xs text-slate-400 hover:text-white transition-colors">
+              Return to Home
             </Link>
           </div>
         </motion.div>
@@ -537,37 +558,44 @@ export default function ProposalPage() {
     );
   }
 
+  if (!proposal) {
+    return null;
+  }
+
+  const rawPlan = proposal.plan || "starter";
+  const planConfig = getPlanConfig(rawPlan);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-900 via-red-900 to-pink-800 relative overflow-hidden">
-      {/* Floating Temporary Preview Banner (4 min countdown) */}
+    <div className="min-h-screen bg-gradient-to-br from-pink-950 via-rose-950 to-slate-950 relative overflow-hidden">
+      {/* Visible Countdown Timer Banner (120s preview) */}
       {secondsRemaining !== null && secondsRemaining > 0 && (
-        <div className="fixed top-0 inset-x-0 z-50 bg-black/85 backdrop-blur-md border-b border-amber-500/30 px-4 py-2.5 flex items-center justify-between text-white shadow-xl">
+        <div className="fixed top-0 inset-x-0 z-50 bg-black/90 backdrop-blur-md border-b border-rose-500/30 px-4 py-2.5 flex items-center justify-between text-white shadow-xl">
           <div className="flex items-center gap-2 text-xs">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping" />
-            <span className="font-semibold text-amber-300 hidden sm:inline">
-              Live Preview Mode:
+            <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+            <span className="font-semibold text-rose-300 hidden sm:inline">
+              Live Preview:
             </span>
-            <span className="font-mono bg-amber-500/20 px-2 py-0.5 rounded text-amber-200 font-bold">
+            <span className="font-mono bg-rose-500/20 border border-rose-500/30 px-2 py-0.5 rounded text-white font-bold">
               {Math.floor(secondsRemaining / 60)
                 .toString()
                 .padStart(2, "0")}
               :
               {(secondsRemaining % 60).toString().padStart(2, "0")}
             </span>
-            <span className="text-white/60 text-[11px] hidden md:inline">
-              remaining before termination
+            <span className="text-slate-300 text-[11px] hidden md:inline">
+              remaining • Draft preserved upon expiry
             </span>
           </div>
 
           <Link
-            href={`/checkout?plan=${proposal.plan}&proposalId=${proposal.id}`}
+            href={`/checkout?plan=${planConfig.id}&proposalId=${proposal?.id || id}`}
           >
             <Button
               size="sm"
-              className="h-8 px-3.5 bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white font-semibold text-xs gap-1.5 shadow-md shadow-pink-500/30"
+              className="h-9 px-4 bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs gap-1.5 rounded-lg shadow-sm"
             >
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Unlock Permanent Link</span>
+              <span>Unlock Link (₹{planConfig.priceRupees})</span>
             </Button>
           </Link>
         </div>

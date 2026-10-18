@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { proposals } from "@/db/schema";
@@ -30,9 +30,43 @@ export async function GET(request: NextRequest, { params }: Params) {
       const { getProposalByIdOrSlug } = await import("@/lib/admin-store");
       const storeProp = await getProposalByIdOrSlug(id);
       if (storeProp) {
-        return apiSuccess(storeProp);
+        proposal = storeProp as any;
+      } else {
+        return apiError("Proposal not found", "NOT_FOUND", 404);
       }
-      return apiError("Proposal not found", "NOT_FOUND", 404);
+    }
+
+    // Check payment status and 120-second preview expiry
+    const content = (proposal.content as Record<string, unknown>) || {};
+    const isPaid = Boolean(proposal.status === "final" || content.isPaid || (proposal as any).createdByAdmin);
+
+    if (!isPaid) {
+      const expiresAt = content.expiresAt
+        ? Number(content.expiresAt)
+        : (proposal.createdAt ? new Date(proposal.createdAt).getTime() + 120 * 1000 : 0);
+
+      if (expiresAt && Date.now() > expiresAt) {
+        return new NextResponse(
+          JSON.stringify({
+            success: false,
+            error: {
+              code: "PREVIEW_EXPIRED",
+              message: "Preview link expired after 120 seconds. Please unlock to activate your permanent link.",
+              proposalId: proposal.id,
+              slug: proposal.slug,
+              plan: proposal.plan || content.plan || "starter",
+              partnerName: proposal.clientName || content.partnerName || "Partner",
+            },
+          }),
+          {
+            status: 410,
+            headers: {
+              "Content-Type": "application/json",
+              "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+            },
+          }
+        );
+      }
     }
 
     // Public proposals can be viewed by anyone (e.g. the recipient)

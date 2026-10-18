@@ -6,12 +6,12 @@ function generateId(): string {
   return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 }
 
-export const PREVIEW_DURATION_MS = 4 * 60 * 1000; // 4 minutes temporary preview window
+export const PREVIEW_DURATION_MS = 2 * 60 * 1000; // 120 seconds (2 minutes) temporary preview window
 
 export function saveProposal(data: Omit<ProposalData, "id" | "createdAt">): string {
   const proposals = getAllProposals();
   
-  const isPaid = Boolean(data.isPaid) || data.plan === "basic";
+  const isPaid = Boolean(data.isPaid);
   const now = Date.now();
   const newProposal: ProposalData = {
     ...data,
@@ -62,7 +62,10 @@ export function markProposalPaid(id: string): boolean {
   return true;
 }
 
-export function isProposalExpired(proposal: ProposalData): boolean {
+export function isProposalExpired(
+  proposal: Partial<ProposalData> | { isPaid?: boolean; expiresAt?: number } | null | undefined
+): boolean {
+  if (!proposal) return false;
   if (proposal.isPaid) return false;
   if (!proposal.expiresAt) return false;
   return Date.now() > proposal.expiresAt;
