@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { subscriptions, webhookEvents, proposals } from "@/db/schema";
 import { checkoutSchema } from "@/lib/validators";
 import { updateOrderStatus, getOrderById } from "@/lib/orders";
+import { getYouPiPaymentSession } from "@/lib/youpi-client";
 import { markProposalPaid } from "@/lib/proposal-storage";
 import { eq, or } from "drizzle-orm";
 import { apiSuccess, apiError, handleApiError } from "@/lib/api-response";
@@ -14,8 +15,22 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({}));
 
     const rawOrderId = typeof body.orderId === "string" ? body.orderId.trim() : "";
-    const orderId = rawOrderId || `upi_${Date.now()}`;
-    const existingOrder = rawOrderId ? await getOrderById(rawOrderId) : null;
+    if (!rawOrderId) {
+      return apiError(
+        "Order ID is required to confirm payment.",
+        "BAD_REQUEST",
+        400
+      );
+    }
+    const orderId = rawOrderId;
+    const existingOrder = await getOrderById(orderId);
+    if (!existingOrder) {
+      return apiError(
+        "Order not found. Please initiate checkout first.",
+        "NOT_FOUND",
+        404
+      );
+    }
 
     const rawPlan = body.plan || existingOrder?.planId || "starter";
     const validated = checkoutSchema.parse({
@@ -25,7 +40,7 @@ export async function POST(request: NextRequest) {
 
     const utr = typeof body.utr === "string" ? body.utr.trim() : "";
 
-    if (!utr || utr.length < 6) {
+    if (!utr || !/^\d{10,16}$/.test(utr)) {
       return apiError(
         "Please provide a valid 12-digit UPI UTR / Reference number from your bank payment.",
         "BAD_REQUEST",
@@ -33,8 +48,44 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 1. Update order status in orders table/cache
-    await updateOrderStatus(orderId, "paid", { utr });
+    // 1. Authoritative Gateway Verification
+    // Never mark an order paid purely from client-controlled UTR strings.
+    // Check with the YouPI payment gateway or require explicit test mode flag.
+    const isExplicitTestMode = process.env.ENABLE_TEST_PAYMENTS === "true";
+    let isVerified = false;
+    let bankUtr = utr;
+
+    if (existingOrder.paymentId) {
+      const session = await getYouPiPaymentSession(existingOrder.paymentId);
+      if (session && session.status === "SUCCESS") {
+        isVerified = true;
+        bankUtr = session.utr || utr;
+      }
+    } else if (isExplicitTestMode) {
+      isVerified = true;
+    }
+
+    if (!isVerified) {
+      // Record the UTR on the pending order for gateway/manual reconciliation
+      await updateOrderStatus(orderId, "pending", { utr });
+      const origin =
+        request.headers.get("origin") ||
+        process.env.NEXT_PUBLIC_SITE_URL ||
+        "https://www.lovehub.in";
+      const redirectUrl = `${origin}/checkout/callback?orderId=${encodeURIComponent(orderId)}`;
+
+      return apiSuccess({
+        success: true,
+        verified: false,
+        orderId,
+        status: "pending",
+        message: "UTR reference received. Payment verification in progress with banking gateway.",
+        url: redirectUrl,
+      });
+    }
+
+    // 2. Verified: Update order status to 'paid'
+    await updateOrderStatus(orderId, "paid", { utr: bankUtr });
 
     // 2. Get current session if user is logged in
     try {
@@ -127,6 +178,8 @@ export async function POST(request: NextRequest) {
 
     return apiSuccess({
       success: true,
+      verified: true,
+      status: "paid",
       orderId,
       plan: validated.plan,
       proposalId: effectiveProposalId,

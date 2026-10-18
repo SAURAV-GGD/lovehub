@@ -105,6 +105,14 @@ export async function ensureDbTables(): Promise<void> {
             "updated_at" timestamp DEFAULT now() NOT NULL
           );
 
+          CREATE TABLE IF NOT EXISTS "proposal_responses" (
+            "id" text PRIMARY KEY NOT NULL,
+            "proposal_id" text NOT NULL REFERENCES "proposals"("id") ON DELETE CASCADE,
+            "event_type" text NOT NULL,
+            "payload" jsonb DEFAULT '{}'::jsonb NOT NULL,
+            "created_at" timestamp DEFAULT now() NOT NULL
+          );
+
           CREATE TABLE IF NOT EXISTS "birthday_pages" (
             "id" text PRIMARY KEY NOT NULL,
             "user_id" text REFERENCES "user"("id") ON DELETE CASCADE,

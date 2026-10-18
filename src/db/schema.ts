@@ -93,6 +93,23 @@ export const proposals = pgTable(
   ]
 );
 
+export const proposalResponses = pgTable(
+  "proposal_responses",
+  {
+    id: text("id").primaryKey(),
+    proposalId: text("proposal_id")
+      .notNull()
+      .references(() => proposals.id, { onDelete: "cascade" }),
+    eventType: text("event_type").notNull(),
+    payload: jsonb("payload").default({}).notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("proposal_responses_proposal_id_idx").on(table.proposalId),
+    index("proposal_responses_event_type_idx").on(table.eventType),
+  ]
+);
+
 // ==========================================
 // 3. Subscriptions & Payments
 // ==========================================

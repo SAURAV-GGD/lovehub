@@ -301,6 +301,7 @@ export default function ProposalPage() {
 
   useEffect(() => {
     async function load() {
+      // 1. Optimistic local cache display to eliminate flash of loading
       const local = getProposal(id);
       if (local) {
         if (!local.isPaid && isProposalExpired(local)) {
@@ -310,14 +311,13 @@ export default function ProposalPage() {
             partnerName: local.partnerName,
             proposalId: local.id,
           });
-          setLoading(false);
-          return;
+        } else {
+          setProposal(local);
         }
-        setProposal(local);
         setLoading(false);
-        return;
       }
 
+      // 2. Authoritative Server Check (Primary source of truth for cross-device & paid state)
       try {
         const res = await fetch(`/api/proposals/${id}`, { cache: "no-store" });
         if (res.status === 410) {
@@ -333,6 +333,13 @@ export default function ProposalPage() {
           if (json.success && json.data) {
             const row = json.data;
             const content = row.content || {};
+            const serverIsPaid = Boolean(content.isPaid || row.status === "final" || row.createdByAdmin);
+
+            // If server confirmed paid, clear any local expiry
+            if (serverIsPaid) {
+              setIsExpired(false);
+            }
+
             setProposal({
               id: row.id,
               yourName: content.yourName || "Someone Special",
@@ -347,7 +354,7 @@ export default function ProposalPage() {
               customSlug: row.slug,
               plan: content.plan || row.plan || "romantic",
               createdAt: new Date(row.createdAt),
-              isPaid: Boolean(content.isPaid || row.status === "final" || row.createdByAdmin),
+              isPaid: serverIsPaid,
               expiresAt: content.expiresAt,
               customConfig: content.customConfig,
               createdByAdmin: content.createdByAdmin || row.createdByAdmin,
@@ -357,7 +364,7 @@ export default function ProposalPage() {
           }
         }
       } catch {
-        // network error
+        // network error - fallback to local cache
       }
       setLoading(false);
     }

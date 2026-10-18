@@ -37,6 +37,7 @@ export const generateProposalSchema = z.object({
 export type GenerateProposalInput = z.infer<typeof generateProposalSchema>;
 
 export const proposalSchema = z.object({
+  id: z.string().optional(),
   title: z.string().min(1, "Title is required").max(200),
   clientName: z.string().max(100).optional(),
   input: z.record(z.string(), z.any()),

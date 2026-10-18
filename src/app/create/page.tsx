@@ -354,20 +354,21 @@ function CreateContent() {
         },
       };
 
-      const id = saveProposal(proposalData);
+      let canonicalId = saveProposal(proposalData);
 
       try {
         const res = await fetch("/api/proposals", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            id: canonicalId,
             title: `Proposal for ${partnerName}`,
             clientName: partnerName,
             input: { yourName, partnerName, relationshipType, tone, language },
-            content: proposalData,
+            content: { ...proposalData, id: canonicalId },
             status: "draft",
             isPublic: true,
-            slug: customSlug || id,
+            slug: customSlug || canonicalId,
           }),
         });
 
@@ -379,12 +380,17 @@ function CreateContent() {
             return;
           }
           console.warn("Server proposal save info:", errData);
+        } else {
+          const resData = await res.json();
+          if (resData?.data?.id) {
+            canonicalId = resData.data.id;
+          }
         }
       } catch (networkErr) {
         console.warn("Could not sync to server, local copy preserved:", networkErr);
       }
 
-      setProposalId(id);
+      setProposalId(canonicalId);
       setStep(4);
       toast.success("Live preview created! Valid for 2 minutes.");
     } catch (err) {

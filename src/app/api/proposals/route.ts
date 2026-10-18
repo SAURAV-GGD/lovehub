@@ -54,19 +54,21 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validated = proposalSchema.parse(body);
 
-    const proposalId = createId();
-    const slug = validated.slug || createId();
+    const proposalId = (typeof body.id === "string" && body.id.trim()) ? body.id.trim() : createId();
+    const slug = validated.slug || proposalId;
 
     const isPaid = Boolean((validated.content as any)?.isPaid);
     const expiresAt = isPaid ? undefined : Date.now() + 120 * 1000; // 120-second preview window
     const contentWithExpiry = {
       ...((validated.content as Record<string, unknown>) || {}),
+      id: proposalId,
       isPaid,
       expiresAt,
     };
 
     let created = null;
     try {
+      const planVal = (validated.content as any)?.plan || "romantic";
       const [dbCreated] = await db
         .insert(proposals)
         .values({
@@ -74,11 +76,26 @@ export async function POST(request: NextRequest) {
           userId: userId || "guest-creator-user",
           title: validated.title,
           clientName: validated.clientName || null,
+          plan: planVal,
           input: validated.input,
           content: contentWithExpiry,
           status: isPaid ? "final" : "draft",
-          isPublic: validated.isPublic,
+          isPublic: validated.isPublic !== undefined ? validated.isPublic : true,
           slug,
+        })
+        .onConflictDoUpdate({
+          target: proposals.id,
+          set: {
+            title: validated.title,
+            clientName: validated.clientName || null,
+            plan: planVal,
+            input: validated.input,
+            content: contentWithExpiry,
+            status: isPaid ? "final" : "draft",
+            isPublic: validated.isPublic !== undefined ? validated.isPublic : true,
+            slug,
+            updatedAt: new Date(),
+          },
         })
         .returning();
       created = dbCreated;
