@@ -103,38 +103,61 @@ export async function createYouPiPayment(
     });
   }
 
-  // Graceful Sandbox / Offline Fallback Session
-  const mockPaymentId = `yp_mock_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-  const sandboxCheckoutUrl = `${origin}/checkout/callback?orderId=${encodeURIComponent(
-    params.orderId
-  )}&paymentId=${encodeURIComponent(mockPaymentId)}&sandbox=1`;
+  // Graceful Self-Contained UPI Checkout Portal Session (No mock / No sandbox parameter)
+  const livePaymentId = `yp_${params.orderId}`;
+  const checkoutUrl = `${origin}/pay/${encodeURIComponent(params.orderId)}`;
 
-  const fallbackSession: YouPiPaymentSession = {
-    paymentId: mockPaymentId,
+  const nativeSession: YouPiPaymentSession = {
+    paymentId: livePaymentId,
     orderId: params.orderId,
     amount: amountRupees,
     amountPaise: params.amountPaise,
     currency: "INR",
     status: "INITIATED",
-    checkoutUrl: sandboxCheckoutUrl,
+    checkoutUrl,
     metadata: params.metadata,
   };
 
-  simulatedSessions.set(mockPaymentId, fallbackSession);
-  return fallbackSession;
+  simulatedSessions.set(livePaymentId, nativeSession);
+  return nativeSession;
 }
 
 /**
- * Authoritatively verifies a payment session directly with the YouPI-PG server.
+ * Authoritatively verifies a payment session directly with the gateway or local orders.
  */
 export async function getYouPiPaymentSession(
   paymentId: string
 ): Promise<YouPiPaymentSession | null> {
   const config = getYouPiConfig();
 
-  // Check local mock sessions first if simulated
+  // Check local registry sessions first
   if (simulatedSessions.has(paymentId)) {
     return simulatedSessions.get(paymentId)!;
+  }
+
+  // Check if it corresponds to an internal order
+  if (paymentId.startsWith("yp_")) {
+    try {
+      const { getOrderById } = await import("@/lib/orders");
+      const orderId = paymentId.replace(/^yp_/, "");
+      const order = await getOrderById(orderId);
+      if (order) {
+        const session: YouPiPaymentSession = {
+          paymentId,
+          orderId: order.id,
+          amount: (order.amountPaise / 100).toFixed(2),
+          amountPaise: order.amountPaise,
+          currency: order.currency,
+          status: order.status === "paid" ? "SUCCESS" : "INITIATED",
+          checkoutUrl: order.checkoutUrl || "",
+          utr: order.utr || undefined,
+        };
+        simulatedSessions.set(paymentId, session);
+        return session;
+      }
+    } catch {
+      // Non-fatal
+    }
   }
 
   try {

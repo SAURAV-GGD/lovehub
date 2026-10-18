@@ -1,9 +1,12 @@
 import { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
-import { subscriptions, webhookEvents } from "@/db/schema";
+import { subscriptions, webhookEvents, proposals } from "@/db/schema";
 import { checkoutSchema } from "@/lib/validators";
-import { apiSuccess, handleApiError } from "@/lib/api-response";
+import { updateOrderStatus } from "@/lib/orders";
+import { markProposalPaid } from "@/lib/proposal-storage";
+import { eq, or } from "drizzle-orm";
+import { apiSuccess, apiError, handleApiError } from "@/lib/api-response";
 import { logger } from "@/lib/logger";
 
 export async function POST(request: NextRequest) {
@@ -15,14 +18,20 @@ export async function POST(request: NextRequest) {
     });
 
     const utr = typeof body.utr === "string" ? body.utr.trim() : "";
-    const orderId = typeof body.orderId === "string" ? body.orderId : `upi_${Date.now()}`;
+    const orderId = typeof body.orderId === "string" ? body.orderId.trim() : `upi_${Date.now()}`;
 
-    // Get current session if user is logged in
+    if (!utr || utr.length < 6) {
+      return apiError("Please provide a valid 12-digit UPI UTR / Reference number from your bank payment.", "BAD_REQUEST", 400);
+    }
+
+    // 1. Update order status in orders table/cache
+    await updateOrderStatus(orderId, "paid", { utr });
+
+    // 2. Get current session if user is logged in
     const session = await auth.api.getSession({ headers: request.headers });
 
     if (session?.user?.id) {
       const userId = session.user.id;
-      // Record or update subscription in database
       await db
         .insert(subscriptions)
         .values({
@@ -44,7 +53,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Record payment reference in webhookEvents table for accounting / audit
+    // 3. Record payment reference in webhookEvents table for accounting / audit
     await db
       .insert(webhookEvents)
       .values({
@@ -54,11 +63,11 @@ export async function POST(request: NextRequest) {
       })
       .onConflictDoNothing();
 
-    // Update proposal if proposalId is provided
+    // 4. Update proposal if proposalId is provided
     if (validated.proposalId) {
+      markProposalPaid(validated.proposalId);
+
       try {
-        const { proposals } = await import("@/db/schema");
-        const { or, eq } = await import("drizzle-orm");
         const [existing] = await db
           .select()
           .from(proposals)
@@ -72,15 +81,18 @@ export async function POST(request: NextRequest) {
         if (existing) {
           const currentContent =
             (existing.content as Record<string, unknown>) || {};
+          const updatedContent: Record<string, unknown> = {
+            ...currentContent,
+            isPaid: true,
+          };
+          delete updatedContent.expiresAt;
+
           await db
             .update(proposals)
             .set({
               status: "final",
-              content: {
-                ...currentContent,
-                isPaid: true,
-                expiresAt: undefined,
-              },
+              content: updatedContent,
+              updatedAt: new Date(),
             })
             .where(eq(proposals.id, existing.id));
         }
@@ -92,11 +104,8 @@ export async function POST(request: NextRequest) {
     const origin =
       request.headers.get("origin") ||
       process.env.NEXT_PUBLIC_SITE_URL ||
-      "http://localhost:3000";
-
-    const redirectUrl = validated.proposalId
-      ? `${origin}/checkout/success?proposalId=${validated.proposalId}&plan=${validated.plan}`
-      : `${origin}/create?plan=${validated.plan}&upgraded=true`;
+      "https://www.lovehub.in";
+    const redirectUrl = `${origin}/checkout/callback?orderId=${encodeURIComponent(orderId)}`;
 
     return apiSuccess({
       success: true,

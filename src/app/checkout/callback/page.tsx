@@ -199,14 +199,29 @@ function CallbackContent() {
               </div>
             )}
 
-            {/* Sandbox Simulation Helper */}
-            {isSandbox && state !== "paid" && (
+            {/* Action to open payment portal if pending */}
+            {state !== "paid" && orderId && (
+              <div className="pt-1">
+                <Link href={`/pay/${encodeURIComponent(orderId)}`} className="block w-full">
+                  <Button
+                    type="button"
+                    className="w-full h-11 text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-md gap-2 cursor-pointer"
+                  >
+                    <span>Open UPI Payment &amp; QR Code</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </Link>
+              </div>
+            )}
+
+            {/* Sandbox Simulation Helper - Local Dev Only */}
+            {isSandbox && state !== "paid" && process.env.NODE_ENV !== "production" && (
               <div className="rounded-xl border border-dashed border-amber-500/50 bg-amber-500/5 p-4 space-y-2">
                 <div className="text-xs font-bold text-amber-700 dark:text-amber-300">
-                  🧪 Sandbox Testing Mode
+                  🧪 Local Dev Testing Helper
                 </div>
                 <p className="text-[11px] text-muted-foreground">
-                  YouPI gateway is in mock/sandbox mode. Click below to simulate an immediate bank approval.
+                  Simulate an instant gateway confirmation for local debugging.
                 </p>
                 <Button
                   type="button"
