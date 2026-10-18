@@ -9,14 +9,21 @@ export default function JourneyVideo() {
   useEffect(() => {
     const v = ref.current;
     if (!v) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return; // poster only
+
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (mediaQuery.matches) {
+      try {
+        v.pause();
+      } catch {}
+      return;
+    }
 
     let raf = 0;
     let cur = 0;
     let last = -1;
     let primed = false;
 
-    // iOS only lets a video be controlled after one user gesture
+    // iOS unlocks scrubbing after first user touch gesture
     const unlock = () => {
       v.play()
         .then(() => v.pause())
@@ -31,14 +38,13 @@ export default function JourneyVideo() {
         if (!primed) {
           cur = target;
           primed = true;
-        } // refresh mid-page: no scrub from 0
-        cur += (target - cur) * 0.15; // extra smoothing on top of Lenis
+        }
+        cur += (target - cur) * 0.15;
         if (!v.seeking && Math.abs(cur - last) > 0.008) {
           v.currentTime = cur;
           last = cur;
         }
-        // Subtle depth scale 1.0 -> 1.06 across the walk
-        const scale = 1.0 + (cur / d) * 0.06;
+        const scale = 1.0 + (cur / d) * 0.04;
         v.style.transform = `scale(${scale.toFixed(4)})`;
       }
       raf = requestAnimationFrame(loop);
@@ -47,14 +53,29 @@ export default function JourneyVideo() {
 
     const onVis = () => {
       cancelAnimationFrame(raf);
-      if (!document.hidden) raf = requestAnimationFrame(loop);
+      if (!document.hidden && !mediaQuery.matches) {
+        raf = requestAnimationFrame(loop);
+      }
     };
     document.addEventListener("visibilitychange", onVis);
+
+    const handleMotionChange = (e: MediaQueryListEvent) => {
+      if (e.matches) {
+        cancelAnimationFrame(raf);
+        try {
+          v.pause();
+        } catch {}
+      } else {
+        raf = requestAnimationFrame(loop);
+      }
+    };
+    mediaQuery.addEventListener("change", handleMotionChange);
 
     return () => {
       cancelAnimationFrame(raf);
       document.removeEventListener("visibilitychange", onVis);
       window.removeEventListener("touchstart", unlock);
+      mediaQuery.removeEventListener("change", handleMotionChange);
     };
   }, []);
 
@@ -65,7 +86,7 @@ export default function JourneyVideo() {
       className="fixed inset-0 z-0 h-full w-full object-cover pointer-events-none"
       muted
       playsInline
-      preload="auto"
+      preload="metadata"
       poster="/video/hero-poster.jpg"
       aria-hidden="true"
       tabIndex={-1}

@@ -14,7 +14,6 @@ import {
   FaqJsonLd,
 } from "@/components/seo/JsonLd";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Heart,
@@ -22,18 +21,23 @@ import {
   Camera,
   Music,
   Share2,
-  CheckCircle2,
+  Check,
+  Minus,
   ArrowRight,
   ShieldCheck,
   Star,
-  Flame,
   Cake,
+  Sparkles,
+  Lock,
+  Smartphone,
+  Eye,
 } from "lucide-react";
+import { PLANS, ALL_PLANS } from "@/lib/plans";
 
 export const metadata = constructMetadata({
-  title: "LoveHub - AI Proposal & Romantic Website Generator",
+  title: "LoveHub - Interactive Proposal & Keepsake Generator",
   description:
-    "Venture past the ordinary into an eternal yes. Design personalized, romantic proposal websites and birthday keepsakes with AI love letters, music, and interactive runaway buttons.",
+    "Design personal proposal websites with your photos, background music, an AI love letter, and an interactive runaway 'No' button. One-time payment, permanent link.",
   canonical: "/",
 });
 
@@ -41,37 +45,42 @@ const faqs = [
   {
     question: "How does the interactive proposal page work?",
     answer:
-      "Your partner receives a private link. When they open it, they see your customized love letter, photos, and music. When they try to click 'No', the button playfully runs away! When they click 'YES', a joyous confetti celebration explodes.",
+      "Your partner receives a private link. When opened, they see your photos, love letter, and background music. When they attempt to tap 'No', the button elusively teleports away. When they click 'YES', a celebration animation triggers.",
   },
   {
-    question: "Can I customize the proposal text and photos?",
+    question: "How does the preview link work before paying?",
     answer:
-      "Yes! You can either use our AI romantic assistant to draft a personalized letter in English or Hinglish, or write your own message, along with uploading favorite photos and choosing background music.",
+      "You can build your proposal and test it in a live preview mode valid for 2 minutes. Once satisfied, complete payment (starting at Rs. 31 one-time) to instantly generate your permanent, unguessable link with lifetime hosting.",
+  },
+  {
+    question: "Can I customize the letter and upload our own photos?",
+    answer:
+      "Yes. You can write your own message or use our bilingual romance assistant in English or Hinglish. You can upload milestone photos with captions and select a romantic acoustic guitar or piano soundtrack.",
   },
   {
     question: "How do I share the proposal with my partner?",
     answer:
-      "Once created, you get a clean, unique link. You can send it directly via WhatsApp, Instagram DM, iMessage, or display it as a surprise QR code.",
+      "Your permanent link is private and unguessable. You can share it directly via WhatsApp, Instagram DM, SMS, or display it as a surprise QR code.",
+  },
+  {
+    question: "Are there any recurring subscriptions or hidden fees?",
+    answer:
+      "None. Every plan on LoveHub is a simple, one-time payment. There are zero monthly charges, zero auto-debits, and zero hidden fees.",
   },
   {
     question: "Can I also create birthday celebration pages?",
     answer:
-      "Yes! LoveHub features dedicated interactive 3D birthday wishboards with virtual candle blowing, memory photo walls, and personalized birthday notes.",
-  },
-  {
-    question: "Is my proposal private and secure?",
-    answer:
-      "Absolutely. Only people with your unique link can view your proposal. You also have full control to toggle visibility or delete the page anytime from your dashboard.",
+      "Yes. LoveHub includes dedicated interactive birthday wishboards with virtual candle blowing, audio notes, and memory photo walls.",
   },
 ];
 
 export default function HomePage() {
   return (
-    <div className="relative min-h-screen text-white selection:bg-rose-500 selection:text-white">
+    <div className="relative min-h-screen text-white selection:bg-rose-600 selection:text-white">
       {/* Scroll-Scrubbed Journey Background Video */}
       <JourneyVideo />
 
-      {/* Cinematic Contrast Scrim */}
+      {/* Cinematic Contrast Scrim (WCAG AA Compliant) */}
       <div id="video-scrim" className="pointer-events-none fixed inset-0 z-0" />
 
       {/* Lenis Smooth Scroll & Progress Engine */}
@@ -91,176 +100,316 @@ export default function HomePage() {
 
       {/* Main Content Layer (Above Video & Scrim) */}
       <main className="relative z-10 journey-content">
-        {/* Section 0: Hero Journey (0.0s) */}
+        {/* Section 0: Hero Journey */}
         <MotionHero />
 
-        {/* Section 1: Live Interactive Runaway "NO" Simulator (~0.8s) */}
+        {/* Section 1: Live Interactive Runaway "NO" Simulator in Smartphone Mockup */}
         <InteractiveDemo />
 
-        {/* Section 2: 3-Step Journey (~1.7s) */}
-        <section id="steps" className="min-h-[160vh] py-28 sm:py-36 flex flex-col justify-center">
-          <div className="max-w-7xl mx-auto px-5 sm:px-8 space-y-16 w-full">
+        {/* Section 2: 3-Step Journey (Alternating Text/Visual Rows) */}
+        <section id="steps" className="py-24 sm:py-32 flex flex-col justify-center">
+          <div className="max-w-6xl mx-auto px-5 sm:px-8 space-y-20 w-full">
             <Reveal>
-              <div className="text-center space-y-4 max-w-2xl mx-auto">
-                <Badge variant="outline" className="text-rose-300 border-rose-400/40 bg-rose-500/10 backdrop-blur-md">
-                  Simple 3-Step Journey
+              <div className="text-center space-y-3 max-w-2xl mx-auto">
+                <Badge variant="outline" className="text-rose-300 border-rose-500/30 bg-rose-500/10 backdrop-blur-md">
+                  Process
                 </Badge>
                 <h2 className="font-[family-name:var(--font-playfair)] italic text-3xl sm:text-5xl font-bold text-white tracking-tight">
-                  Craft Magic in Minutes
+                  From Story to Live Link in Three Steps
                 </h2>
-                <p className="text-slate-200 text-base sm:text-lg">
-                  No technical skills needed. From idea to heartwarming proposal page in under two minutes.
+                <p className="text-slate-300 text-sm sm:text-base max-w-[65ch] mx-auto leading-relaxed">
+                  Simple workflow designed for mobile and desktop creators. Complete your page, preview it live, and share.
                 </p>
               </div>
             </Reveal>
 
+            {/* Step 1: Text Left, Visual Right */}
+            <Reveal delay={0.1}>
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center glass p-8 sm:p-10 border border-white/10 rounded-2xl">
+                <div className="lg:col-span-7 space-y-4">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-white/10 text-xs font-mono text-slate-300 uppercase tracking-wider">
+                    <span>Step 01</span>
+                  </div>
+                  <h3 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                    Draft Your Personal Love Letter
+                  </h3>
+                  <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-[65ch]">
+                    Write your own words or pick a tone (cute, heartfelt, filmy, or playful). Our bilingual writing assistant crafts a tailored note in English or Hinglish featuring your inside jokes and shared memories.
+                  </p>
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    <span className="px-3 py-1 rounded-full bg-white/10 text-xs text-slate-300">English &amp; Hinglish</span>
+                    <span className="px-3 py-1 rounded-full bg-white/10 text-xs text-slate-300">Tone Selection</span>
+                    <span className="px-3 py-1 rounded-full bg-white/10 text-xs text-slate-300">Instant Regeneration</span>
+                  </div>
+                </div>
+
+                <div className="lg:col-span-5 bg-slate-900/90 border border-white/10 rounded-xl p-5 space-y-3 shadow-lg">
+                  <div className="flex items-center justify-between text-xs text-slate-400 pb-2 border-b border-white/10">
+                    <span className="font-mono">AI Note Generator</span>
+                    <span className="text-rose-400 font-medium">Hinglish Tone</span>
+                  </div>
+                  <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-sans italic bg-black/40 p-4 rounded-lg border border-white/5">
+                    &ldquo;From that first unscripted conversation to navigating every city together, life has been brighter with you by my side. Will you make forever official with me?&rdquo;
+                  </p>
+                  <div className="flex items-center justify-between pt-1 text-[11px] text-slate-400">
+                    <span>Generated in 1.4s</span>
+                    <span className="text-emerald-400 flex items-center gap-1">
+                      <Check className="w-3 h-3" /> Ready to customize
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </Reveal>
+
+            {/* Step 2: Visual Left, Text Right */}
             <Reveal delay={0.15}>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <Card className="glass bg-slate-950/60 border-white/20 shadow-2xl relative overflow-hidden rounded-3xl">
-                  <CardHeader className="space-y-4 p-8">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-500/20 border border-rose-400/30 text-rose-300">
-                      <Wand2 className="h-7 w-7" />
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center glass p-8 sm:p-10 border border-white/10 rounded-2xl">
+                <div className="lg:col-span-5 order-2 lg:order-1 bg-slate-900/90 border border-white/10 rounded-xl p-5 space-y-4 shadow-lg">
+                  <div className="flex items-center justify-between text-xs text-slate-400 pb-2 border-b border-white/10">
+                    <span className="font-mono">Curated Soundtrack</span>
+                    <span className="text-rose-400 font-medium">Active</span>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-white/10 border border-rose-500/30">
+                      <div className="flex items-center gap-3">
+                        <Music className="w-4 h-4 text-rose-400" />
+                        <div>
+                          <p className="text-xs font-semibold text-white">Romantic Piano Suite</p>
+                          <p className="text-[10px] text-slate-400">Ambient Acoustic Melodies</p>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-mono text-slate-400">3:24</span>
                     </div>
-                    <CardTitle className="text-xl font-bold text-white">
-                      1. AI Writes Your Story
-                    </CardTitle>
-                    <CardDescription className="text-slate-300 leading-relaxed text-sm sm:text-base">
-                      Choose your tone (Filmy, Emotional, Funny, Cute) and language. Our romance AI generates a customized love letter woven with your inside jokes.
-                    </CardDescription>
-                  </CardHeader>
-                </Card>
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/5 opacity-70">
+                      <div className="flex items-center gap-3">
+                        <Music className="w-4 h-4 text-slate-400" />
+                        <div>
+                          <p className="text-xs font-semibold text-slate-300">Soft Acoustic Guitar</p>
+                          <p className="text-[10px] text-slate-400">Warm Fingerpicked Strings</p>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-mono text-slate-400">2:48</span>
+                    </div>
+                  </div>
+                </div>
 
-                <Card className="glass bg-slate-950/60 border-white/20 shadow-2xl relative overflow-hidden rounded-3xl">
-                  <CardHeader className="space-y-4 p-8">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-500/20 border border-rose-400/30 text-rose-300">
-                      <Camera className="h-7 w-7" />
-                    </div>
-                    <CardTitle className="text-xl font-bold text-white">
-                      2. Add Memories & Music
-                    </CardTitle>
-                    <CardDescription className="text-slate-300 leading-relaxed text-sm sm:text-base">
-                      Upload your favorite couple photos, write sweet captions, and pick a melodic romantic piano or acoustic guitar background track.
-                    </CardDescription>
-                  </CardHeader>
-                </Card>
+                <div className="lg:col-span-7 order-1 lg:order-2 space-y-4">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-white/10 text-xs font-mono text-slate-300 uppercase tracking-wider">
+                    <span>Step 02</span>
+                  </div>
+                  <h3 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                    Add Photos and Background Music
+                  </h3>
+                  <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-[65ch]">
+                    Upload your favorite milestone pictures with personalized captions. Select an ambient piano, acoustic guitar, or Indian romantic flute melody that plays smoothly as your partner views the page.
+                  </p>
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    <span className="px-3 py-1 rounded-full bg-white/10 text-xs text-slate-300">Up to 12 Photos</span>
+                    <span className="px-3 py-1 rounded-full bg-white/10 text-xs text-slate-300">Custom Captions</span>
+                    <span className="px-3 py-1 rounded-full bg-white/10 text-xs text-slate-300">Royalty-Free Audio</span>
+                  </div>
+                </div>
+              </div>
+            </Reveal>
 
-                <Card className="glass bg-slate-950/60 border-white/20 shadow-2xl relative overflow-hidden rounded-3xl">
-                  <CardHeader className="space-y-4 p-8">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-500/20 border border-rose-400/30 text-rose-300">
-                      <Share2 className="h-7 w-7" />
+            {/* Step 3: Text Left, Visual Right */}
+            <Reveal delay={0.2}>
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center glass p-8 sm:p-10 border border-white/10 rounded-2xl">
+                <div className="lg:col-span-7 space-y-4">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-white/10 text-xs font-mono text-slate-300 uppercase tracking-wider">
+                    <span>Step 03</span>
+                  </div>
+                  <h3 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                    Preview Live, Unlock, and Share
+                  </h3>
+                  <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-[65ch]">
+                    Every creation includes a 2-minute live preview to inspect your layout on phone and desktop. Once unlocked with a one-time payment, you receive an unguessable private link ready for WhatsApp or print.
+                  </p>
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    <span className="px-3 py-1 rounded-full bg-white/10 text-xs text-slate-300">2-Minute Free Preview</span>
+                    <span className="px-3 py-1 rounded-full bg-white/10 text-xs text-slate-300">No Re-typing on Unlock</span>
+                    <span className="px-3 py-1 rounded-full bg-white/10 text-xs text-slate-300">Permanent Private URL</span>
+                  </div>
+                </div>
+
+                <div className="lg:col-span-5 bg-slate-900/90 border border-white/10 rounded-xl p-5 space-y-3 shadow-lg">
+                  <div className="flex items-center justify-between text-xs text-slate-400 pb-2 border-b border-white/10">
+                    <span className="font-mono">Private URL Delivery</span>
+                    <span className="text-emerald-400 font-medium">Permanent</span>
+                  </div>
+                  <div className="p-3 bg-black/40 rounded-lg border border-white/10 flex items-center justify-between text-xs font-mono">
+                    <span className="text-slate-300 truncate mr-2">lovehub.in/p/alex-and-sam</span>
+                    <Badge variant="outline" className="border-emerald-500/40 text-emerald-400 text-[10px]">
+                      Active
+                    </Badge>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <div className="p-2.5 rounded-lg bg-white/5 border border-white/5 text-center">
+                      <p className="text-[11px] text-slate-400">Share Format</p>
+                      <p className="text-xs font-semibold text-white">WhatsApp &amp; DM</p>
                     </div>
-                    <CardTitle className="text-xl font-bold text-white">
-                      3. Share & Celebrate
-                    </CardTitle>
-                    <CardDescription className="text-slate-300 leading-relaxed text-sm sm:text-base">
-                      Send the private link via WhatsApp or surprise QR code. Watch them try to click &ldquo;No&rdquo; while it runs away, followed by an explosion of confetti!
-                    </CardDescription>
-                  </CardHeader>
-                </Card>
+                    <div className="p-2.5 rounded-lg bg-white/5 border border-white/5 text-center">
+                      <p className="text-[11px] text-slate-400">Security</p>
+                      <p className="text-xs font-semibold text-white">Unguessable Token</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </Reveal>
           </div>
         </section>
 
-        {/* Section 3: Features Grid (~2.5s) */}
-        <section id="features" className="min-h-[140vh] py-28 sm:py-36 flex flex-col justify-center">
-          <div className="max-w-7xl mx-auto px-5 sm:px-8 space-y-16 w-full">
+        {/* Section 3: List-Style Feature Section */}
+        <section id="features" className="py-24 sm:py-32 flex flex-col justify-center">
+          <div className="max-w-6xl mx-auto px-5 sm:px-8 space-y-16 w-full">
             <Reveal>
-              <div className="text-center space-y-4 max-w-2xl mx-auto">
-                <Badge variant="outline" className="text-rose-300 border-rose-400/40 bg-rose-500/10 backdrop-blur-md">
-                  Why Couples Love Us
+              <div className="text-center space-y-3 max-w-2xl mx-auto">
+                <Badge variant="outline" className="text-rose-300 border-rose-500/30 bg-rose-500/10 backdrop-blur-md">
+                  Core Features
                 </Badge>
                 <h2 className="font-[family-name:var(--font-playfair)] italic text-3xl sm:text-5xl font-bold text-white tracking-tight">
-                  Everything You Need for a Yes
+                  Engineered for a Memorable Response
                 </h2>
-                <p className="text-slate-200 text-base sm:text-lg">
-                  Every detail is engineered to make your partner feel cherished, loved, and smiling ear to ear.
+                <p className="text-slate-300 text-sm sm:text-base max-w-[65ch] mx-auto leading-relaxed">
+                  Every feature focuses on clean presentation, reliable mobile rendering, and playful user engagement.
                 </p>
               </div>
             </Reveal>
 
             <Reveal delay={0.15}>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <div className="glass bg-slate-950/60 border-white/20 p-7 rounded-3xl space-y-4 hover:border-rose-400/40 transition-colors shadow-xl">
-                  <div className="h-12 w-12 rounded-2xl bg-rose-500/20 border border-rose-400/30 text-rose-300 flex items-center justify-center">
-                    <Flame className="h-6 w-6" />
+              <div className="glass border border-white/10 rounded-2xl divide-y divide-white/10 overflow-hidden shadow-xl">
+                
+                {/* Feature Row 1 */}
+                <div className="p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:bg-white/[0.03] transition-colors">
+                  <div className="flex items-start gap-4 max-w-2xl">
+                    <div className="h-11 w-11 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center shrink-0 mt-0.5">
+                      <Smartphone className="h-5 w-5" />
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="text-base sm:text-lg font-bold text-white">
+                        Runaway &ldquo;No&rdquo; Button Engine
+                      </h3>
+                      <p className="text-sm text-slate-300 leading-relaxed max-w-[65ch]">
+                        A mathematical avoidance algorithm that calculates touch coordinates and bounces the &ldquo;No&rdquo; button across the viewport, ensuring only &ldquo;YES&rdquo; can be tapped.
+                      </p>
+                    </div>
                   </div>
-                  <h3 className="text-lg font-bold text-white">Runaway &ldquo;No&rdquo; Button</h3>
-                  <p className="text-sm text-slate-300 leading-relaxed">
-                    A playful interactive mini-game where the &ldquo;No&rdquo; button teleports across the screen whenever their cursor or finger approaches.
-                  </p>
+                  <div className="shrink-0 flex items-center gap-2">
+                    <span className="text-xs font-mono text-slate-400 bg-white/5 border border-white/10 px-3 py-1.5 rounded-lg">
+                      Touch &amp; Hover
+                    </span>
+                  </div>
                 </div>
 
-                <div className="glass bg-slate-950/60 border-white/20 p-7 rounded-3xl space-y-4 hover:border-rose-400/40 transition-colors shadow-xl">
-                  <div className="h-12 w-12 rounded-2xl bg-rose-500/20 border border-rose-400/30 text-rose-300 flex items-center justify-center">
-                    <Music className="h-6 w-6" />
+                {/* Feature Row 2 */}
+                <div className="p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:bg-white/[0.03] transition-colors">
+                  <div className="flex items-start gap-4 max-w-2xl">
+                    <div className="h-11 w-11 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center shrink-0 mt-0.5">
+                      <Music className="h-5 w-5" />
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="text-base sm:text-lg font-bold text-white">
+                        Ambient Audio Engine
+                      </h3>
+                      <p className="text-sm text-slate-300 leading-relaxed max-w-[65ch]">
+                        Curated instrumentals spanning acoustic guitar, romantic piano, and Bollywood classical flute with gentle fade-in and mute controls.
+                      </p>
+                    </div>
                   </div>
-                  <h3 className="text-lg font-bold text-white">Romantic Background Melodies</h3>
-                  <p className="text-sm text-slate-300 leading-relaxed">
-                    Carefully selected ambient piano, acoustic guitar, and Bollywood-inspired romantic tunes to set the emotional atmosphere.
-                  </p>
+                  <div className="shrink-0 flex items-center gap-2">
+                    <span className="text-xs font-mono text-slate-400 bg-white/5 border border-white/10 px-3 py-1.5 rounded-lg">
+                      Audio API
+                    </span>
+                  </div>
                 </div>
 
-                <div className="glass bg-slate-950/60 border-white/20 p-7 rounded-3xl space-y-4 hover:border-rose-400/40 transition-colors shadow-xl">
-                  <div className="h-12 w-12 rounded-2xl bg-rose-500/20 border border-rose-400/30 text-rose-300 flex items-center justify-center">
-                    <Camera className="h-6 w-6" />
+                {/* Feature Row 3 */}
+                <div className="p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:bg-white/[0.03] transition-colors">
+                  <div className="flex items-start gap-4 max-w-2xl">
+                    <div className="h-11 w-11 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center shrink-0 mt-0.5">
+                      <Camera className="h-5 w-5" />
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="text-base sm:text-lg font-bold text-white">
+                        Responsive Photo Gallery &amp; Flipbook
+                      </h3>
+                      <p className="text-sm text-slate-300 leading-relaxed max-w-[65ch]">
+                        Clean polaroid stacks and optional 3D flipbook that adapt cleanly across Android, iOS, and desktop browsers without layout shifts.
+                      </p>
+                    </div>
                   </div>
-                  <h3 className="text-lg font-bold text-white">Photo Memory Slideshow</h3>
-                  <p className="text-sm text-slate-300 leading-relaxed">
-                    Showcase your first date, favorite trips, and cozy milestones in an elegant responsive photo carousel.
-                  </p>
+                  <div className="shrink-0 flex items-center gap-2">
+                    <span className="text-xs font-mono text-slate-400 bg-white/5 border border-white/10 px-3 py-1.5 rounded-lg">
+                      Up to 12 Photos
+                    </span>
+                  </div>
                 </div>
 
-                <div className="glass bg-slate-950/60 border-white/20 p-7 rounded-3xl space-y-4 hover:border-rose-400/40 transition-colors shadow-xl">
-                  <div className="h-12 w-12 rounded-2xl bg-rose-500/20 border border-rose-400/30 text-rose-300 flex items-center justify-center">
-                    <Wand2 className="h-6 w-6" />
+                {/* Feature Row 4 */}
+                <div className="p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:bg-white/[0.03] transition-colors">
+                  <div className="flex items-start gap-4 max-w-2xl">
+                    <div className="h-11 w-11 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center shrink-0 mt-0.5">
+                      <Wand2 className="h-5 w-5" />
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="text-base sm:text-lg font-bold text-white">
+                        Bilingual Romance AI (English &amp; Hinglish)
+                      </h3>
+                      <p className="text-sm text-slate-300 leading-relaxed max-w-[65ch]">
+                        Generate sincere proposals that sound like natural conversation rather than robotic poetry, supporting culturally relevant phrasing.
+                      </p>
+                    </div>
                   </div>
-                  <h3 className="text-lg font-bold text-white">Bilingual AI Romance Engine</h3>
-                  <p className="text-sm text-slate-300 leading-relaxed">
-                    Switch seamlessly between English and Hinglish with cinematic Bollywood dialogues or deep heartfelt prose.
-                  </p>
+                  <div className="shrink-0 flex items-center gap-2">
+                    <span className="text-xs font-mono text-slate-400 bg-white/5 border border-white/10 px-3 py-1.5 rounded-lg">
+                      AI Generator
+                    </span>
+                  </div>
                 </div>
 
-                <div className="glass bg-slate-950/60 border-white/20 p-7 rounded-3xl space-y-4 hover:border-rose-400/40 transition-colors shadow-xl">
-                  <div className="h-12 w-12 rounded-2xl bg-rose-500/20 border border-rose-400/30 text-rose-300 flex items-center justify-center">
-                    <ShieldCheck className="h-6 w-6" />
+                {/* Feature Row 5 */}
+                <div className="p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:bg-white/[0.03] transition-colors">
+                  <div className="flex items-start gap-4 max-w-2xl">
+                    <div className="h-11 w-11 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center shrink-0 mt-0.5">
+                      <ShieldCheck className="h-5 w-5" />
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="text-base sm:text-lg font-bold text-white">
+                        Private &amp; Unguessable Security
+                      </h3>
+                      <p className="text-sm text-slate-300 leading-relaxed max-w-[65ch]">
+                        Each proposal is stored under a cryptographically random slug with search engine indexing blocked by default to keep your moment private.
+                      </p>
+                    </div>
                   </div>
-                  <h3 className="text-lg font-bold text-white">Private & Unguessable Links</h3>
-                  <p className="text-sm text-slate-300 leading-relaxed">
-                    Your proposal is secret and protected by unique cryptographic tokens. No search engine indexing without your consent.
-                  </p>
+                  <div className="shrink-0 flex items-center gap-2">
+                    <span className="text-xs font-mono text-slate-400 bg-white/5 border border-white/10 px-3 py-1.5 rounded-lg">
+                      noindex / nofollow
+                    </span>
+                  </div>
                 </div>
 
-                <div className="glass bg-slate-950/60 border-white/20 p-7 rounded-3xl space-y-4 hover:border-rose-400/40 transition-colors shadow-xl">
-                  <div className="h-12 w-12 rounded-2xl bg-rose-500/20 border border-rose-400/30 text-rose-300 flex items-center justify-center">
-                    <Star className="h-6 w-6" />
-                  </div>
-                  <h3 className="text-lg font-bold text-white">Full-Screen Celebration</h3>
-                  <p className="text-sm text-slate-300 leading-relaxed">
-                    Heart bursts and colorful confetti showers light up the screen the second they hit &ldquo;YES!&rdquo;.
-                  </p>
-                </div>
               </div>
             </Reveal>
 
-            {/* Birthday Cross-Promo Banner */}
+            {/* Birthday Cross-Banner */}
             <Reveal delay={0.25}>
-              <div className="glass bg-slate-950/60 border-white/20 rounded-3xl p-8 sm:p-10 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8">
-                <div className="space-y-3 text-center md:text-left">
+              <div className="glass border border-white/10 rounded-2xl p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="space-y-2 text-center md:text-left">
                   <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/30 text-amber-200 text-xs font-semibold">
-                    <Cake className="w-4 h-4 text-amber-300" />
-                    <span>Also on LoveHub</span>
+                    <Cake className="w-3.5 h-3.5 text-amber-300" />
+                    <span>Birthday Keepsakes</span>
                   </div>
-                  <h3 className="font-[family-name:var(--font-playfair)] italic text-2xl sm:text-3xl font-bold text-white">
-                    Planning a Birthday Celebration?
+                  <h3 className="font-[family-name:var(--font-playfair)] italic text-xl sm:text-2xl font-bold text-white">
+                    Need an Interactive Birthday Wishboard?
                   </h3>
-                  <p className="text-slate-300 text-sm sm:text-base max-w-xl">
-                    Create interactive 3D wishboards with virtual candle blowing, emotional audio notes, and polaroid photo walls for friends & family.
+                  <p className="text-slate-300 text-sm max-w-xl">
+                    Create 3D birthday celebration pages with virtual candle blowing and audio guestbooks.
                   </p>
                 </div>
-                <Button asChild size="lg" className="rounded-full bg-[#0E6B5E] hover:bg-[#095248] text-white px-8 py-3 text-base shadow-xl shrink-0">
+                <Button asChild className="rounded-full bg-[#0E6B5E] hover:bg-[#0A5248] text-white px-6 min-h-[44px] text-sm font-semibold shrink-0">
                   <Link href="/birthdays">
-                    Explore Birthday Wishboards <ArrowRight className="ml-2 h-4 w-4" />
+                    Explore Birthdays <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
               </div>
@@ -268,168 +417,145 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Section 4: Pricing Section (~3.3s) */}
-        <section id="pricing" className="min-h-screen py-28 sm:py-36 flex flex-col justify-center">
-          <div className="max-w-7xl mx-auto px-5 sm:px-8 space-y-16 w-full">
+        {/* Section 4: Real Comparison-Style Pricing Table */}
+        <section id="pricing" className="py-24 sm:py-32 flex flex-col justify-center">
+          <div className="max-w-6xl mx-auto px-5 sm:px-8 space-y-16 w-full">
             <Reveal>
-              <div className="text-center space-y-4 max-w-2xl mx-auto">
+              <div className="text-center space-y-3 max-w-2xl mx-auto">
+                <Badge variant="outline" className="text-rose-300 border-rose-500/30 bg-rose-500/10 backdrop-blur-md">
+                  Transparent Pricing
+                </Badge>
                 <h2 className="font-[family-name:var(--font-playfair)] italic text-3xl sm:text-5xl font-bold text-white tracking-tight">
-                  Simple, Transparent Pricing
+                  One-Time Payment. Zero Subscriptions.
                 </h2>
-                <p className="text-slate-200 text-base sm:text-lg">
-                  Start free or choose an interactive plan. Transparent one-time pricing with zero recurring subscriptions.
+                <p className="text-slate-300 text-sm sm:text-base max-w-[65ch] mx-auto leading-relaxed">
+                  Test your proposal in live preview mode first. Pay once when ready to generate your permanent shareable link.
                 </p>
               </div>
             </Reveal>
 
             <Reveal delay={0.15}>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto items-stretch">
-                {/* Free Plan */}
-                <Card className="flex flex-col justify-between glass bg-slate-950/65 border-white/20 rounded-3xl p-3 shadow-xl hover:border-white/30 transition-all">
-                  <CardHeader className="space-y-2 p-6">
-                    <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                      Starter Explorer
-                    </div>
-                    <CardTitle className="text-2xl font-bold text-white">Free Forever</CardTitle>
-                    <div className="text-4xl font-extrabold text-white font-sans">
-                      ₹0
-                    </div>
-                    <CardDescription className="text-slate-300 text-sm">
-                      Perfect for a quick, heartfelt proposal page
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-6 p-6 pt-0">
-                    <ul className="space-y-3.5 text-sm text-slate-200">
-                      <li className="flex items-center gap-2.5">
-                        <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" /> Up to 3 photos
-                      </li>
-                      <li className="flex items-center gap-2.5">
-                        <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" /> AI love letter generator (English &amp; Hinglish)
-                      </li>
-                      <li className="flex items-center gap-2.5">
-                        <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" /> Clean private proposal link
-                      </li>
-                      <li className="flex items-center gap-2.5">
-                        <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" /> 100% Mobile &amp; desktop optimized
-                      </li>
-                      <li className="flex items-center gap-2.5">
-                        <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" /> No credit card needed
-                      </li>
-                    </ul>
-                    <Button asChild variant="outline" className="w-full rounded-full py-5 text-sm font-semibold border-white/30 text-white hover:bg-white/10">
-                      <Link href="/create?plan=basic">Start Free (₹0) ↗</Link>
-                    </Button>
-                  </CardContent>
-                </Card>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 items-stretch max-w-5xl mx-auto">
+                
+                {ALL_PLANS.map((plan) => {
+                  const isFeatured = plan.featured;
+                  return (
+                    <div
+                      key={plan.id}
+                      className={`flex flex-col justify-between glass rounded-2xl p-6 sm:p-7 transition-all relative ${
+                        isFeatured
+                          ? "border-2 border-rose-500 bg-slate-950/85 shadow-2xl md:-translate-y-2 z-10"
+                          : "border border-white/10 bg-slate-950/70"
+                      }`}
+                    >
+                      {/* Featured Label */}
+                      {isFeatured && (
+                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-rose-600 text-white text-[11px] font-bold tracking-wider uppercase shadow-sm">
+                          Most Popular
+                        </div>
+                      )}
 
-                {/* Romantic Plan */}
-                <Card className="flex flex-col justify-between glass bg-slate-950/80 border-2 border-rose-500 shadow-2xl relative md:scale-105 z-10 rounded-3xl p-3">
-                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-rose-500 to-pink-600 text-white text-xs font-bold tracking-wide shadow-md">
-                    ✨ MOST POPULAR
-                  </div>
-                  <CardHeader className="space-y-2 p-6 pt-8">
-                    <div className="text-xs font-semibold uppercase tracking-wider text-rose-400">
-                      Interactive Delight
-                    </div>
-                    <CardTitle className="text-2xl font-bold text-white">Romantic</CardTitle>
-                    <div className="text-4xl font-extrabold text-white font-sans">
-                      ₹69 <span className="text-sm font-normal text-slate-300">/ one-time</span>
-                    </div>
-                    <CardDescription className="text-slate-300 text-sm">
-                      Interactive celebration with runaway &ldquo;No&rdquo; button &amp; tunes
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-6 p-6 pt-0">
-                    <ul className="space-y-3.5 text-sm text-slate-200">
-                      <li className="flex items-center gap-2.5 font-medium text-white">
-                        <CheckCircle2 className="h-4 w-4 text-rose-400 shrink-0" /> Playful Runaway &ldquo;No&rdquo; button
-                      </li>
-                      <li className="flex items-center gap-2.5">
-                        <CheckCircle2 className="h-4 w-4 text-rose-400 shrink-0" /> Romantic background melodies (Piano / Guitar)
-                      </li>
-                      <li className="flex items-center gap-2.5">
-                        <CheckCircle2 className="h-4 w-4 text-rose-400 shrink-0" /> Up to 5 couple photos
-                      </li>
-                      <li className="flex items-center gap-2.5">
-                        <CheckCircle2 className="h-4 w-4 text-rose-400 shrink-0" /> Full-screen confetti &amp; heart bursts
-                      </li>
-                      <li className="flex items-center gap-2.5">
-                        <CheckCircle2 className="h-4 w-4 text-rose-400 shrink-0" /> Instant WhatsApp &amp; surprise QR code
-                      </li>
-                    </ul>
-                    <Button asChild className="w-full rounded-full py-5 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-bold shadow-lg shadow-rose-500/25">
-                      <Link href="/create?plan=romantic">Create Romantic (₹69) ↗</Link>
-                    </Button>
-                  </CardContent>
-                </Card>
+                      {/* Plan Header */}
+                      <div className="space-y-4">
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-xl font-bold text-white">{plan.name}</h3>
+                            <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">
+                              One-Time
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-400 mt-1 min-h-[32px] leading-relaxed">
+                            {plan.tagline}
+                          </p>
+                        </div>
 
-                {/* Premium Plan */}
-                <Card className="flex flex-col justify-between glass bg-slate-950/65 border-white/20 rounded-3xl p-3 shadow-xl hover:border-white/30 transition-all">
-                  <CardHeader className="space-y-2 p-6">
-                    <div className="text-xs font-semibold uppercase tracking-wider text-purple-400">
-                      👑 VIP Lifetime
+                        {/* Price Row */}
+                        <div className="py-2 border-y border-white/10 flex items-baseline gap-1.5">
+                          <span className="text-4xl font-extrabold text-white font-sans tracking-tight">
+                            ₹{plan.priceRupees}
+                          </span>
+                          <span className="text-xs text-slate-400 font-normal">
+                            one-time payment
+                          </span>
+                        </div>
+
+                        {/* Features Comparison List */}
+                        <ul className="space-y-3 pt-2 text-xs text-slate-200">
+                          {plan.features.map((feature, idx) => (
+                            <li key={idx} className="flex items-start gap-2.5">
+                              {feature.included ? (
+                                <Check className="h-4 w-4 text-rose-400 shrink-0 mt-0.5" />
+                              ) : (
+                                <Minus className="h-4 w-4 text-slate-500 shrink-0 mt-0.5" />
+                              )}
+                              <span className={feature.included ? "text-slate-200" : "text-slate-500 line-through"}>
+                                {feature.name}
+                                {feature.detail && (
+                                  <span className="text-rose-300 font-medium ml-1">
+                                    ({feature.detail})
+                                  </span>
+                                )}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      {/* CTA Button */}
+                      <div className="pt-6 mt-6 border-t border-white/10">
+                        <Button
+                          asChild
+                          className={`w-full rounded-xl py-3 min-h-[44px] text-sm font-semibold transition-all cursor-pointer ${
+                            isFeatured
+                              ? "bg-rose-600 hover:bg-rose-700 text-white shadow-md active:scale-[0.98]"
+                              : "bg-white/10 hover:bg-white/15 text-white border border-white/15 active:scale-[0.98]"
+                          }`}
+                        >
+                          <Link href={`/create?plan=${plan.id}`}>
+                            Choose {plan.name} (₹{plan.priceRupees})
+                          </Link>
+                        </Button>
+                        <p className="text-[11px] text-center text-slate-400 mt-2">
+                          Live 2-minute preview before payment
+                        </p>
+                      </div>
                     </div>
-                    <CardTitle className="text-2xl font-bold text-white">Premium Forever</CardTitle>
-                    <div className="text-4xl font-extrabold text-white font-sans">
-                      ₹169 <span className="text-sm font-normal text-slate-300">/ one-time</span>
-                    </div>
-                    <CardDescription className="text-slate-300 text-sm">
-                      Custom link slug and 3D memory flipbook slideshow
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-6 p-6 pt-0">
-                    <ul className="space-y-3.5 text-sm text-slate-200">
-                      <li className="flex items-center gap-2.5 font-medium text-white">
-                        <CheckCircle2 className="h-4 w-4 text-purple-400 shrink-0" /> Custom URL slug (e.g. lovehub.site/p/alex-and-sam)
-                      </li>
-                      <li className="flex items-center gap-2.5">
-                        <CheckCircle2 className="h-4 w-4 text-purple-400 shrink-0" /> Up to 12 photos + 3D Memory Flipbook
-                      </li>
-                      <li className="flex items-center gap-2.5">
-                        <CheckCircle2 className="h-4 w-4 text-purple-400 shrink-0" /> Priority AI generation (unlimited revisions)
-                      </li>
-                      <li className="flex items-center gap-2.5">
-                        <CheckCircle2 className="h-4 w-4 text-purple-400 shrink-0" /> Lifetime cloud hosting &amp; analytics
-                      </li>
-                      <li className="flex items-center gap-2.5">
-                        <CheckCircle2 className="h-4 w-4 text-purple-400 shrink-0" /> Watermark-free luxury experience
-                      </li>
-                    </ul>
-                    <Button asChild variant="outline" className="w-full rounded-full py-5 text-sm font-semibold border-purple-400/40 text-purple-300 hover:bg-purple-950/40">
-                      <Link href="/create?plan=premium">Get Premium (₹169) ↗</Link>
-                    </Button>
-                  </CardContent>
-                </Card>
+                  );
+                })}
+
               </div>
             </Reveal>
           </div>
         </section>
 
-        {/* Section 5: FAQ Section (~4.2s) */}
-        <section id="faq" className="min-h-screen py-28 sm:py-36 flex flex-col justify-center">
+        {/* Section 5: FAQ Section */}
+        <section id="faq" className="py-24 sm:py-32 flex flex-col justify-center">
           <div className="max-w-4xl mx-auto px-5 sm:px-8 space-y-12 w-full">
             <Reveal>
-              <div className="text-center space-y-4">
+              <div className="text-center space-y-3">
+                <Badge variant="outline" className="text-rose-300 border-rose-500/30 bg-rose-500/10 backdrop-blur-md">
+                  Help &amp; Answers
+                </Badge>
                 <h2 className="font-[family-name:var(--font-playfair)] italic text-3xl sm:text-5xl font-bold text-white tracking-tight">
                   Frequently Asked Questions
                 </h2>
-                <p className="text-slate-200 text-base sm:text-lg">
-                  Everything you need to know about setting up your proposal or celebration.
+                <p className="text-slate-300 text-sm sm:text-base max-w-[65ch] mx-auto leading-relaxed">
+                  Everything you need to know about setting up your proposal website.
                 </p>
               </div>
             </Reveal>
 
             <Reveal delay={0.15}>
-              <div className="space-y-5">
+              <div className="space-y-4">
                 {faqs.map((faq, index) => (
                   <div
                     key={index}
-                    className="p-6 sm:p-7 rounded-3xl glass bg-slate-950/60 border-white/20 space-y-2 hover:border-white/30 transition-colors shadow-lg"
+                    className="p-6 rounded-2xl glass border border-white/10 space-y-2 shadow-sm hover:border-white/20 transition-colors"
                   >
-                    <h3 className="text-base sm:text-lg font-bold text-white">
+                    <h3 className="text-base font-bold text-white">
                       {faq.question}
                     </h3>
-                    <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
+                    <p className="text-sm text-slate-300 leading-relaxed max-w-[65ch]">
                       {faq.answer}
                     </p>
                   </div>
@@ -439,21 +565,27 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Section 6: Final CTA Banner (~4.6s - 5.0s) */}
-        <section id="cta" className="min-h-screen py-28 sm:py-36 flex flex-col items-center justify-center text-center">
+        {/* Section 6: Final CTA Banner */}
+        <section id="cta" className="py-24 sm:py-32 flex flex-col items-center justify-center text-center">
           <Reveal>
-            <div className="max-w-4xl mx-auto px-5 sm:px-8 space-y-8 glass bg-slate-950/70 border-white/20 p-10 sm:p-16 rounded-[2.5rem] shadow-2xl backdrop-blur-2xl">
-              <Heart className="h-14 w-14 mx-auto fill-rose-500 text-rose-500 animate-pulse" />
-              <h2 className="font-[family-name:var(--font-playfair)] italic text-3xl sm:text-5xl md:text-6xl font-bold text-white tracking-tight">
-                Ready to Venture Into An Eternal Yes?
+            <div className="max-w-3xl mx-auto px-5 sm:px-8 space-y-6 glass border border-white/10 p-10 sm:p-14 rounded-2xl shadow-2xl">
+              <div className="w-12 h-12 mx-auto rounded-full bg-rose-500/20 border border-rose-500/30 flex items-center justify-center">
+                <Heart className="h-6 w-6 text-rose-500 fill-rose-500" />
+              </div>
+              <h2 className="font-[family-name:var(--font-playfair)] italic text-3xl sm:text-5xl font-bold text-white tracking-tight">
+                Ready to Create Your Proposal?
               </h2>
-              <p className="text-slate-200 text-base sm:text-xl max-w-xl mx-auto leading-relaxed">
-                Give your partner a moment they will remember for the rest of their lives.
+              <p className="text-slate-300 text-sm sm:text-base max-w-[65ch] mx-auto leading-relaxed">
+                Take two minutes to assemble your photos, background melody, and love note. Preview it live on your own device before sharing.
               </p>
-              <div className="pt-4">
-                <Button asChild size="lg" className="h-14 px-10 rounded-full bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-bold text-base shadow-2xl transition-transform hover:scale-105 cursor-pointer">
+              <div className="pt-2">
+                <Button
+                  asChild
+                  size="lg"
+                  className="px-8 min-h-[48px] rounded-full bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm shadow-xl transition-transform hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                >
                   <Link href="/create">
-                    Start Creating Free <ArrowRight className="ml-2 h-5 w-5" />
+                    Create Your Proposal <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
               </div>
@@ -463,14 +595,14 @@ export default function HomePage() {
       </main>
 
       {/* Solid Dark Footer */}
-      <footer className="border-t border-white/10 bg-[#0b0720] py-12 relative z-10">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-6 text-sm text-slate-400">
+      <footer className="border-t border-white/10 bg-[#0E0D11] py-12 relative z-10">
+        <div className="max-w-6xl mx-auto px-5 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-6 text-xs text-slate-400">
           <div className="flex items-center gap-2.5">
-            <Heart className="h-5 w-5 text-rose-500 fill-rose-500" />
-            <span className="font-bold text-white text-base">LoveHub</span>
+            <Heart className="h-4 w-4 text-rose-500 fill-rose-500" />
+            <span className="font-bold text-white text-sm">LoveHub</span>
             <span>&copy; {new Date().getFullYear()} All rights reserved.</span>
           </div>
-          <div className="flex items-center flex-wrap gap-6">
+          <div className="flex items-center flex-wrap gap-5">
             <Link href="/privacy" className="hover:text-rose-400 transition-colors">
               Privacy Policy
             </Link>
@@ -482,7 +614,7 @@ export default function HomePage() {
             </Link>
             <Link
               href="/admin/login"
-              className="hover:text-rose-400 font-semibold text-slate-300 hover:underline flex items-center gap-1 transition-colors"
+              className="hover:text-rose-400 text-slate-300 transition-colors"
             >
               Admin Portal
             </Link>

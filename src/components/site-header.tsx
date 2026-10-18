@@ -205,7 +205,7 @@ export function SiteHeader({
               onClick={() => setMobileMenuOpen(false)}
               className="py-1 text-teal-700 font-semibold hover:text-teal-800"
             >
-              Birthdays (New 🎉)
+              Birthdays
             </Link>
             <a
               href="#how-it-works"

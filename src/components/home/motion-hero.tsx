@@ -124,13 +124,13 @@ export function MotionHero() {
 
       {/* Main Center Content (Hero Focal Point) */}
       <div className="relative z-20 max-w-6xl mx-auto px-5 sm:px-8 text-center my-auto py-12 sm:py-16">
-        {/* Top Frosted Capsule Badge */}
-        <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full backdrop-blur-md bg-white/15 border border-white/25 text-white text-xs sm:text-sm font-medium shadow-md mb-6 sm:mb-8 animate-fade-in">
-          <span className="bg-white text-gray-950 font-bold px-2 py-0.5 rounded-full text-[10px] sm:text-xs tracking-wider uppercase">
-            New
+        {/* Top Product Pill Badge */}
+        <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full backdrop-blur-md bg-white/15 border border-white/25 text-white text-xs sm:text-sm font-medium shadow-md mb-6 sm:mb-8">
+          <span className="bg-white text-slate-950 font-bold px-2 py-0.5 rounded-full text-[10px] sm:text-xs tracking-wider uppercase">
+            Product
           </span>
           <span className="drop-shadow-sm">
-            AI-Crafted Proposal Websites &amp; Birthday Wishboards
+            Interactive Proposal Websites &amp; Keepsake Pages
           </span>
         </div>
 
@@ -142,53 +142,53 @@ export function MotionHero() {
         </h1>
 
         {/* Clean Sans Subtitle */}
-        <p className="font-sans text-sm sm:text-base md:text-lg text-white/90 drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)] max-w-2xl mx-auto leading-relaxed mb-8 sm:mb-10 font-normal">
-          Discover love in ways once unimaginable. Our personalized websites and interactive experiences bring your romantic proposal within reach—magical, emotional, and unforgettable.
+        <p className="font-sans text-sm sm:text-base md:text-lg text-white/90 drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)] max-w-[65ch] mx-auto leading-relaxed mb-8 sm:mb-10 font-normal">
+          Build a personal proposal website with your own photos, background music, a custom note in English or Hinglish, and an interactive runaway &ldquo;No&rdquo; button.
         </p>
 
         {/* Dual Call To Actions */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
           <a
             href="#pricing"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full backdrop-blur-md bg-white/25 hover:bg-white/35 border border-white/40 text-white font-semibold px-8 py-3.5 text-sm sm:text-base shadow-xl shadow-black/15 transition-all hover:scale-[1.03] active:scale-[0.98]"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full backdrop-blur-md bg-white/25 hover:bg-white/35 border border-white/40 text-white font-semibold px-8 py-3.5 min-h-[44px] text-sm sm:text-base shadow-xl shadow-black/15 transition-all hover:scale-[1.02] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-white"
           >
-            Start Your Story <ArrowDown className="w-4 h-4 ml-1" />
+            <span>View Plans</span> <ArrowDown className="w-4 h-4 ml-1" />
           </a>
           <a
-            href="#interactive-demo"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 text-white hover:text-white/80 font-medium text-sm sm:text-base px-6 py-3.5 transition-colors drop-shadow-md group"
+            href="#demo"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 text-white hover:text-white/80 font-medium text-sm sm:text-base px-6 py-3.5 min-h-[44px] transition-colors drop-shadow-md group focus-visible:ring-2 focus-visible:ring-white rounded-full"
           >
-            <span>See Live Demo</span>
-            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-white/25 group-hover:bg-white/35 text-white transition-transform group-hover:scale-110">
-              <Play className="w-3 h-3 fill-white ml-0.5" />
+            <span>Test Runaway Button</span>
+            <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-white/20 group-hover:bg-white/30 text-white transition-transform group-hover:scale-105">
+              <Play className="w-3.5 h-3.5 fill-white ml-0.5" />
             </span>
           </a>
         </div>
       </div>
 
-      {/* Bottom Features & Collaboration Bar */}
+      {/* Bottom Features & Highlights Bar */}
       <div className="relative z-20 pb-8 sm:pb-12 px-5 sm:px-8 text-center">
-        {/* Collaboration Glass Pill */}
+        {/* Capability Pill */}
         <div className="inline-flex items-center justify-center backdrop-blur-md bg-white/15 border border-white/25 rounded-full px-4 sm:px-5 py-1 text-[11px] sm:text-xs text-white/95 font-medium shadow-sm mb-5 drop-shadow-sm">
-          Cherished by over 10,000+ happy couples &amp; celebration architects globally
+          Interactive proposal pages • Custom tunes &amp; photos • Instant WhatsApp delivery
         </div>
 
-        {/* 5 Luxury Italic Serif Labels */}
+        {/* 5 Product Highlight Labels */}
         <div className="flex items-center justify-center flex-wrap gap-6 sm:gap-10 md:gap-16 font-[family-name:var(--font-playfair)] italic text-lg sm:text-2xl md:text-3xl text-white/90 tracking-wide drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)]">
           <span className="hover:text-white transition-colors cursor-default">
-            Runaway &ldquo;NO&rdquo;
+            Runaway &ldquo;No&rdquo; Button
           </span>
           <span className="hover:text-white transition-colors cursor-default">
-            3D Flipbook
+            3D Memory Flipbook
           </span>
           <span className="hover:text-white transition-colors cursor-default">
-            Dynamic Tunes
+            Background Tunes
           </span>
           <span className="hover:text-white transition-colors cursor-default">
-            Instant QR
+            Surprise QR Code
           </span>
           <span className="hover:text-white transition-colors cursor-default">
-            Bespoke VIP
+            Private Links
           </span>
         </div>
       </div>
