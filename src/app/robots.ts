@@ -6,13 +6,31 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: ["/", "/create", "/proposal/*"],
-        disallow: ["/api/*", "/dashboard/*", "/checkout/*"],
+        allow: ["/", "/create", "/birthdays", "/birthdays/new", "/privacy", "/terms"],
+        disallow: [
+          "/api/*",
+          "/dashboard/*",
+          "/checkout/*",
+          "/cart/*",
+          "/admin/*",
+          "/proposal/*",
+          "/login",
+          "/signup",
+        ],
       },
       {
         userAgent: ["GPTBot", "ClaudeBot", "PerplexityBot", "Google-Extended"],
-        allow: ["/", "/llms.txt", "/create"],
-        disallow: ["/api/*", "/dashboard/*", "/checkout/*"],
+        allow: ["/", "/llms.txt", "/create", "/birthdays"],
+        disallow: [
+          "/api/*",
+          "/dashboard/*",
+          "/checkout/*",
+          "/cart/*",
+          "/admin/*",
+          "/proposal/*",
+          "/login",
+          "/signup",
+        ],
       },
     ],
     sitemap: [
@@ -21,3 +39,5 @@ export default function robots(): MetadataRoute.Robots {
     ],
   };
 }
+
+

@@ -24,6 +24,7 @@ export function OrganizationJsonLd() {
     name: siteConfig.name,
     url: siteConfig.url,
     logo: `${siteConfig.url}/icon.png`,
+    image: `${siteConfig.url}/og-image.png`,
   };
 
   return (
@@ -39,12 +40,38 @@ export function SoftwareAppJsonLd() {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     name: siteConfig.name,
-    operatingSystem: "Web",
+    operatingSystem: "Web, iOS, Android",
     applicationCategory: "LifestyleApplication",
+    image: `${siteConfig.url}/og-image.png`,
     offers: {
-      "@type": "Offer",
-      price: "0",
-      priceCurrency: "USD",
+      "@type": "AggregateOffer",
+      priceCurrency: "INR",
+      lowPrice: "31",
+      highPrice: "169",
+      offerCount: "3",
+      offers: [
+        {
+          "@type": "Offer",
+          name: "Starter",
+          price: "31",
+          priceCurrency: "INR",
+          availability: "https://schema.org/InStock",
+        },
+        {
+          "@type": "Offer",
+          name: "Romantic",
+          price: "69",
+          priceCurrency: "INR",
+          availability: "https://schema.org/InStock",
+        },
+        {
+          "@type": "Offer",
+          name: "Premium",
+          price: "169",
+          priceCurrency: "INR",
+          availability: "https://schema.org/InStock",
+        },
+      ],
     },
     description: siteConfig.description,
   };

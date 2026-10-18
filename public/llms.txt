@@ -25,4 +25,4 @@ LoveHub is a modern web application that enables users to create personalized, i
 - Language: TypeScript
 - Database: PostgreSQL (Drizzle ORM)
 - Authentication: better-auth
-- Payments: Cashfree (in progress)
+- Payments: UPI / YouPI-PG (Instant QR & App Intent)

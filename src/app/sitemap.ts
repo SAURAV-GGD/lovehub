@@ -2,50 +2,45 @@ import type { MetadataRoute } from "next";
 import { siteConfig } from "@/lib/seo";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const routes = [
+  const buildDate = new Date();
+
+  return [
     {
       url: `${siteConfig.url}`,
-      lastModified: new Date(),
-      changeFrequency: "weekly" as const,
+      lastModified: buildDate,
+      changeFrequency: "daily",
       priority: 1.0,
     },
     {
       url: `${siteConfig.url}/create`,
-      lastModified: new Date(),
-      changeFrequency: "weekly" as const,
+      lastModified: buildDate,
+      changeFrequency: "weekly",
       priority: 0.9,
     },
     {
       url: `${siteConfig.url}/birthdays`,
-      lastModified: new Date(),
-      changeFrequency: "weekly" as const,
+      lastModified: buildDate,
+      changeFrequency: "weekly",
       priority: 0.9,
     },
     {
-      url: `${siteConfig.url}/login`,
-      lastModified: new Date(),
-      changeFrequency: "monthly" as const,
-      priority: 0.5,
-    },
-    {
-      url: `${siteConfig.url}/signup`,
-      lastModified: new Date(),
-      changeFrequency: "monthly" as const,
-      priority: 0.5,
+      url: `${siteConfig.url}/birthdays/new`,
+      lastModified: buildDate,
+      changeFrequency: "weekly",
+      priority: 0.8,
     },
     {
       url: `${siteConfig.url}/privacy`,
-      lastModified: new Date(),
-      changeFrequency: "monthly" as const,
+      lastModified: buildDate,
+      changeFrequency: "monthly",
       priority: 0.3,
     },
     {
       url: `${siteConfig.url}/terms`,
-      lastModified: new Date(),
-      changeFrequency: "monthly" as const,
+      lastModified: buildDate,
+      changeFrequency: "monthly",
       priority: 0.3,
     },
   ];
-
-  return routes;
 }
+

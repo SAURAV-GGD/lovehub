@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
-export const alt = "LoveHub - Create Magical Proposal Websites with AI";
+export const alt = "LoveHub - Interactive Proposal & Keepsake Generator";
 export const size = {
   width: 1200,
   height: 630,
@@ -16,69 +16,127 @@ export default async function Image() {
           height: "100%",
           width: "100%",
           display: "flex",
-          flexDirection: "column",
+          flexDirection: "row",
           alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: "#fff1f2",
-          backgroundImage:
-            "radial-gradient(circle at 25px 25px, #fecdd3 2%, transparent 0%), radial-gradient(circle at 75px 75px, #ffe4e6 2%, transparent 0%)",
-          backgroundSize: "100px 100px",
+          justifyContent: "space-between",
+          backgroundColor: "#160611",
+          backgroundImage: "radial-gradient(circle at 25% 40%, #500724 0%, #160611 75%)",
+          padding: "60px 80px",
+          color: "#ffffff",
+          fontFamily: "system-ui, -apple-system, sans-serif",
         }}
       >
         <div
           style={{
             display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: 90,
-            height: 90,
-            borderRadius: "50%",
-            backgroundColor: "#f43f5e",
-            color: "white",
-            fontSize: 48,
-            marginBottom: 24,
-            boxShadow: "0 10px 25px rgba(244, 63, 94, 0.3)",
+            flexDirection: "column",
+            maxWidth: "700px",
           }}
         >
-          ❤️
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              marginBottom: "24px",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "14px",
+                fontWeight: 700,
+                color: "#f43f5e",
+                letterSpacing: "0.15em",
+                textTransform: "uppercase",
+                border: "1px solid rgba(244, 63, 94, 0.4)",
+                padding: "8px 16px",
+                borderRadius: "9999px",
+                backgroundColor: "rgba(244, 63, 94, 0.1)",
+              }}
+            >
+              LOVEHUB.IN • PROPOSALS &amp; WISHBOARDS
+            </span>
+          </div>
+          <h1
+            style={{
+              fontSize: "64px",
+              fontWeight: 800,
+              lineHeight: 1.1,
+              margin: "0 0 20px 0",
+              color: "#ffffff",
+            }}
+          >
+            Make Them Say Yes.
+          </h1>
+          <p
+            style={{
+              fontSize: "22px",
+              lineHeight: 1.4,
+              color: "#e2e8f0",
+              margin: "0 0 32px 0",
+            }}
+          >
+            Design personal proposal websites with couple photos, ambient music, AI love notes, and the interactive runaway &apos;No&apos; button.
+          </p>
+          <div style={{ display: "flex", gap: "16px" }}>
+            <span
+              style={{
+                backgroundColor: "rgba(255, 255, 255, 0.1)",
+                border: "1px solid rgba(255, 255, 255, 0.2)",
+                padding: "8px 18px",
+                borderRadius: "8px",
+                fontSize: "16px",
+                fontWeight: 600,
+                color: "#fecdd3",
+              }}
+            >
+              Rs. 31 One-Time
+            </span>
+            <span
+              style={{
+                backgroundColor: "rgba(255, 255, 255, 0.1)",
+                border: "1px solid rgba(255, 255, 255, 0.2)",
+                padding: "8px 18px",
+                borderRadius: "8px",
+                fontSize: "16px",
+                fontWeight: 600,
+                color: "#fecdd3",
+              }}
+            >
+              Permanent Link
+            </span>
+            <span
+              style={{
+                backgroundColor: "rgba(255, 255, 255, 0.1)",
+                border: "1px solid rgba(255, 255, 255, 0.2)",
+                padding: "8px 18px",
+                borderRadius: "8px",
+                fontSize: "16px",
+                fontWeight: 600,
+                color: "#fecdd3",
+              }}
+            >
+              Mobile Optimized
+            </span>
+          </div>
         </div>
         <div
           style={{
-            fontSize: 60,
-            fontWeight: 800,
-            color: "#881337",
-            letterSpacing: "-0.02em",
-            marginBottom: 16,
-          }}
-        >
-          LoveHub
-        </div>
-        <div
-          style={{
-            fontSize: 28,
-            fontWeight: 500,
-            color: "#9f1239",
-            maxWidth: 800,
-            textAlign: "center",
-            lineHeight: 1.4,
-          }}
-        >
-          Create Magical, Personalized AI Proposal Websites For Your Love
-        </div>
-        <div
-          style={{
-            marginTop: 40,
             display: "flex",
             alignItems: "center",
-            padding: "12px 28px",
-            borderRadius: 9999,
-            backgroundColor: "#f43f5e",
-            color: "white",
-            fontSize: 20,
-            fontWeight: 600,
+            justifyContent: "center",
+            width: "280px",
+            height: "280px",
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(225, 29, 72, 0.3) 0%, rgba(225, 29, 72, 0) 70%)",
           }}
         >
-          lovehub.dev
+          <div
+            style={{
+              fontSize: "140px",
+            }}
+          >
+            💖
+          </div>
         </div>
       </div>
     ),

@@ -17,10 +17,10 @@ const plusJakartaSans = Plus_Jakarta_Sans({
   display: "swap",
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+import { siteConfig } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
+  metadataBase: new URL(siteConfig.url),
   title: {
     default: "LoveHub - Interactive Proposal & Keepsake Generator",
     template: "%s | LoveHub",
@@ -30,17 +30,37 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: "/favicon.ico" },
-      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.png", type: "image/png", sizes: "512x512" },
     ],
     shortcut: "/favicon.ico",
-    apple: "/favicon.ico",
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
   },
   openGraph: {
     title: "LoveHub - Interactive Proposal & Keepsake Generator",
     description:
       "Design an interactive proposal website with couple photos, background melodies, an AI love letter, and an interactive runaway 'No' button.",
     siteName: "LoveHub",
+    url: siteConfig.url,
+    locale: "en_IN",
     type: "website",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "LoveHub - Interactive Proposal & Keepsake Generator",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "LoveHub - Interactive Proposal & Keepsake Generator",
+    description:
+      "Design an interactive proposal website with couple photos, background melodies, an AI love letter, and an interactive runaway 'No' button.",
+    images: ["/og-image.png"],
+    creator: siteConfig.creator,
   },
 };
 
