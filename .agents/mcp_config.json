@@ -5,6 +5,9 @@
     },
     "hostinger": {
       "serverUrl": "https://mcp.hostinger.com"
+    },
+    "cloudflare": {
+      "serverUrl": "https://mcp.cloudflare.com/mcp"
     }
   }
 }
