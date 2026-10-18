@@ -40,6 +40,8 @@ interface ProposalItem {
   isPublic: boolean;
   slug: string | null;
   createdAt: string;
+  hasSaidYes?: boolean;
+  quizAnswerCount?: number;
 }
 
 interface OrderItem {
@@ -79,8 +81,27 @@ export default function DashboardPage() {
 
         if (propsRes.ok) {
           const json = await propsRes.json();
-          if (json.success) {
-            setProposals(json.data || []);
+          if (json.success && Array.isArray(json.data)) {
+            const rawItems = json.data as ProposalItem[];
+            const itemsWithStats = await Promise.all(
+              rawItems.map(async (item) => {
+                try {
+                  const rRes = await fetch(`/api/proposals/${encodeURIComponent(item.id)}/response`);
+                  if (rRes.ok) {
+                    const rJson = await rRes.json();
+                    if (rJson.success && Array.isArray(rJson.data)) {
+                      const hasYes = rJson.data.some((e: any) => e.eventType === "accepted");
+                      const quizCount = rJson.data.filter((e: any) => e.eventType === "quiz_answered").length;
+                      return { ...item, hasSaidYes: hasYes, quizAnswerCount: quizCount };
+                    }
+                  }
+                } catch {
+                  // Fallback
+                }
+                return item;
+              })
+            );
+            setProposals(itemsWithStats);
           }
         }
 
@@ -501,6 +522,20 @@ export default function DashboardPage() {
                       <p className="font-[family-name:var(--font-playfair)] italic text-sm text-rose-300">
                         Dedicated to: {item.clientName}
                       </p>
+                    )}
+
+                    {item.hasSaidYes && (
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-pink-500/20 border border-pink-500/40 text-pink-300 text-xs font-bold animate-pulse">
+                        <Heart className="w-3.5 h-3.5 fill-pink-400" />
+                        <span>She/He Said YES! 🤍✨</span>
+                      </div>
+                    )}
+
+                    {Boolean(item.quizAnswerCount && item.quizAnswerCount > 0) && !item.hasSaidYes && (
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-300 text-[11px] font-medium">
+                        <Sparkles className="w-3 h-3 text-purple-400" />
+                        <span>Partner Answered Quiz ({item.quizAnswerCount})</span>
+                      </div>
                     )}
 
                     <div className="flex items-center text-xs text-slate-400 gap-1.5 pt-1">

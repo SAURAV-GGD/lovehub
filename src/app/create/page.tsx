@@ -12,11 +12,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Heart, ArrowLeft, Wand2, Camera, Music, X, Upload, ArrowRight, Sparkles, Shield, AlertTriangle, CheckCircle2, ExternalLink, Clock, Lock, ShoppingBag, User, Loader2 } from "lucide-react";
+import { Heart, ArrowLeft, Wand2, Camera, Music, X, Upload, ArrowRight, Sparkles, Shield, AlertTriangle, CheckCircle2, ExternalLink, Clock, Lock, ShoppingBag, User, Loader2, Eye, Smartphone } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Suspense, useState, useCallback, useEffect } from "react";
+import { Suspense, useState, useCallback, useEffect, useMemo } from "react";
 import { useDropzone } from "react-dropzone";
 import { useSession, signIn, signUp } from "@/lib/auth-client";
 import {
@@ -30,11 +30,16 @@ import {
   languageLabels,
   musicOptions,
   ensureStoryConfig,
+  StoryQuizQuestion,
+  ProposalData,
 } from "@/lib/proposal-types";
 import { getPlanConfig } from "@/lib/plans";
 import { MusicSelector, MusicSelectionState } from "@/components/music/music-selector";
 import { generateProposalMessage } from "@/lib/ai-generator";
 import { saveProposal, isSlugAvailable, getProposalUrl } from "@/lib/proposal-storage";
+import { PhonePreview } from "@/components/story/PhonePreview";
+import { QuizEditor } from "@/components/story/QuizEditor";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { trackEvent } from "@/lib/analytics";
 import { toast } from "sonner";
 
@@ -69,6 +74,85 @@ function CreateContent() {
   const [proposalId, setProposalId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCompressingPhotos, setIsCompressingPhotos] = useState(false);
+  const [customQuestions, setCustomQuestions] = useState<StoryQuizQuestion[]>([]);
+  const [isMobilePreviewOpen, setIsMobilePreviewOpen] = useState(false);
+
+  // Initialize or update default quiz questions when names change if creator hasn't manually edited
+  useEffect(() => {
+    if (customQuestions.length === 0) {
+      const initial = ensureStoryConfig({ yourName, partnerName }).quiz.questions;
+      setCustomQuestions(initial);
+    }
+  }, [yourName, partnerName, customQuestions.length]);
+
+  const previewProposal: ProposalData = useMemo(() => {
+    const finalMusic =
+      musicSelection.type === "preset" ? musicSelection.presetId || "romantic-piano" : "none";
+    const base = ensureStoryConfig({
+      yourName: yourName || "Me",
+      partnerName: partnerName || "My Love",
+      relationshipType,
+      message: message || "I choose you. Every single time. 🤍♾️",
+      photos,
+      photoCaptions,
+      backgroundMusic: finalMusic,
+      customConfig: {
+        enableRunawayButton: enableRunawayNo,
+        musicType: musicSelection.type,
+        youtubeUrl: musicSelection.youtubeUrl,
+        youtubeVideoId: musicSelection.youtubeVideoId,
+        customMusicUrl: musicSelection.customAudioUrl,
+        musicTitle: musicSelection.musicTitle,
+      },
+    });
+
+    if (customQuestions.length > 0) {
+      base.quiz.questions = customQuestions;
+    }
+    if (relationshipStartDate) {
+      base.relationshipStartDate = new Date(relationshipStartDate).toISOString();
+      base.finale.startDate = new Date(relationshipStartDate).toISOString();
+    }
+
+    return {
+      id: "preview_proposal_live",
+      yourName: yourName || "Me",
+      partnerName: partnerName || "My Love",
+      relationshipType,
+      tone,
+      language,
+      message: message || "I choose you. Every single time. 🤍♾️",
+      photos,
+      photoCaptions,
+      backgroundMusic: finalMusic,
+      plan: planKey,
+      createdAt: new Date(),
+      isPaid: true,
+      customConfig: {
+        enableRunawayButton: enableRunawayNo,
+        musicType: musicSelection.type,
+        youtubeUrl: musicSelection.youtubeUrl,
+        youtubeVideoId: musicSelection.youtubeVideoId,
+        customMusicUrl: musicSelection.customAudioUrl,
+        musicTitle: musicSelection.musicTitle,
+      },
+      storyConfig: base,
+    };
+  }, [
+    yourName,
+    partnerName,
+    relationshipType,
+    tone,
+    language,
+    message,
+    photos,
+    photoCaptions,
+    musicSelection,
+    planKey,
+    enableRunawayNo,
+    customQuestions,
+    relationshipStartDate,
+  ]);
 
   // User Authentication State
   const { data: session, isPending: isSessionLoading } = useSession();
@@ -377,6 +461,14 @@ function CreateContent() {
               enableRunawayButton: enableRunawayNo,
             },
           }),
+          ...(customQuestions.length > 0
+            ? {
+                quiz: {
+                  ...ensureStoryConfig({ yourName, partnerName }).quiz,
+                  questions: customQuestions,
+                },
+              }
+            : {}),
           relationshipStartDate: relationshipStartDate
             ? new Date(relationshipStartDate).toISOString()
             : undefined,
@@ -739,7 +831,7 @@ function CreateContent() {
 
   return (
     <div className="min-h-screen romantic-gradient py-12 px-4">
-      <div className="container mx-auto max-w-3xl">
+      <div className="container mx-auto max-w-6xl">
         {/* Header */}
         <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <Link href="/" className="inline-flex items-center gap-2 text-foreground/70 hover:text-primary transition-colors text-sm">
@@ -766,7 +858,11 @@ function CreateContent() {
           </div>
         </div>
 
-        {/* Interactive Plan Selector Bar */}
+        {/* 12-Column Responsive Editor + Live Simulator Grid */}
+        <div className="lg:grid lg:grid-cols-12 lg:gap-8 items-start">
+          {/* Left Column: Form & Settings */}
+          <div className="lg:col-span-7 space-y-8">
+            {/* Interactive Plan Selector Bar */}
         <div className="mb-8 p-3 rounded-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-border shadow-sm">
           <div className="flex items-center justify-between px-2 mb-2">
             <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
@@ -1215,6 +1311,20 @@ function CreateContent() {
                         </p>
                       </div>
                     </div>
+
+                    {/* Interactive Quiz Questions Editor */}
+                    <div className="pt-3 border-t border-pink-200/60 dark:border-pink-900/40 space-y-2">
+                      <Label className="text-xs font-semibold text-foreground/80 flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-pink-500" />
+                        <span>Customize Interactive Quiz (Scene 2)</span>
+                      </Label>
+                      <QuizEditor
+                        partnerName={partnerName}
+                        yourName={yourName}
+                        questions={customQuestions}
+                        onChange={setCustomQuestions}
+                      />
+                    </div>
                   </div>
 
                   {/* Preview Summary */}
@@ -1299,6 +1409,35 @@ function CreateContent() {
             </motion.div>
           )}
         </AnimatePresence>
+          </div>
+
+          {/* Right Column: Live Mobile Smartphone Simulator */}
+          <div className="hidden lg:flex lg:col-span-5 sticky top-8 justify-center">
+            <PhonePreview proposal={previewProposal} />
+          </div>
+        </div>
+
+        {/* Floating Mobile Live Preview Button */}
+        <div className="lg:hidden fixed bottom-5 right-5 z-40">
+          <Button
+            type="button"
+            onClick={() => setIsMobilePreviewOpen(true)}
+            className="rounded-full shadow-2xl bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white font-bold text-xs gap-1.5 px-4 py-2.5 h-auto cursor-pointer"
+          >
+            <Eye className="w-4 h-4" />
+            <span>Live Preview</span>
+          </Button>
+        </div>
+
+        {/* Mobile Live Preview Dialog */}
+        <Dialog open={isMobilePreviewOpen} onOpenChange={setIsMobilePreviewOpen}>
+          <DialogContent className="max-w-sm p-2 bg-transparent border-none shadow-none flex justify-center">
+            <DialogHeader className="sr-only">
+              <DialogTitle>Live Phone Preview</DialogTitle>
+            </DialogHeader>
+            <PhonePreview proposal={previewProposal} />
+          </DialogContent>
+        </Dialog>
 
         {/* Required Policy & Consent Gate Modal */}
         {showPolicyGate && (
