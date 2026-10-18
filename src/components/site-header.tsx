@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Heart, Menu, X, ArrowRight } from "lucide-react";
+import { Heart, Menu, X, ArrowRight, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export interface SiteHeaderProps {
@@ -15,6 +15,28 @@ export function SiteHeader({
   theme = "default",
 }: SiteHeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [cartCount, setCartCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadCart() {
+      try {
+        const res = await fetch("/api/cart");
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data && isMounted) {
+            setCartCount(json.data.totalCount || 0);
+          }
+        }
+      } catch {
+        // Safe fallback
+      }
+    }
+    loadCart();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const isBirthday = theme === "birthday" || active === "birthdays";
 
@@ -68,6 +90,19 @@ export function SiteHeader({
           {/* Right Action */}
           <div className="hidden sm:flex items-center gap-3">
             <Link
+              href="/cart"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#E6DCC6] bg-[#FDF4E7] text-[#14231F] hover:bg-[#E6DCC6]/60 transition-colors text-xs font-semibold"
+              title="Your Orders & Cart"
+            >
+              <ShoppingBag className="w-4 h-4 text-[#0E6B5E]" />
+              <span>Cart</span>
+              {typeof cartCount === "number" && cartCount > 0 && (
+                <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-[#0E6B5E] rounded-full">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
+            <Link
               href="/birthdays/new"
               className="inline-flex items-center justify-center rounded-full bg-[#0E6B5E] hover:bg-[#095248] text-white px-6 py-2.5 text-sm font-semibold shadow-sm ring-1 ring-[#D9A441]/80 hover:ring-[#D9A441] transition-all hover:shadow-md"
             >
@@ -116,6 +151,21 @@ export function SiteHeader({
               >
                 Pricing
               </a>
+              <Link
+                href="/cart"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-between py-1 text-base text-[#14231F] hover:text-[#0E6B5E]"
+              >
+                <span className="flex items-center gap-2">
+                  <ShoppingBag className="w-4 h-4 text-[#0E6B5E]" />
+                  Cart & Orders
+                </span>
+                {typeof cartCount === "number" && cartCount > 0 && (
+                  <span className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-xs font-bold text-white bg-[#0E6B5E] rounded-full">
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
             </nav>
             <div className="pt-2">
               <Link
@@ -171,6 +221,19 @@ export function SiteHeader({
           </a>
         </nav>
         <div className="flex items-center gap-3">
+          <Link
+            href="/cart"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-rose-200 bg-rose-50/70 text-rose-700 hover:bg-rose-100 transition-colors text-xs font-semibold shadow-2xs"
+            title="Your Orders & Cart"
+          >
+            <ShoppingBag className="w-4 h-4 text-rose-500" />
+            <span>Cart</span>
+            {typeof cartCount === "number" && cartCount > 0 && (
+              <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-rose-600 rounded-full">
+                {cartCount}
+              </span>
+            )}
+          </Link>
           <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
             <Link href="/login">Sign In</Link>
           </Button>
@@ -221,6 +284,21 @@ export function SiteHeader({
             >
               Pricing
             </a>
+            <Link
+              href="/cart"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between py-1 text-gray-700 hover:text-rose-600 font-medium"
+            >
+              <span className="flex items-center gap-2">
+                <ShoppingBag className="w-4 h-4 text-rose-500" />
+                Cart & Orders
+              </span>
+              {typeof cartCount === "number" && cartCount > 0 && (
+                <span className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-xs font-bold text-white bg-rose-600 rounded-full">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
             <Link
               href="/login"
               onClick={() => setMobileMenuOpen(false)}
