@@ -22,11 +22,11 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "LoveHub - Create Magical Proposal Pages & Celebrations",
+    default: "LoveHub - Interactive Proposal & Keepsake Generator",
     template: "%s | LoveHub",
   },
   description:
-    "Create a personalized proposal website for your love. Beautiful themes, AI-generated messages, and magical celebrations.",
+    "Design an interactive proposal website with couple photos, background melodies, an AI love letter, and an interactive runaway 'No' button.",
   icons: {
     icon: [
       { url: "/favicon.ico" },
@@ -36,9 +36,9 @@ export const metadata: Metadata = {
     apple: "/favicon.ico",
   },
   openGraph: {
-    title: "LoveHub - Create Magical Proposal Pages & Celebrations",
+    title: "LoveHub - Interactive Proposal & Keepsake Generator",
     description:
-      "Create a personalized proposal website for your love. Beautiful themes, AI-generated messages, and magical celebrations.",
+      "Design an interactive proposal website with couple photos, background melodies, an AI love letter, and an interactive runaway 'No' button.",
     siteName: "LoveHub",
     type: "website",
   },

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const siteConfig = {
   name: "LoveHub",
   description:
-    "Create a personalized, magical proposal website for your partner. AI-crafted love letters, photo memories, romantic themes, and interactive celebration buttons.",
+    "Create an interactive proposal website with couple photos, ambient background melodies, a custom love note in English or Hinglish, and an elusive runaway 'No' button.",
   url:
     process.env.NEXT_PUBLIC_SITE_URL ||
     (process.env.NODE_ENV === "production" ? "https://lovehub.in" : "http://localhost:3000"),

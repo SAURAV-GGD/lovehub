@@ -3,27 +3,46 @@ import { subscriptions, usage, webhookEvents } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { logger } from "./logger";
 
+import { PLANS, getPlanConfig } from "./plans";
+
 export const PLAN_LIMITS = {
+  starter: 3,
   free: 3,
+  basic: 3,
   romantic: 15,
   pro: 30,
   premium: 999,
 };
 
 export const PLAN_PRICING = {
+  starter: {
+    name: PLANS.starter.name,
+    amount: PLANS.starter.priceRupees, // ₹31
+    amountPaise: PLANS.starter.pricePaise,
+    currency: "inr",
+  },
   basic: {
-    name: "Basic Plan",
-    amount: 39, // ₹39
+    name: PLANS.starter.name,
+    amount: PLANS.starter.priceRupees, // ₹31
+    amountPaise: PLANS.starter.pricePaise,
     currency: "inr",
   },
   romantic: {
-    name: "Romantic Plan",
-    amount: 69, // ₹69
+    name: PLANS.romantic.name,
+    amount: PLANS.romantic.priceRupees, // ₹69
+    amountPaise: PLANS.romantic.pricePaise,
+    currency: "inr",
+  },
+  pro: {
+    name: PLANS.romantic.name,
+    amount: PLANS.romantic.priceRupees, // ₹69
+    amountPaise: PLANS.romantic.pricePaise,
     currency: "inr",
   },
   premium: {
-    name: "Premium Forever Plan",
-    amount: 169, // ₹169
+    name: PLANS.premium.name,
+    amount: PLANS.premium.priceRupees, // ₹169
+    amountPaise: PLANS.premium.pricePaise,
     currency: "inr",
   },
 };
