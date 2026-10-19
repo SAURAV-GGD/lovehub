@@ -4,6 +4,8 @@ import { proposalResponses, proposals } from "@/db/schema";
 import { apiSuccess, apiError, handleApiError } from "@/lib/api-response";
 import { eq, or, desc } from "drizzle-orm";
 import { auth } from "@/lib/auth";
+import { getAdminSessionFromRequest } from "@/lib/admin-auth";
+import { rateLimit } from "@/lib/rate-limit";
 
 interface Params {
   params: Promise<{ id: string }>;
@@ -19,9 +21,21 @@ export async function POST(request: NextRequest, { params }: Params) {
       return apiError("Proposal ID is required", "BAD_REQUEST", 400);
     }
 
+    // Rate Limiting Protection (20 submissions per minute per IP)
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0].trim() || "unknown-ip";
+    const limit = rateLimit(`resp_submit:${ip}`, { interval: 60000, maxRequests: 20 });
+    if (!limit.success) {
+      return apiError("Too many responses submitted. Please wait a minute.", "RATE_LIMITED", 429);
+    }
+
     const body = await request.json().catch(() => ({}));
-    const eventType = typeof body.eventType === "string" ? body.eventType.trim() : "response";
+    const eventType = typeof body.eventType === "string" ? body.eventType.trim().slice(0, 50) : "response";
+    
+    // Validate payload size (prevent oversized storage attacks)
     const payload = (body.payload && typeof body.payload === "object") ? body.payload : {};
+    if (JSON.stringify(payload).length > 20000) {
+      return apiError("Response payload exceeds maximum allowed size", "BAD_REQUEST", 400);
+    }
 
     const eventId = `resp_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
     const newEntry = {
@@ -65,7 +79,55 @@ export async function GET(request: NextRequest, { params }: Params) {
       return apiError("Proposal ID is required", "BAD_REQUEST", 400);
     }
 
-    // Try fetching from DB
+    // 1. Identify User or Admin Session
+    let authenticatedUserId: string | null = null;
+    let isAdmin = false;
+    try {
+      const userSession = await auth.api.getSession({ headers: request.headers });
+      if (userSession?.user?.id) {
+        authenticatedUserId = userSession.user.id;
+      }
+    } catch {}
+
+    if (!authenticatedUserId) {
+      const adminSession = getAdminSessionFromRequest(request);
+      if (adminSession?.email) {
+        isAdmin = true;
+        authenticatedUserId = `admin-${adminSession.email.split("@")[0]}`;
+      }
+    }
+
+    if (!authenticatedUserId) {
+      return apiError("Authentication required to view private proposal responses", "UNAUTHORIZED", 401);
+    }
+
+    // 2. Verify ownership unless administrator
+    if (!isAdmin) {
+      let proposalOwnerId: string | null = null;
+      try {
+        const [prop] = await db
+          .select({ userId: proposals.userId })
+          .from(proposals)
+          .where(or(eq(proposals.id, id), eq(proposals.slug, id)));
+        if (prop) {
+          proposalOwnerId = prop.userId;
+        }
+      } catch {}
+
+      if (!proposalOwnerId) {
+        const { getProposalByIdOrSlug } = await import("@/lib/admin-store");
+        const storeProp = await getProposalByIdOrSlug(id);
+        if (storeProp) {
+          proposalOwnerId = (storeProp as any).userId;
+        }
+      }
+
+      if (proposalOwnerId && proposalOwnerId !== authenticatedUserId) {
+        return apiError("You do not have permission to view responses for this proposal", "FORBIDDEN", 403);
+      }
+    }
+
+    // 3. Return responses
     try {
       const records = await db
         .select()

@@ -21,6 +21,16 @@ const AUTH_SECRET =
   process.env.BETTER_AUTH_SECRET ||
   "development_secret_key_at_least_32_characters_long_for_auth";
 
+// Security Invariant: Ensure secure credentials in production
+if (process.env.NODE_ENV === "production") {
+  if (!process.env.ADMIN_PASSWORD || process.env.ADMIN_PASSWORD === "LoveHubAdmin2026!") {
+    console.error("FATAL SECURITY WARNING: ADMIN_PASSWORD is unset or using default password in production!");
+  }
+  if (!process.env.BETTER_AUTH_SECRET || process.env.BETTER_AUTH_SECRET.includes("development_secret")) {
+    console.error("FATAL SECURITY WARNING: BETTER_AUTH_SECRET is unset or using development fallback in production!");
+  }
+}
+
 /**
  * Sign payload using HMAC SHA-256
  */
@@ -35,7 +45,7 @@ export function signToken(data: AdminSession): string {
 }
 
 /**
- * Verify and decode HMAC signed token
+ * Verify and decode HMAC signed token with constant-time equality check
  */
 export function verifyToken(token: string): AdminSession | null {
   try {
@@ -48,7 +58,10 @@ export function verifyToken(token: string): AdminSession | null {
       .update(base64Data)
       .digest("base64url");
 
-    if (signature !== expectedSignature) {
+    const sigBuf = Buffer.from(signature);
+    const expBuf = Buffer.from(expectedSignature);
+
+    if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
       return null;
     }
 
@@ -66,13 +79,24 @@ export function verifyToken(token: string): AdminSession | null {
 }
 
 /**
- * Check if the provided credentials match the admin configuration
+ * Check if the provided credentials match the admin configuration using constant-time comparison
  */
 export function validateAdminCredentials(email: string, pass: string): boolean {
   const normalizedEmail = (email || "").trim().toLowerCase();
   const targetEmail = DEFAULT_ADMIN_EMAIL.trim().toLowerCase();
 
-  return normalizedEmail === targetEmail && pass === DEFAULT_ADMIN_PASSWORD;
+  if (normalizedEmail !== targetEmail) {
+    return false;
+  }
+
+  const passBuf = Buffer.from(pass || "");
+  const targetBuf = Buffer.from(DEFAULT_ADMIN_PASSWORD || "");
+
+  if (passBuf.length !== targetBuf.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(passBuf, targetBuf);
 }
 
 /**
@@ -99,14 +123,23 @@ export function createAdminSession(email = DEFAULT_ADMIN_EMAIL): {
 /**
  * Verify admin session from NextRequest cookies or Authorization header
  */
-export function getAdminSessionFromRequest(request: NextRequest): AdminSession | null {
-  const cookieToken = request.cookies.get(ADMIN_COOKIE_NAME)?.value;
+export function getAdminSessionFromRequest(request: NextRequest | Request): AdminSession | null {
+  const cookieToken = (request as any).cookies?.get?.(ADMIN_COOKIE_NAME)?.value;
   if (cookieToken) {
     const session = verifyToken(cookieToken);
     if (session) return session;
   }
 
-  const authHeader = request.headers.get("authorization");
+  const cookieHeader = request.headers?.get?.("cookie");
+  if (cookieHeader) {
+    const match = cookieHeader.match(new RegExp(`(?:^|; )${ADMIN_COOKIE_NAME}=([^;]*)`));
+    if (match?.[1]) {
+      const session = verifyToken(decodeURIComponent(match[1]));
+      if (session) return session;
+    }
+  }
+
+  const authHeader = request.headers?.get?.("authorization");
   if (authHeader?.startsWith("Bearer ")) {
     const headerToken = authHeader.substring(7);
     const session = verifyToken(headerToken);

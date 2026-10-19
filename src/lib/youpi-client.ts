@@ -239,6 +239,11 @@ export function verifyYouPiWebhookSignature(
     return false;
   }
 
+  if (process.env.NODE_ENV === "production" && !secretOverride && !process.env.YOUPI_WEBHOOK_SECRET) {
+    logger.error("FATAL: YOUPI_WEBHOOK_SECRET is not configured in production. Rejecting webhook.");
+    return false;
+  }
+
   const secret = secretOverride || process.env.YOUPI_WEBHOOK_SECRET || "test_webhook_secret_for_youpi";
   const bodyBuffer = typeof rawBody === "string" ? Buffer.from(rawBody, "utf8") : rawBody;
 

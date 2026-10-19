@@ -93,10 +93,29 @@ export async function PUT(request: NextRequest, { params }: Params) {
       return apiError("Unauthorized", "UNAUTHORIZED", 401);
     }
 
-    const [existing] = await db
-      .select()
-      .from(proposals)
-      .where(eq(proposals.id, id));
+    let existing: any = null;
+    try {
+      const [dbExisting] = await db
+        .select()
+        .from(proposals)
+        .where(eq(proposals.id, id));
+      existing = dbExisting;
+    } catch {
+      // DB offline fallback
+    }
+
+    if (!existing) {
+      const { getProposalByIdOrSlug } = await import("@/lib/admin-store");
+      const storeProp = await getProposalByIdOrSlug(id);
+      if (storeProp) {
+        existing = {
+          id: (storeProp as any).id || id,
+          userId: (storeProp as any).userId || session.user.id,
+          status: (storeProp as any).status || "draft",
+          content: (storeProp as any).content || storeProp,
+        };
+      }
+    }
 
     if (!existing) {
       return apiError("Proposal not found", "NOT_FOUND", 404);
@@ -109,16 +128,50 @@ export async function PUT(request: NextRequest, { params }: Params) {
     const body = await request.json();
     const validated = proposalSchema.partial().parse(body);
 
-    const [updated] = await db
-      .update(proposals)
-      .set({
-        ...validated,
-        updatedAt: new Date(),
-      })
-      .where(eq(proposals.id, id))
-      .returning();
+    // Security Hardening:
+    // Strip status, id, and content.isPaid from client update payload.
+    // Commercial entitlement and payment status can only be modified through verified payment webhooks.
+    const { status, id: bodyId, ...allowedUpdates } = validated;
 
-    return apiSuccess(updated);
+    let updatedContent = existing.content as Record<string, unknown>;
+    if (allowedUpdates.content) {
+      const existingContent = (existing.content as Record<string, unknown>) || {};
+      const newContent = allowedUpdates.content as Record<string, unknown>;
+      
+      // Preserve existing verified commercial state
+      const isPaid = Boolean(existing.status === "final" || existingContent.isPaid);
+      updatedContent = {
+        ...newContent,
+        isPaid,
+        expiresAt: isPaid ? undefined : existingContent.expiresAt,
+      };
+    }
+
+    let updated: any = null;
+    try {
+      const [dbUpdated] = await db
+        .update(proposals)
+        .set({
+          ...allowedUpdates,
+          content: updatedContent,
+          updatedAt: new Date(),
+        })
+        .where(eq(proposals.id, id))
+        .returning();
+      updated = dbUpdated;
+    } catch {
+      // DB offline / in-memory fallback
+    }
+
+    return apiSuccess(
+      updated || {
+        ...existing,
+        ...allowedUpdates,
+        content: updatedContent,
+        status: existing.status,
+        updatedAt: new Date(),
+      }
+    );
   } catch (err) {
     return handleApiError(err);
   }

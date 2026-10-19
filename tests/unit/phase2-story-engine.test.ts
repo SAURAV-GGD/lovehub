@@ -128,8 +128,12 @@ describe("Phase 2: Modular Story Engine & 7 Scenes", () => {
       expect(postJson.data.logged).toBe(true);
       expect(postJson.data.eventType).toBe("accepted");
 
-      // Verify retrieval
-      const getReq = new Request(`http://localhost:3000/api/proposals/${proposalId}/response`);
+      // Verify retrieval (requires authentication as enforced by Finding 5)
+      const { signToken } = await import("@/lib/admin-auth");
+      const adminToken = signToken({ email: "admin@lovehub.test", role: "admin" });
+      const getReq = new Request(`http://localhost:3000/api/proposals/${proposalId}/response`, {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      });
       const getRes = await GET(getReq as any, { params: Promise.resolve({ id: proposalId }) });
       expect(getRes.status).toBe(200);
       const getJson = await getRes.json();

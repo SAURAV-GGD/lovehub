@@ -289,6 +289,13 @@ export async function POST(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
   try {
+    // 1. Rate Limiting Protection (20 deletes per minute per IP)
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0].trim() || "unknown-ip";
+    const limit = rateLimit(`upload_delete:${ip}`, { interval: 60000, maxRequests: 20 });
+    if (!limit.success) {
+      return apiError("Too many delete requests. Please wait a minute and try again.", "RATE_LIMITED", 429);
+    }
+
     const { searchParams } = new URL(request.url);
     let keyOrUrl = searchParams.get("key") || searchParams.get("url");
 
@@ -299,6 +306,44 @@ export async function DELETE(request: NextRequest) {
 
     if (!keyOrUrl) {
       return apiError("Missing 'key' or 'url' to delete", "VALIDATION_ERROR", 400);
+    }
+
+    // 2. Identify Caller Session
+    let authenticatedUserId: string | null = null;
+    let isAdmin = false;
+    try {
+      const userSession = await auth.api.getSession({ headers: request.headers });
+      if (userSession?.user?.id) {
+        authenticatedUserId = userSession.user.id;
+      }
+    } catch {}
+
+    if (!authenticatedUserId) {
+      const adminSession = getAdminSessionFromRequest(request);
+      if (adminSession?.email) {
+        isAdmin = true;
+        authenticatedUserId = `admin-${adminSession.email.split("@")[0]}`;
+      }
+    }
+
+    // 3. Ownership / Authorization Validation
+    const isGuestKey =
+      keyOrUrl.includes("/guest/") ||
+      keyOrUrl.startsWith("guest/") ||
+      keyOrUrl.includes("fallback/proposals/guest/");
+
+    if (!isAdmin && !authenticatedUserId && !isGuestKey) {
+      return apiError("Authentication required to delete non-guest media assets", "UNAUTHORIZED", 401);
+    }
+
+    if (authenticatedUserId && !isAdmin && !isGuestKey) {
+      const ownsKey =
+        keyOrUrl.includes(`/${authenticatedUserId}/`) ||
+        keyOrUrl.includes(authenticatedUserId);
+
+      if (!ownsKey) {
+        return apiError("You do not have permission to delete this media asset", "FORBIDDEN", 403);
+      }
     }
 
     if (keyOrUrl.includes("cloudinary.com") || (isCloudinaryConfigured() && !keyOrUrl.includes("r2.dev") && !keyOrUrl.includes("r2.cloudflarestorage"))) {

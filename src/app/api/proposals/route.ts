@@ -57,12 +57,38 @@ export async function POST(request: NextRequest) {
     const proposalId = (typeof body.id === "string" && body.id.trim()) ? body.id.trim() : createId();
     const slug = validated.slug || proposalId;
 
-    const isPaid = Boolean((validated.content as any)?.isPaid);
-    const expiresAt = isPaid ? undefined : Date.now() + 120 * 1000; // 120-second preview window
+    const userSuppliedContent = (validated.content as Record<string, unknown>) || {};
+    const sanitizedContent = { ...userSuppliedContent };
+    delete (sanitizedContent as any).isPaid;
+    delete (sanitizedContent as any).expiresAt;
+
+    // Security Enforcement:
+    // Check if proposal already exists to preserve legitimate paid status and verify ownership
+    let isAlreadyPaid = false;
+    try {
+      const [existingProposal] = await db
+        .select()
+        .from(proposals)
+        .where(eq(proposals.id, proposalId));
+
+      if (existingProposal) {
+        if (existingProposal.userId && existingProposal.userId !== userId) {
+          return apiError("You do not have permission to overwrite this proposal", "FORBIDDEN", 403);
+        }
+        isAlreadyPaid = Boolean(
+          existingProposal.status === "final" ||
+          (existingProposal.content as any)?.isPaid
+        );
+      }
+    } catch {
+      // DB offline / initial creation fallback
+    }
+
+    const expiresAt = isAlreadyPaid ? undefined : Date.now() + 120 * 1000; // 120-second preview window
     const contentWithExpiry = {
-      ...((validated.content as Record<string, unknown>) || {}),
+      ...sanitizedContent,
       id: proposalId,
-      isPaid,
+      isPaid: isAlreadyPaid,
       expiresAt,
     };
 
@@ -79,7 +105,7 @@ export async function POST(request: NextRequest) {
           plan: planVal,
           input: validated.input,
           content: contentWithExpiry,
-          status: isPaid ? "final" : "draft",
+          status: isAlreadyPaid ? "final" : "draft",
           isPublic: validated.isPublic !== undefined ? validated.isPublic : true,
           slug,
         })
@@ -91,7 +117,7 @@ export async function POST(request: NextRequest) {
             plan: planVal,
             input: validated.input,
             content: contentWithExpiry,
-            status: isPaid ? "final" : "draft",
+            status: isAlreadyPaid ? "final" : "draft",
             isPublic: validated.isPublic !== undefined ? validated.isPublic : true,
             slug,
             updatedAt: new Date(),
@@ -109,6 +135,8 @@ export async function POST(request: NextRequest) {
       const c = (validated.content as any) || {};
       const inp = (validated.input as any) || {};
       await createAdminProposal({
+        assignedClientId: userId,
+        status: isAlreadyPaid ? "final" : "draft",
         yourName: c.yourName || inp.yourName || "Someone Special",
         partnerName: c.partnerName || inp.partnerName || "My Love",
         relationshipType: c.relationshipType || inp.relationshipType || "girlfriend",
@@ -126,7 +154,21 @@ export async function POST(request: NextRequest) {
       });
     } catch {}
 
-    return apiSuccess(created || { id: proposalId, slug, ...validated }, 201);
+    return apiSuccess(
+      created || {
+        id: proposalId,
+        userId: userId || "guest-creator-user",
+        title: validated.title,
+        clientName: validated.clientName || null,
+        plan: (validated.content as any)?.plan || "romantic",
+        input: validated.input,
+        content: contentWithExpiry,
+        status: isAlreadyPaid ? "final" : "draft",
+        isPublic: validated.isPublic !== undefined ? validated.isPublic : true,
+        slug,
+      },
+      201
+    );
   } catch (err) {
     return handleApiError(err);
   }

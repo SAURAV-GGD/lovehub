@@ -591,7 +591,9 @@ export async function createAdminProposal(
     title: input.title || `Proposal for ${input.partnerName} (${input.plan.toUpperCase()})`,
     clientName: input.partnerName,
     plan: input.plan,
-    createdByAdmin: true,
+    createdByAdmin: input.assignedClientId
+      ? Boolean(input.assignedClientId.startsWith("admin-") || input.assignedClientId === "admin-master")
+      : true,
     status: input.status || "final",
     isPublic: input.isPublic !== false,
     slug,

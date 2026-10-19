@@ -8,9 +8,25 @@ import {
   DEFAULT_ADMIN_EMAIL,
 } from "@/lib/admin-auth";
 import { apiSuccess, apiError } from "@/lib/api-response";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
   try {
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      request.headers.get("x-real-ip") ||
+      "127.0.0.1";
+
+    // Rate Limiting: Maximum 5 attempts per minute per IP to mitigate brute-force
+    const limit = rateLimit(`admin_auth:${ip}`, { interval: 60000, maxRequests: 5 });
+    if (!limit.success) {
+      return apiError(
+        "Too many login attempts. Please wait a minute and try again.",
+        "RATE_LIMITED",
+        429
+      );
+    }
+
     const body = await request.json();
     const { email, password } = body;
 
