@@ -9,6 +9,7 @@ import {
   MAX_IMAGE_FILE_SIZE_BYTES,
 } from "../../src/lib/cloudflare-r2";
 import { NextRequest } from "next/server";
+import { GET, POST, DELETE } from "../../src/app/api/upload/route";
 
 describe("Cloudflare R2 Object Storage Backend", () => {
   const originalEnv = process.env;
@@ -141,7 +142,6 @@ describe("Cloudflare R2 Object Storage Backend", () => {
 
   describe("API Endpoint /api/upload", () => {
     it("GET /api/upload returns storage capabilities", async () => {
-      const { GET } = await import("../../src/app/api/upload/route");
       const res = await GET();
       expect(res.status).toBe(200);
 
@@ -153,7 +153,6 @@ describe("Cloudflare R2 Object Storage Backend", () => {
     });
 
     it("POST /api/upload accepts base64 payload in application/json", async () => {
-      const { POST } = await import("../../src/app/api/upload/route");
       const req = new NextRequest("http://localhost:3000/api/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -174,7 +173,6 @@ describe("Cloudflare R2 Object Storage Backend", () => {
     });
 
     it("POST /api/upload rejects request missing image data", async () => {
-      const { POST } = await import("../../src/app/api/upload/route");
       const req = new NextRequest("http://localhost:3000/api/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -190,7 +188,6 @@ describe("Cloudflare R2 Object Storage Backend", () => {
     });
 
     it("DELETE /api/upload deletes requested key", async () => {
-      const { DELETE } = await import("../../src/app/api/upload/route");
       const req = new NextRequest("http://localhost:3000/api/upload?key=proposals/guest/test-123.jpg", {
         method: "DELETE",
       });

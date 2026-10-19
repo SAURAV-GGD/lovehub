@@ -12,18 +12,28 @@ import {
   MAX_IMAGE_FILE_SIZE_BYTES,
 } from "@/lib/cloudflare-r2";
 import { uploadToImgBB } from "@/lib/imgbb";
+import {
+  uploadToCloudinary,
+  deleteFromCloudinary,
+  isCloudinaryConfigured,
+  getCloudinaryConfig,
+} from "@/lib/cloudinary";
 
 /**
  * GET /api/upload
  * Returns status and configuration parameters of storage providers.
  */
 export async function GET() {
-  const cfg = getR2Config();
+  const r2Cfg = getR2Config();
+  const cldCfg = getCloudinaryConfig();
   const r2Configured = isR2Configured();
+  const cldConfigured = isCloudinaryConfigured();
   const imgbbConfigured = Boolean(process.env.IMGBB_API_KEY);
 
   let activeProvider = "In-App Database Storage";
-  if (r2Configured) {
+  if (cldConfigured) {
+    activeProvider = "Cloudinary";
+  } else if (r2Configured) {
     activeProvider = "Cloudflare R2";
   } else if (imgbbConfigured) {
     activeProvider = "ImgBB";
@@ -31,10 +41,14 @@ export async function GET() {
 
   return apiSuccess({
     provider: activeProvider,
+    cloudinary: {
+      isConfigured: cldConfigured,
+      cloudName: cldCfg.cloudName || null,
+    },
     cloudflareR2: {
       isConfigured: r2Configured,
-      bucketName: cfg.bucketName,
-      publicDomain: cfg.publicDomain || null,
+      bucketName: r2Cfg.bucketName,
+      publicDomain: r2Cfg.publicDomain || null,
     },
     imgbb: {
       isConfigured: imgbbConfigured,
@@ -53,12 +67,33 @@ async function uploadMedia(params: {
   userId?: string;
   proposalId?: string;
 }) {
-  // 1. Cloudflare R2 if credentials provided
+  // 1. Cloudinary (Enterprise Free 25GB CDN)
+  if (isCloudinaryConfigured()) {
+    try {
+      const cldResult = await uploadToCloudinary(
+        params.buffer,
+        params.folder || "proposals",
+        params.originalName
+      );
+      return {
+        url: cldResult.url,
+        key: cldResult.publicId,
+        bucket: "cloudinary",
+        size: cldResult.bytes || params.buffer.length,
+        mimeType: params.mimeType,
+        isMock: false,
+      };
+    } catch (cldErr) {
+      console.warn("Cloudinary upload failed, falling back to secondary provider:", cldErr);
+    }
+  }
+
+  // 2. Cloudflare R2 if credentials provided
   if (isR2Configured()) {
     return await uploadToR2(params);
   }
 
-  // 2. ImgBB if API key provided
+  // 3. ImgBB if API key provided
   if (process.env.IMGBB_API_KEY) {
     try {
       const imgbbResult = await uploadToImgBB(params.buffer, params.originalName);
@@ -75,7 +110,7 @@ async function uploadMedia(params: {
     }
   }
 
-  // 3. Resilient Fallback
+  // 4. Resilient Fallback
   return await uploadToR2(params);
 }
 
@@ -264,6 +299,11 @@ export async function DELETE(request: NextRequest) {
 
     if (!keyOrUrl) {
       return apiError("Missing 'key' or 'url' to delete", "VALIDATION_ERROR", 400);
+    }
+
+    if (keyOrUrl.includes("cloudinary.com") || (isCloudinaryConfigured() && !keyOrUrl.includes("r2.dev") && !keyOrUrl.includes("r2.cloudflarestorage"))) {
+      await deleteFromCloudinary(keyOrUrl);
+      return apiSuccess({ deleted: true, key: keyOrUrl });
     }
 
     const result = await deleteFromR2(keyOrUrl);
