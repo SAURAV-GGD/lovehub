@@ -11,29 +11,77 @@ import {
   ALLOWED_IMAGE_MIME_TYPES,
   MAX_IMAGE_FILE_SIZE_BYTES,
 } from "@/lib/cloudflare-r2";
+import { uploadToImgBB } from "@/lib/imgbb";
 
 /**
  * GET /api/upload
- * Returns status and configuration parameters of Cloudflare R2 storage.
+ * Returns status and configuration parameters of storage providers.
  */
 export async function GET() {
   const cfg = getR2Config();
-  const configured = isR2Configured();
+  const r2Configured = isR2Configured();
+  const imgbbConfigured = Boolean(process.env.IMGBB_API_KEY);
+
+  let activeProvider = "In-App Database Storage";
+  if (r2Configured) {
+    activeProvider = "Cloudflare R2";
+  } else if (imgbbConfigured) {
+    activeProvider = "ImgBB";
+  }
 
   return apiSuccess({
-    provider: "Cloudflare R2",
-    isConfigured: configured,
-    bucketName: cfg.bucketName,
-    publicDomain: cfg.publicDomain || null,
+    provider: activeProvider,
+    cloudflareR2: {
+      isConfigured: r2Configured,
+      bucketName: cfg.bucketName,
+      publicDomain: cfg.publicDomain || null,
+    },
+    imgbb: {
+      isConfigured: imgbbConfigured,
+    },
     maxSizeBytes: MAX_IMAGE_FILE_SIZE_BYTES,
     maxSizeMB: MAX_IMAGE_FILE_SIZE_BYTES / (1024 * 1024),
     allowedMimeTypes: ALLOWED_IMAGE_MIME_TYPES,
   });
 }
 
+async function uploadMedia(params: {
+  buffer: Buffer;
+  mimeType: string;
+  originalName?: string;
+  folder?: "proposals" | "birthdays" | "avatars" | "uploads";
+  userId?: string;
+  proposalId?: string;
+}) {
+  // 1. Cloudflare R2 if credentials provided
+  if (isR2Configured()) {
+    return await uploadToR2(params);
+  }
+
+  // 2. ImgBB if API key provided
+  if (process.env.IMGBB_API_KEY) {
+    try {
+      const imgbbResult = await uploadToImgBB(params.buffer, params.originalName);
+      return {
+        url: imgbbResult.url,
+        key: `imgbb/${imgbbResult.url.split("/").pop()}`,
+        bucket: "imgbb",
+        size: params.buffer.length,
+        mimeType: params.mimeType,
+        isMock: false,
+      };
+    } catch (imgbbErr) {
+      console.warn("ImgBB upload error, falling back to local storage:", imgbbErr);
+    }
+  }
+
+  // 3. Resilient Fallback
+  return await uploadToR2(params);
+}
+
 /**
  * POST /api/upload
- * Uploads one or more user pictures to Cloudflare R2.
+ * Uploads one or more user pictures. Supports Cloudflare R2, ImgBB, and resilient database storage.
  * Supports both multipart/form-data (Files) and application/json (Base64 data URIs).
  */
 export async function POST(request: NextRequest) {
@@ -109,7 +157,7 @@ export async function POST(request: NextRequest) {
         const arrayBuf = await file.arrayBuffer();
         const buffer = Buffer.from(arrayBuf);
 
-        const uploaded = await uploadToR2({
+        const uploaded = await uploadMedia({
           buffer,
           mimeType: mime,
           originalName: file.name,
@@ -175,7 +223,7 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        const uploaded = await uploadToR2({
+        const uploaded = await uploadMedia({
           buffer,
           mimeType,
           originalName: filename || `photo-${i + 1}`,
