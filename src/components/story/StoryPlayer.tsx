@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ProposalData, StoryConfig, StorySceneId, ensureStoryConfig } from "@/lib/proposal-types";
 import { AudioController } from "./AudioController";
@@ -15,10 +15,17 @@ import { Heart, Sparkles } from "lucide-react";
 
 interface StoryPlayerProps {
   proposal: ProposalData;
+  activeSceneId?: StorySceneId;
+  onSceneChange?: (sceneId: StorySceneId) => void;
   onResponseLogged?: (eventType: string, payload: any) => void;
 }
 
-export function StoryPlayer({ proposal, onResponseLogged }: StoryPlayerProps) {
+export function StoryPlayer({
+  proposal,
+  activeSceneId,
+  onSceneChange,
+  onResponseLogged,
+}: StoryPlayerProps) {
   const storyConfig = ensureStoryConfig(proposal);
   const enabledScenes = storyConfig.enabledScenes || [
     "intro",
@@ -34,7 +41,21 @@ export function StoryPlayer({ proposal, onResponseLogged }: StoryPlayerProps) {
   const [audioAutoStart, setAudioAutoStart] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
 
+  // Synchronize with external activeSceneId requests (e.g. from editor preview buttons)
+  useEffect(() => {
+    if (activeSceneId) {
+      const idx = enabledScenes.indexOf(activeSceneId);
+      if (idx !== -1) {
+        setCurrentSceneIndex(idx);
+      }
+    }
+  }, [activeSceneId, enabledScenes]);
+
   const currentSceneId: StorySceneId = enabledScenes[currentSceneIndex] || "intro";
+
+  useEffect(() => {
+    onSceneChange?.(currentSceneId);
+  }, [currentSceneId, onSceneChange]);
 
   // Post response events to server
   const logResponse = useCallback(

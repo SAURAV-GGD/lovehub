@@ -46,6 +46,7 @@ import { saveProposal, isSlugAvailable, getProposalUrl } from "@/lib/proposal-st
 import { PhonePreview } from "@/components/story/PhonePreview";
 import { QuizEditor } from "@/components/story/QuizEditor";
 import { GiftEditor } from "@/components/story/GiftEditor";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { trackEvent } from "@/lib/analytics";
 import { toast } from "sonner";
@@ -99,6 +100,7 @@ function CreateContent() {
     "finale",
   ]);
   const [firstSceneId, setFirstSceneId] = useState<StorySceneId>("intro");
+  const [activeSceneId, setActiveSceneId] = useState<StorySceneId>("intro");
   const [isMobilePreviewOpen, setIsMobilePreviewOpen] = useState(false);
   const [isExtractModalOpen, setIsExtractModalOpen] = useState(false);
   const [chatNotesText, setChatNotesText] = useState("");
@@ -1342,6 +1344,10 @@ function CreateContent() {
                     <Label className="text-xs font-semibold flex items-center gap-1.5">
                       <Sparkles className="w-3.5 h-3.5 text-pink-500" />
                       <span>Love Letter Typography Style (Scene 5)</span>
+                      <InfoTooltip
+                        title="Letter Typography"
+                        description="Select the typeface that matches your relationship's sentiment. Playfair Serif feels royal & timeless; Romantic Cursive feels handwritten; Vintage Typewriter evokes old-school parchment letters."
+                      />
                     </Label>
                     <Select
                       value={letterFontStyle}
@@ -1591,7 +1597,14 @@ function CreateContent() {
 
                   {limits.hasCustomSlug && (
                     <div className="space-y-2">
-                      <Label htmlFor="customSlug">Custom URL (Optional)</Label>
+                      <div className="flex items-center gap-1.5">
+                        <Label htmlFor="customSlug">Custom URL (Optional)</Label>
+                        <InfoTooltip
+                          title="Custom Proposal URL"
+                          description="Personalize your romantic link (e.g. lovehub.in/proposal/rahul-loves-ananya). Makes the link feel uniquely yours and easy to share."
+                          tip="Protected with lifelong unguessable encryption and fast global CDN."
+                        />
+                      </div>
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-foreground/60">/proposal/</span>
                         <Input
@@ -1629,15 +1642,30 @@ function CreateContent() {
                         enabledScenes={enabledScenes}
                         onEnabledScenesChange={setEnabledScenes}
                         firstSceneId={firstSceneId}
-                        onFirstSceneChange={setFirstSceneId}
+                        onFirstSceneChange={(id) => {
+                          setFirstSceneId(id);
+                          setActiveSceneId(id);
+                        }}
+                        previewSceneId={activeSceneId}
+                        onPreviewScene={(sceneId) => {
+                          setActiveSceneId(sceneId);
+                          if (typeof window !== "undefined" && window.innerWidth < 1024) {
+                            setIsMobilePreviewOpen(true);
+                          }
+                        }}
                       />
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-rose-200/70 dark:border-rose-900/40">
                       {/* Relationship Start Date for Live Forever Timer */}
                       <div className="space-y-1.5">
-                        <Label htmlFor="relationshipStartDate" className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                          Relationship Start Date (Forever Counter ♾️)
+                        <Label htmlFor="relationshipStartDate" className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
+                          <span>Relationship Start Date (Forever Counter ♾️)</span>
+                          <InfoTooltip
+                            title="Forever Relationship Clock"
+                            description="Sets the starting date for the real-time love ticker in Scene 7, counting every single day, hour, minute, and second since you met or fell in love."
+                            tip="Displayed prominently alongside celebratory fireworks & confetti!"
+                          />
                         </Label>
                         <Input
                           id="relationshipStartDate"
@@ -1653,8 +1681,13 @@ function CreateContent() {
 
                       {/* Playful Runaway NO Button Toggle */}
                       <div className="space-y-1.5">
-                        <Label className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
-                          Playful Runaway &ldquo;NO&rdquo; Button
+                        <Label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
+                          <span>Playful Runaway &ldquo;NO&rdquo; Button</span>
+                          <InfoTooltip
+                            title="Runaway 'NO' Button Physics"
+                            description="When enabled, if your partner attempts to tap 'No', the button playfully evades their touch by darting away across the screen, making 'YES' the only choice!"
+                            tip="A fun, charming surprise that brings lighthearted smiles and laughter."
+                          />
                         </Label>
                         <button
                           type="button"
@@ -1843,7 +1876,11 @@ function CreateContent() {
 
           {/* Right Column: Live Mobile Smartphone Simulator */}
           <div className="hidden lg:flex lg:col-span-5 sticky top-8 justify-center">
-            <PhonePreview proposal={previewProposal} />
+            <PhonePreview
+              proposal={previewProposal}
+              activeSceneId={activeSceneId}
+              onSceneChange={setActiveSceneId}
+            />
           </div>
         </div>
 
@@ -1865,7 +1902,11 @@ function CreateContent() {
             <DialogHeader className="sr-only">
               <DialogTitle>Live Phone Preview</DialogTitle>
             </DialogHeader>
-            <PhonePreview proposal={previewProposal} />
+            <PhonePreview
+              proposal={previewProposal}
+              activeSceneId={activeSceneId}
+              onSceneChange={setActiveSceneId}
+            />
           </DialogContent>
         </Dialog>
 
