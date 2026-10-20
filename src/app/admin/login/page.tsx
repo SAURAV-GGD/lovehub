@@ -63,8 +63,8 @@ function AdminLoginForm() {
       const data = await res.json().catch(() => null);
       if (res.ok && (data?.success !== false)) {
         toast.success("Administrator session verified! Welcome to LoveHub Console.");
-        router.push(callbackUrl);
-        router.refresh();
+        // Full navigation guarantees clean bundles
+        window.location.href = callbackUrl;
       } else {
         const errorMsg =
           (typeof data?.error === "string" ? data.error : null) ||
