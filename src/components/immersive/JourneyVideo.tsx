@@ -10,82 +10,90 @@ export default function JourneyVideo() {
     const v = ref.current;
     if (!v) return;
 
-    // Explicitly enforce muted attributes for Safari/iOS autoplay/scrub policy
+    // Enforce muted attributes for cross-browser / iOS Safari autoplay policy
     v.muted = true;
     (v as HTMLVideoElement & { defaultMuted?: boolean }).defaultMuted = true;
 
-    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (mediaQuery.matches) {
-      try {
-        v.pause();
-      } catch {}
-      return;
-    }
-
-    let raf = 0;
-    let cur = 0;
-    let last = -1;
-    let primed = false;
-
-    // iOS Safari requires a user gesture (touch or scroll) to prime the video pipeline for scrubbing
-    const unlock = () => {
+    // Fluid background video playback engine
+    const startPlayback = () => {
       try {
         const p = v.play();
         if (p !== undefined) {
-          p.then(() => v.pause()).catch(() => {});
+          p.catch(() => {});
         }
       } catch {}
     };
 
-    const unlockEvents = ["touchstart", "touchend", "pointerdown", "scroll"] as const;
+    startPlayback();
+
+    // Unlock on initial interaction if device policy required a user gesture
+    const unlockEvents = ["touchstart", "pointerdown", "scroll", "wheel"] as const;
+    const unlock = () => {
+      startPlayback();
+    };
     unlockEvents.forEach((evt) => {
       window.addEventListener(evt, unlock, { once: true, passive: true });
     });
 
-    const loop = () => {
-      const d = v.duration;
-      // Guard readyState >= 1 (HAVE_METADATA) to prevent iOS Safari throwing InvalidStateError on currentTime assignment
-      if (d && isFinite(d) && v.readyState >= 1) {
-        const target = Math.min(Math.max(scrollState.progress, 0), 1) * (d - 0.05);
-        if (!primed) {
-          cur = target;
-          primed = true;
-        }
-        cur += (target - cur) * 0.15;
-        if (!v.seeking && Math.abs(cur - last) > 0.008) {
-          try {
-            v.currentTime = cur;
-            last = cur;
-          } catch {
-            // Guard against edge-case seek rejections during high-frequency touch scrub
-          }
-        }
-        const scale = 1.0 + (cur / d) * 0.04;
-        v.style.transform = `scale(${scale.toFixed(4)})`;
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (mediaQuery.matches) {
+      return () => {
+        unlockEvents.forEach((evt) => window.removeEventListener(evt, unlock));
+      };
+    }
+
+    let raf = 0;
+    let startTime = performance.now();
+    let curScale = 1.03;
+    let curY = 0;
+    let curRate = 1.0;
+
+    const loop = (now: number) => {
+      const elapsed = (now - startTime) * 0.001;
+
+      // 1. Organic Ambient Breathing: 0.65Hz gentle harmonic expansion
+      const breath = Math.sin(elapsed * 0.65) * 0.016;
+
+      // 2. Multi-Plane Optical Scroll Parallax (translates subtly up with scroll depth)
+      const targetY = -scrollState.progress * 42; // Smooth 0-42px drift
+      curY += (targetY - curY) * 0.08;
+
+      // 3. Combined Scale: Base + Breath + Subtle Scroll Depth
+      const targetScale = 1.025 + breath + scrollState.progress * 0.035;
+      curScale += (targetScale - curScale) * 0.08;
+
+      // 4. Scroll Velocity-Reactive Playback Rate (organically breathes with scroll tempo without seeking)
+      const velocity = Math.abs(scrollState.velocity || 0);
+      const targetRate = Math.min(1.0 + velocity * 0.16, 1.35);
+      curRate += (targetRate - curRate) * 0.08;
+
+      if (v.playbackRate !== undefined && Math.abs(v.playbackRate - curRate) > 0.02) {
+        try {
+          v.playbackRate = Number(curRate.toFixed(2));
+        } catch {}
       }
+
+      // GPU hardware transform running at native 60/120 FPS
+      v.style.transform = `translate3d(0, ${curY.toFixed(2)}px, 0) scale(${curScale.toFixed(4)})`;
+
       raf = requestAnimationFrame(loop);
     };
+
     raf = requestAnimationFrame(loop);
 
     const onVis = () => {
-      cancelAnimationFrame(raf);
-      if (!document.hidden && !mediaQuery.matches) {
-        raf = requestAnimationFrame(loop);
-      }
-    };
-    document.addEventListener("visibilitychange", onVis);
-
-    const handleMotionChange = (e: MediaQueryListEvent) => {
-      if (e.matches) {
+      if (document.hidden) {
         cancelAnimationFrame(raf);
         try {
           v.pause();
         } catch {}
       } else {
+        startTime = performance.now();
+        startPlayback();
         raf = requestAnimationFrame(loop);
       }
     };
-    mediaQuery.addEventListener("change", handleMotionChange);
+    document.addEventListener("visibilitychange", onVis);
 
     return () => {
       cancelAnimationFrame(raf);
@@ -93,7 +101,6 @@ export default function JourneyVideo() {
       unlockEvents.forEach((evt) => {
         window.removeEventListener(evt, unlock);
       });
-      mediaQuery.removeEventListener("change", handleMotionChange);
     };
   }, []);
 
@@ -103,10 +110,12 @@ export default function JourneyVideo() {
       id="journey-video"
       className="fixed inset-0 z-0 h-[100dvh] min-h-[100vh] w-full object-cover object-center pointer-events-none"
       style={{
-        transform: "translateZ(0)",
-        WebkitTransform: "translateZ(0)",
+        transform: "translate3d(0, 0px, 0) scale(1.03)",
+        WebkitTransform: "translate3d(0, 0px, 0) scale(1.03)",
         willChange: "transform",
       }}
+      autoPlay
+      loop
       muted
       playsInline
       preload="auto"

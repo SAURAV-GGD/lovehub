@@ -75,7 +75,7 @@ const playSoftPopSound = () => {
 };
 
 export default function InteractiveFloatingHearts({
-  heartCount = 18,
+  heartCount = 10,
 }: {
   heartCount?: number;
 }) {

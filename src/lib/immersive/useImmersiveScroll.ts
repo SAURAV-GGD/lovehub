@@ -29,7 +29,7 @@ export function useImmersiveScroll() {
         orientation: "vertical",
         gestureOrientation: "vertical",
         smoothWheel: true,
-        touchMultiplier: 1.5,
+        touchMultiplier: 1.0,
       });
 
       lenis.on("scroll", (e: { scroll: number; velocity: number; direction: number }) => {
