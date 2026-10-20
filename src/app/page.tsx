@@ -3,7 +3,6 @@ import { constructMetadata } from "@/lib/seo";
 import InteractiveFloatingHearts from "@/components/InteractiveFloatingHearts";
 import { MotionHero } from "@/components/home/motion-hero";
 import { InteractiveDemo } from "@/components/home/interactive-demo";
-import JourneyVideo from "@/components/immersive/JourneyVideo";
 import ScrollDriver from "@/components/immersive/ScrollDriver";
 import ImmersiveLoader from "@/components/immersive/ImmersiveLoader";
 import { Reveal } from "@/components/immersive/Reveal";
@@ -76,12 +75,8 @@ const faqs = [
 
 export default function HomePage() {
   return (
-    <div className="relative min-h-screen text-white selection:bg-rose-600 selection:text-white">
-      {/* Scroll-Scrubbed Journey Background Video */}
-      <JourneyVideo />
+    <div className="relative min-h-screen bg-[#080B11] text-white selection:bg-rose-600 selection:text-white">
 
-      {/* Cinematic Contrast Scrim (WCAG AA Compliant) */}
-      <div id="video-scrim" className="pointer-events-none fixed inset-0 z-0 h-[100dvh] min-h-[100vh] w-full" />
 
       {/* Lenis Smooth Scroll & Progress Engine */}
       <ScrollDriver />

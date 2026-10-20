@@ -3,12 +3,15 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Heart, ArrowUpRight, Play, Menu, X, ArrowDown } from "lucide-react";
+import JourneyVideo from "@/components/immersive/JourneyVideo";
 
 export function MotionHero() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <section id="hero" className="relative w-full min-h-screen flex flex-col justify-between overflow-hidden text-white select-none">
+      {/* Framed Cinematic Background Video */}
+      <JourneyVideo />
 
       {/* Floating Glassmorphism Navbar */}
       <header className="relative z-30 w-full pt-6 sm:pt-8 px-5 sm:px-10 lg:px-16">

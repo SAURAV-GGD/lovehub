@@ -60,7 +60,13 @@ export function InteractiveDemo() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           
           {/* Left Column: Context & Controls */}
-          <div className="lg:col-span-6 space-y-6 text-center lg:text-left">
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="lg:col-span-6 space-y-6 text-center lg:text-left"
+          >
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs sm:text-sm font-semibold tracking-wide">
               <Sparkles className="w-4 h-4 text-rose-400" />
               <span>Interactive Simulator</span>
@@ -105,10 +111,16 @@ export function InteractiveDemo() {
                 </button>
               )}
             </div>
-          </div>
+          </motion.div>
 
           {/* Right Column: Real Smartphone Mockup */}
-          <div className="lg:col-span-6 flex justify-center">
+          <motion.div
+            initial={{ opacity: 0, y: 35, scale: 0.94 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.55, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+            className="lg:col-span-6 flex justify-center"
+          >
             <div className="relative w-full max-w-[340px] sm:max-w-[360px] aspect-[9/18.5] bg-slate-950 rounded-[44px] p-3 shadow-2xl border-[6px] border-slate-800 ring-1 ring-white/20 select-none">
               
               {/* Phone Speaker & Dynamic Island */}
@@ -231,7 +243,7 @@ export function InteractiveDemo() {
                 <div className="w-28 h-1 bg-white/30 rounded-full mx-auto" />
               </div>
             </div>
-          </div>
+          </motion.div>
 
         </div>
       </div>
