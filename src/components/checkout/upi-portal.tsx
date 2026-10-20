@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -59,6 +59,7 @@ export function UpiCheckoutPortal({
   const [utr, setUtr] = useState("");
   const [copied, setCopied] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isSubmittingRef = useRef(false);
   const [timeLeft, setTimeLeft] = useState(900); // 15 minutes in seconds
 
   useEffect(() => {
@@ -87,6 +88,8 @@ export function UpiCheckoutPortal({
 
   const handleConfirmUtr = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmittingRef.current || isSubmitting) return;
+
     const cleanUtr = utr.trim();
 
     if (!cleanUtr) {
@@ -99,6 +102,7 @@ export function UpiCheckoutPortal({
       return;
     }
 
+    isSubmittingRef.current = true;
     setIsSubmitting(true);
     try {
       const res = await fetch("/api/checkout/confirm-upi", {
@@ -128,10 +132,12 @@ export function UpiCheckoutPortal({
               json.message ||
               "Could not verify UTR. Please check and try again.";
         toast.error(errorMsg);
+        isSubmittingRef.current = false;
         setIsSubmitting(false);
       }
     } catch (err) {
       toast.error("Network error verifying transaction. Please try again.");
+      isSubmittingRef.current = false;
       setIsSubmitting(false);
     }
   };

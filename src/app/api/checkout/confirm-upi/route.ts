@@ -9,9 +9,24 @@ import { markProposalPaid } from "@/lib/proposal-storage";
 import { eq, or } from "drizzle-orm";
 import { apiSuccess, apiError, handleApiError } from "@/lib/api-response";
 import { logger } from "@/lib/logger";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
   try {
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+      request.headers.get("x-real-ip") ||
+      "127.0.0.1";
+
+    const rateKey = `confirm_upi_${ip}`;
+    const limit = rateLimit(rateKey, { interval: 60 * 1000, maxRequests: 10 });
+    if (!limit.success) {
+      return apiError(
+        "Too many confirmation attempts. Please wait a minute before retrying.",
+        "RATE_LIMITED",
+        429
+      );
+    }
     const body = await request.json().catch(() => ({}));
 
     const rawOrderId = typeof body.orderId === "string" ? body.orderId.trim() : "";

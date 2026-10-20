@@ -2,12 +2,18 @@ import { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
 import { getPlanConfig } from "@/lib/plans";
 import { createYouPiPayment } from "@/lib/youpi-client";
-import { createOrderRecord } from "@/lib/orders";
+import { createOrderRecord, findActivePendingOrder } from "@/lib/orders";
 import { apiSuccess, apiError, handleApiError } from "@/lib/api-response";
 import { logger } from "@/lib/logger";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
   try {
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+      request.headers.get("x-real-ip") ||
+      "127.0.0.1";
+
     const body = await request.json().catch(() => ({}));
 
     // Support both { planId, pageId } and { plan, proposalId }
@@ -32,6 +38,45 @@ export async function POST(request: NextRequest) {
       }
     } catch {
       // Non-fatal if auth session cannot be parsed
+    }
+
+    // 1. Rate Limiting Protection (Anti-Spam / Anti-DDoS)
+    const rateLimitKey = `checkout_${userId || ip}`;
+    const limit = rateLimit(rateLimitKey, { interval: 60 * 1000, maxRequests: 8 });
+    if (!limit.success) {
+      return apiError(
+        "Too many checkout attempts. Please wait a moment before trying again.",
+        "RATE_LIMITED",
+        429
+      );
+    }
+
+    // 2. Idempotency Check: Re-use active pending order to prevent duplicate charges
+    if (proposalId) {
+      const existingPending = await findActivePendingOrder({
+        proposalId,
+        planId: planConfig.id,
+        maxAgeMinutes: 15,
+      });
+
+      if (existingPending && existingPending.checkoutUrl) {
+        logger.info("Reusing active pending checkout order (idempotent)", {
+          orderId: existingPending.id,
+          proposalId,
+          planId: planConfig.id,
+        });
+
+        return apiSuccess({
+          orderId: existingPending.id,
+          paymentId: existingPending.paymentId,
+          checkoutUrl: existingPending.checkoutUrl,
+          status: "pending",
+          amountRupees: planConfig.priceInRupees,
+          planId: planConfig.id,
+          planName: planConfig.name,
+          isExistingSession: true,
+        });
+      }
     }
 
     const orderId = `lh_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;

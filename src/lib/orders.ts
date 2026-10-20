@@ -102,6 +102,71 @@ export async function getOrderById(orderId: string): Promise<OrderRecord | null>
   return memoryOrders.get(orderId) || null;
 }
 
+export async function findActivePendingOrder(params: {
+  proposalId?: string | null;
+  userId?: string | null;
+  planId?: string;
+  maxAgeMinutes?: number;
+}): Promise<OrderRecord | null> {
+  const maxAgeMs = (params.maxAgeMinutes || 15) * 60 * 1000;
+  const cutoff = Date.now() - maxAgeMs;
+
+  // 1. Check memory cache first
+  for (const order of memoryOrders.values()) {
+    if (order.status !== "pending") continue;
+    if (order.createdAt.getTime() < cutoff) continue;
+    if (params.planId && order.planId !== params.planId) continue;
+    if (params.proposalId && order.proposalId === params.proposalId) {
+      return order;
+    }
+    if (params.userId && order.userId === params.userId) {
+      return order;
+    }
+  }
+
+  // 2. Query DB
+  try {
+    if (params.proposalId) {
+      const rows = await db
+        .select()
+        .from(orders)
+        .where(eq(orders.proposalId, params.proposalId))
+        .orderBy(desc(orders.createdAt))
+        .limit(3);
+
+      for (const row of rows) {
+        if (
+          row.status === "pending" &&
+          row.createdAt.getTime() >= cutoff &&
+          (!params.planId || row.planId === params.planId) &&
+          row.checkoutUrl
+        ) {
+          return {
+            id: row.id,
+            userId: row.userId,
+            proposalId: row.proposalId,
+            planId: row.planId,
+            amountPaise: row.amountPaise,
+            currency: row.currency,
+            status: row.status as OrderRecord["status"],
+            paymentId: row.paymentId,
+            utr: row.utr,
+            checkoutUrl: row.checkoutUrl,
+            createdAt: row.createdAt,
+            updatedAt: row.updatedAt,
+          };
+        }
+      }
+    }
+  } catch (err) {
+    logger.warn("DB findActivePendingOrder fallback:", {
+      err: err instanceof Error ? err.message : String(err),
+    });
+  }
+
+  return null;
+}
+
 export async function updateOrderStatus(
   orderId: string,
   status: "pending" | "paid" | "failed" | "cancelled",

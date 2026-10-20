@@ -6,7 +6,7 @@ import { Heart, Check, ArrowLeft, Shield, Lock, ArrowRight, Loader2 } from "luci
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useState, useRef } from "react";
 import { getPlanConfig } from "@/lib/plans";
 import { toast } from "sonner";
 
@@ -16,9 +16,13 @@ function CheckoutContent() {
   const proposalId = searchParams.get("proposalId") || searchParams.get("id") || undefined;
   const plan = getPlanConfig(rawPlanKey);
   const [isProcessing, setIsProcessing] = useState(false);
+  const isSubmittingRef = useRef(false);
 
   const handleProceedPayment = async () => {
+    if (isSubmittingRef.current || isProcessing) return;
+    isSubmittingRef.current = true;
     setIsProcessing(true);
+
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
@@ -33,6 +37,7 @@ function CheckoutContent() {
 
       if (!res.ok || !json.success) {
         toast.error(json.error?.message || "Could not start payment. Please try again.");
+        isSubmittingRef.current = false;
         setIsProcessing(false);
         return;
       }
@@ -41,11 +46,13 @@ function CheckoutContent() {
         window.location.href = json.data.checkoutUrl;
       } else {
         toast.error("Gateway URL not received. Please try again.");
+        isSubmittingRef.current = false;
         setIsProcessing(false);
       }
     } catch (err) {
       console.error("Checkout initiation error:", err);
       toast.error("Network error starting checkout. Please try again.");
+      isSubmittingRef.current = false;
       setIsProcessing(false);
     }
   };
