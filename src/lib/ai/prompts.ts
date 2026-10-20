@@ -22,6 +22,8 @@ You must respond ONLY with valid, parseable JSON matching this exact schema:
 }
 
 Guidelines:
+- Adapt all grammatical gender forms, verb conjugations, and affectionate terms naturally based on sender's and recipient's identities (e.g., in Hindi/Hinglish: 'karta hoon/karti hoon', 'rakhunga/rakhungi', 'mera hero / meri jaan / meri rajkumari', etc.).
+- STRICT PRIVACY RULE: NEVER explicitly output technical pronoun tokens like '(he/him)', '(she/her)', or '(they/them)' anywhere in the proposal text or headlines! The final proposal must only read as romantic, natural, heartfelt prose.
 - If language is 'hinglish', seamlessly blend colloquial Hindi words into English (e.g., 'dil se', 'hamesha', 'pyaar', 'blockbuster', 'kismet', 'khushi').
 - Match the requested tone exactly:
   * 'cute': Sweet, playful, adorable, endearing
@@ -34,8 +36,11 @@ Guidelines:
 }
 
 export function buildProposalUserPrompt(data: GenerateProposalInput): string {
-  return `Sender name: ${data.yourName}
-Recipient name: ${data.partnerName}
+  const senderGender = data.yourPronouns === "she/her" ? "Female" : data.yourPronouns === "he/him" ? "Male" : "Non-binary";
+  const recipientGender = data.partnerPronouns === "she/her" ? "Female" : data.partnerPronouns === "he/him" ? "Male" : "Non-binary";
+
+  return `Sender name: ${data.yourName} (Gender: ${senderGender})
+Recipient name: ${data.partnerName} (Gender: ${recipientGender})
 Relationship type: ${data.relationshipType}
 Tone: ${data.tone}
 Language: ${data.language}

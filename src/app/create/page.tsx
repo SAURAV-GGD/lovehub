@@ -24,6 +24,7 @@ import {
   ToneType,
   LanguageType,
   PlanType,
+  GenderPronoun,
   planLimits,
   relationshipLabels,
   toneLabels,
@@ -59,6 +60,8 @@ function CreateContent() {
   const [step, setStep] = useState(1);
   const [yourName, setYourName] = useState("");
   const [partnerName, setPartnerName] = useState("");
+  const [yourPronouns, setYourPronouns] = useState<GenderPronoun>("he/him");
+  const [partnerPronouns, setPartnerPronouns] = useState<GenderPronoun>("she/her");
   const [relationshipType, setRelationshipType] = useState<RelationshipType>("girlfriend");
   const [tone, setTone] = useState<ToneType>("cute");
   const [language, setLanguage] = useState<LanguageType>("english");
@@ -167,6 +170,8 @@ function CreateContent() {
       id: "preview_proposal_live",
       yourName: yourName || "Me",
       partnerName: partnerName || "My Love",
+      yourPronouns,
+      partnerPronouns,
       relationshipType,
       tone,
       language,
@@ -425,6 +430,8 @@ function CreateContent() {
         body: JSON.stringify({
           yourName,
           partnerName,
+          yourPronouns,
+          partnerPronouns,
           relationshipType,
           tone,
           language,
@@ -447,6 +454,8 @@ function CreateContent() {
         relationshipType,
         tone,
         language,
+        yourPronouns,
+        partnerPronouns,
       });
       setMessage(generatedMessage);
     } catch {
@@ -456,6 +465,8 @@ function CreateContent() {
         relationshipType,
         tone,
         language,
+        yourPronouns,
+        partnerPronouns,
       });
       setMessage(generatedMessage);
     } finally {
@@ -551,6 +562,8 @@ function CreateContent() {
       const proposalData = {
         yourName,
         partnerName,
+        yourPronouns,
+        partnerPronouns,
         relationshipType,
         tone,
         language,
@@ -645,7 +658,7 @@ function CreateContent() {
             id: canonicalId,
             title: `Proposal for ${partnerName}`,
             clientName: partnerName,
-            input: { yourName, partnerName, relationshipType, tone, language },
+            input: { yourName, partnerName, yourPronouns, partnerPronouns, relationshipType, tone, language },
             content: { ...proposalData, id: canonicalId },
             status: "draft",
             isPublic: true,
@@ -1131,24 +1144,115 @@ function CreateContent() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="yourName">Your Name</Label>
+                  <div className="grid md:grid-cols-2 gap-5">
+                    {/* Your Name & Identity */}
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="yourName" className="text-sm font-semibold">Your Name</Label>
+                        <span className="text-[11px] font-medium text-muted-foreground/80">Creator Identity</span>
+                      </div>
                       <Input
                         id="yourName"
                         placeholder="Enter your name"
                         value={yourName}
                         onChange={(e) => setYourName(e.target.value)}
+                        className="h-10 text-sm"
                       />
+                      <div className="grid grid-cols-3 gap-1.5 p-1 bg-stone-100/90 dark:bg-stone-900/90 rounded-xl border border-stone-200/80 dark:border-stone-800 text-xs">
+                        <button
+                          type="button"
+                          onClick={() => setYourPronouns("he/him")}
+                          className={`py-1.5 px-2 rounded-lg font-medium transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                            yourPronouns === "he/him"
+                              ? "bg-white dark:bg-stone-800 text-rose-600 dark:text-rose-400 shadow-2xs border border-rose-200/80 dark:border-rose-900/60 font-semibold"
+                              : "text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200"
+                          }`}
+                        >
+                          <span>👨🏻 He / Him</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setYourPronouns("she/her")}
+                          className={`py-1.5 px-2 rounded-lg font-medium transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                            yourPronouns === "she/her"
+                              ? "bg-white dark:bg-stone-800 text-rose-600 dark:text-rose-400 shadow-2xs border border-rose-200/80 dark:border-rose-900/60 font-semibold"
+                              : "text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200"
+                          }`}
+                        >
+                          <span>👩🏻 She / Her</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setYourPronouns("they/them")}
+                          className={`py-1.5 px-2 rounded-lg font-medium transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                            yourPronouns === "they/them"
+                              ? "bg-white dark:bg-stone-800 text-rose-600 dark:text-rose-400 shadow-2xs border border-rose-200/80 dark:border-rose-900/60 font-semibold"
+                              : "text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200"
+                          }`}
+                        >
+                          <span>✨ They / Them</span>
+                        </button>
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="partnerName">Partner&apos;s Name</Label>
+
+                    {/* Partner Name & Identity */}
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="partnerName" className="text-sm font-semibold">Partner&apos;s Name</Label>
+                        <span className="text-[11px] font-medium text-muted-foreground/80">Partner Identity</span>
+                      </div>
                       <Input
                         id="partnerName"
                         placeholder="Enter partner's name"
                         value={partnerName}
                         onChange={(e) => setPartnerName(e.target.value)}
+                        className="h-10 text-sm"
                       />
+                      <div className="grid grid-cols-3 gap-1.5 p-1 bg-stone-100/90 dark:bg-stone-900/90 rounded-xl border border-stone-200/80 dark:border-stone-800 text-xs">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPartnerPronouns("she/her");
+                            if (relationshipType === "boyfriend") setRelationshipType("girlfriend");
+                            if (relationshipType === "husband") setRelationshipType("wife");
+                            if (relationshipType === "fiance") setRelationshipType("fiancee");
+                          }}
+                          className={`py-1.5 px-2 rounded-lg font-medium transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                            partnerPronouns === "she/her"
+                              ? "bg-white dark:bg-stone-800 text-rose-600 dark:text-rose-400 shadow-2xs border border-rose-200/80 dark:border-rose-900/60 font-semibold"
+                              : "text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200"
+                          }`}
+                        >
+                          <span>👩🏻 She / Her</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPartnerPronouns("he/him");
+                            if (relationshipType === "girlfriend") setRelationshipType("boyfriend");
+                            if (relationshipType === "wife") setRelationshipType("husband");
+                            if (relationshipType === "fiancee") setRelationshipType("fiance");
+                          }}
+                          className={`py-1.5 px-2 rounded-lg font-medium transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                            partnerPronouns === "he/him"
+                              ? "bg-white dark:bg-stone-800 text-rose-600 dark:text-rose-400 shadow-2xs border border-rose-200/80 dark:border-rose-900/60 font-semibold"
+                              : "text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200"
+                          }`}
+                        >
+                          <span>👨🏻 He / Him</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPartnerPronouns("they/them")}
+                          className={`py-1.5 px-2 rounded-lg font-medium transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                            partnerPronouns === "they/them"
+                              ? "bg-white dark:bg-stone-800 text-rose-600 dark:text-rose-400 shadow-2xs border border-rose-200/80 dark:border-rose-900/60 font-semibold"
+                              : "text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200"
+                          }`}
+                        >
+                          <span>✨ They / Them</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
 

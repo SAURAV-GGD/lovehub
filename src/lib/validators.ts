@@ -27,9 +27,25 @@ export type SignupInput = z.infer<typeof signupSchema>;
 export const generateProposalSchema = z.object({
   yourName: z.string().min(1, "Your name is required").max(100),
   partnerName: z.string().min(1, "Partner's name is required").max(100),
-  relationshipType: z.enum(["crush", "girlfriend", "wife", "long-distance"]),
-  tone: z.enum(["cute", "emotional", "filmy", "funny", "deep-romantic"]),
-  language: z.enum(["english", "hinglish"]),
+  yourPronouns: z.enum(["he/him", "she/her", "they/them"]).optional().default("he/him"),
+  partnerPronouns: z.enum(["he/him", "she/her", "they/them"]).optional().default("she/her"),
+  relationshipType: z
+    .enum([
+      "crush",
+      "girlfriend",
+      "boyfriend",
+      "wife",
+      "husband",
+      "long-distance",
+      "fiancee",
+      "fiance",
+      "partner",
+    ])
+    .default("girlfriend"),
+  tone: z
+    .enum(["cute", "emotional", "filmy", "funny", "deep-romantic", "poetic-vip"])
+    .default("cute"),
+  language: z.enum(["english", "hinglish", "spanish", "french", "hindi"]).default("english"),
   memories: z.string().max(1000).optional(),
   insideJokes: z.string().max(500).optional(),
 });

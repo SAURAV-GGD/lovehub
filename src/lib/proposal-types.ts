@@ -1,12 +1,24 @@
-export type RelationshipType = "crush" | "girlfriend" | "wife" | "long-distance" | "fiancee" | "partner";
+export type RelationshipType =
+  | "crush"
+  | "girlfriend"
+  | "boyfriend"
+  | "wife"
+  | "husband"
+  | "long-distance"
+  | "fiancee"
+  | "fiance"
+  | "partner";
 export type ToneType = "cute" | "emotional" | "filmy" | "funny" | "deep-romantic" | "poetic-vip";
 export type LanguageType = "english" | "hinglish" | "spanish" | "french" | "hindi";
 export type PlanType = "basic" | "starter" | "romantic" | "pro" | "premium" | "custom";
+export type GenderPronoun = "he/him" | "she/her" | "they/them";
 
 export interface ProposalData {
   id: string;
   yourName: string;
   partnerName: string;
+  yourPronouns?: GenderPronoun;
+  partnerPronouns?: GenderPronoun;
   relationshipType: RelationshipType;
   tone: ToneType;
   language: LanguageType;
@@ -104,12 +116,15 @@ export const planLimits: Record<PlanType, {
 };
 
 export const relationshipLabels: Record<RelationshipType, string> = {
-  crush: "Crush",
-  girlfriend: "Girlfriend",
-  wife: "Wife",
-  "long-distance": "Long Distance Partner",
-  fiancee: "Fiancée / Soon to be Wife",
-  partner: "Life Partner",
+  girlfriend: "Girlfriend 🌸",
+  boyfriend: "Boyfriend 🧛🏻",
+  wife: "Wife 💍",
+  husband: "Husband 👑",
+  crush: "Crush ✨",
+  "long-distance": "Long Distance Partner ✈️",
+  fiancee: "Fiancée (Bride to be) 👰🏻‍♀️",
+  fiance: "Fiancé (Groom to be) 🤵🏻",
+  partner: "Life Partner ♾️",
 };
 
 export const toneLabels: Record<ToneType, string> = {
