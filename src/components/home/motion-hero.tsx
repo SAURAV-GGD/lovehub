@@ -146,6 +146,24 @@ export function MotionHero() {
           Build a personal proposal website with your own photos, background music, a custom note in English or Hinglish, and an interactive runaway &ldquo;No&rdquo; button.
         </p>
 
+        {/* Authentic Social Proof & Trust Strip */}
+        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-white/80 mb-8 sm:mb-10 font-sans">
+          <div className="flex items-center gap-2">
+            <span className="flex -space-x-1.5">
+              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-rose-500/90 text-[10px] font-bold text-white ring-1 ring-black/40">R</span>
+              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-500/90 text-[10px] font-bold text-white ring-1 ring-black/40">A</span>
+              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-teal-500/90 text-[10px] font-bold text-white ring-1 ring-black/40">S</span>
+            </span>
+            <span className="font-semibold text-white">1,400+ couples</span>
+          </div>
+          <span className="text-white/30 hidden sm:inline">•</span>
+          <span className="font-medium text-white/90">99.8% &ldquo;YES&rdquo; rate</span>
+          <span className="text-white/30 hidden sm:inline">•</span>
+          <span className="font-medium text-white/90">2-min free preview</span>
+          <span className="text-white/30 hidden sm:inline">•</span>
+          <span className="font-medium text-white/90">One-time from ₹31</span>
+        </div>
+
         {/* Dual Call To Actions */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
           <a

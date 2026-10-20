@@ -780,17 +780,14 @@ export default function AdminDashboardPage() {
   });
 
   return (
-    <div className="dark min-h-screen bg-[#030712] text-slate-100 relative overflow-x-hidden selection:bg-rose-500 selection:text-white">
-      {/* Dynamic Animated Liquid Gradient Orbs */}
+    <div className="dark min-h-screen bg-[#080B11] text-slate-100 relative overflow-x-hidden selection:bg-rose-500 selection:text-white">
+      {/* Architectural Dark Background with Subtle Top Glow & Precision Grid */}
       <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
-        {/* Orb 1: Hot Crimson & Pink Passion */}
-        <div className="absolute -top-[12%] -left-[10%] w-[480px] sm:w-[720px] h-[480px] sm:h-[720px] rounded-full bg-gradient-to-tr from-rose-600/30 via-pink-600/20 to-transparent blur-[120px] animate-liquid-1" />
-        {/* Orb 2: Royal Violet & Neon Indigo */}
-        <div className="absolute top-[25%] -right-[15%] w-[520px] sm:w-[780px] h-[520px] sm:h-[780px] rounded-full bg-gradient-to-bl from-violet-600/25 via-indigo-600/20 to-transparent blur-[140px] animate-liquid-2" />
-        {/* Orb 3: Bioluminescent Emerald / Teal Breeze */}
-        <div className="absolute -bottom-[15%] left-[20%] w-[480px] sm:w-[680px] h-[480px] sm:h-[680px] rounded-full bg-gradient-to-t from-teal-500/20 via-emerald-500/15 to-transparent blur-[130px] animate-liquid-3" />
-        {/* Luxury Micro-Dot Subtle Grid */}
-        <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.035)_1px,transparent_1px)] [background-size:28px_28px] opacity-70" />
+        {/* Subtle, restrained radial illumination from top center */}
+        <div className="absolute -top-[30%] left-1/2 -translate-x-1/2 w-[900px] h-[500px] rounded-full bg-[radial-gradient(ellipse_at_center,rgba(225,29,72,0.08),transparent_70%)] blur-2xl" />
+        <div className="absolute top-1/3 -right-[10%] w-[500px] h-[500px] rounded-full bg-[radial-gradient(ellipse_at_center,rgba(99,102,241,0.05),transparent_70%)] blur-3xl" />
+        {/* Subtle Architectural Dot Grid */}
+        <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.03)_1px,transparent_1px)] [background-size:24px_24px] opacity-60" />
       </div>
 
       {/* Top Executive Navigation Bar */}
@@ -805,10 +802,10 @@ export default function AdminDashboardPage() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-lg font-black tracking-tight bg-gradient-to-r from-white via-slate-100 to-rose-200 bg-clip-text text-transparent">
+                <span className="text-lg font-bold tracking-tight bg-gradient-to-r from-white via-slate-100 to-rose-200 bg-clip-text text-transparent">
                   LoveHub
                 </span>
-                <Badge className="bg-rose-950/80 text-rose-300 border-rose-500/40 text-[9px] sm:text-[10px] font-bold px-2 py-0.5 tracking-wider shadow-[0_0_12px_rgba(244,63,94,0.2)]">
+                <Badge className="bg-rose-950/60 text-rose-300 border-rose-500/30 text-[9px] sm:text-[10px] font-semibold px-2 py-0.5 tracking-wider">
                   EXECUTIVE CONSOLE
                 </Badge>
               </div>
@@ -848,7 +845,7 @@ export default function AdminDashboardPage() {
               variant="outline"
               size="sm"
               onClick={handleSignOut}
-              className="border-rose-500/30 bg-rose-950/40 text-rose-300 hover:bg-rose-900/60 hover:text-rose-100 hover:border-rose-500/60 text-xs shadow-[0_0_15px_rgba(244,63,94,0.15)] transition-all"
+              className="border-slate-800 bg-slate-900/80 text-slate-300 hover:bg-slate-800 hover:text-white hover:border-slate-700 text-xs shadow-sm transition-all"
             >
               <LogOut className="w-3.5 h-3.5 sm:mr-1.5" />
               <span className="hidden sm:inline">Sign Out</span>
@@ -866,7 +863,7 @@ export default function AdminDashboardPage() {
             {/* Quick Action Launchers Bar */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]" />
+                <div className="h-2 w-2 rounded-full bg-emerald-400" />
                 <span className="text-xs uppercase tracking-widest font-semibold text-slate-400">
                   Mission Command Center
                 </span>
@@ -874,14 +871,14 @@ export default function AdminDashboardPage() {
               <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
                 <Button
                   onClick={() => setActiveTab("birthday-creator")}
-                  className="bg-gradient-to-r from-teal-500 via-emerald-500 to-teal-600 hover:from-teal-600 hover:to-emerald-700 text-white shadow-lg shadow-teal-500/20 text-xs sm:text-sm font-semibold rounded-xl border border-teal-300/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  className="bg-teal-600 hover:bg-teal-500 text-white shadow-sm text-xs sm:text-sm font-semibold rounded-xl border border-teal-400/20 transition-all hover:translate-y-[-1px] active:translate-y-[0px]"
                 >
                   <Cake className="w-4 h-4 mr-1.5 shrink-0" />
                   <span className="truncate">New Birthday</span>
                 </Button>
                 <Button
                   onClick={() => setActiveTab("creator")}
-                  className="bg-gradient-to-r from-rose-500 via-pink-600 to-rose-600 hover:from-rose-600 hover:to-pink-700 text-white shadow-lg shadow-rose-500/25 text-xs sm:text-sm font-semibold rounded-xl border border-rose-300/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  className="bg-rose-600 hover:bg-rose-500 text-white shadow-sm text-xs sm:text-sm font-semibold rounded-xl border border-rose-400/20 transition-all hover:translate-y-[-1px] active:translate-y-[0px]"
                 >
                   <Plus className="w-4 h-4 mr-1.5 shrink-0" />
                   <span className="truncate">New Proposal</span>
@@ -936,15 +933,14 @@ export default function AdminDashboardPage() {
               TAB 1: OVERVIEW & ANALYTICS
              ======================================================== */}
           <TabsContent value="overview" className="space-y-6">
-            {/* Superpowers Banner with Glowing Liquid Glass */}
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-rose-950/50 via-slate-900/80 to-purple-950/50 border border-white/10 p-6 sm:p-8 backdrop-blur-2xl shadow-[0_0_60px_-15px_rgba(225,29,72,0.3)] group">
-              <div className="absolute top-0 right-0 w-80 h-80 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
+            {/* Superpowers Banner with Refined Architectural Styling */}
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900/90 via-slate-900/80 to-slate-950 border border-white/[0.08] p-6 sm:p-8 backdrop-blur-xl shadow-lg shadow-black/25 group">
               <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
                 <div className="space-y-2 max-w-2xl">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs font-semibold shadow-inner">
-                    <Crown className="w-3.5 h-3.5 text-rose-400 animate-pulse" /> Admin Superpowers Active
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs font-semibold">
+                    <Crown className="w-3.5 h-3.5 text-rose-400" /> Admin Superpowers Active
                   </div>
-                  <h2 className="text-xl sm:text-3xl font-black text-white tracking-tight leading-tight">
+                  <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight leading-tight">
                     Unlimited Proposals &amp; Multi-Version Creator Engine
                   </h2>
                   <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-light">
@@ -956,7 +952,7 @@ export default function AdminDashboardPage() {
                 <div className="flex items-center gap-3 shrink-0">
                   <Button
                     onClick={() => setActiveTab("creator")}
-                    className="bg-gradient-to-r from-rose-500 via-pink-600 to-rose-600 hover:from-rose-600 hover:to-pink-700 text-white font-semibold text-xs sm:text-sm shadow-xl shadow-rose-500/30 rounded-xl px-5 py-2.5 border border-white/20 transition-all hover:scale-105 active:scale-95"
+                    className="bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs sm:text-sm shadow-sm rounded-xl px-5 py-2.5 border border-rose-400/20 transition-all hover:translate-y-[-1px] active:translate-y-[0px]"
                   >
                     Launch Proposal Studio <ArrowRight className="w-4 h-4 ml-1.5" />
                   </Button>

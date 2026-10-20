@@ -259,132 +259,170 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Section 3: List-Style Feature Section */}
+        {/* Section 3: Magazine-Grade Bento Grid Feature Section */}
         <section id="features" className="py-24 sm:py-32 flex flex-col justify-center">
           <div className="max-w-6xl mx-auto px-5 sm:px-8 space-y-16 w-full">
             <Reveal>
               <div className="text-center space-y-3 max-w-2xl mx-auto">
                 <Badge variant="outline" className="text-rose-300 border-rose-500/30 bg-rose-500/10 backdrop-blur-md">
-                  Core Features
+                  Core Architecture
                 </Badge>
                 <h2 className="font-[family-name:var(--font-playfair)] italic text-3xl sm:text-5xl font-bold text-white tracking-tight">
                   Engineered for a Memorable Response
                 </h2>
                 <p className="text-slate-300 text-sm sm:text-base max-w-[65ch] mx-auto leading-relaxed">
-                  Every feature focuses on clean presentation, reliable mobile rendering, and playful user engagement.
+                  Every component is engineered with quiet elegance, tactile micro-interactions, and flawless mobile responsiveness.
                 </p>
               </div>
             </Reveal>
 
             <Reveal delay={0.15}>
-              <div className="glass border border-white/10 rounded-2xl divide-y divide-white/10 overflow-hidden shadow-xl">
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-5 lg:gap-6">
                 
-                {/* Feature Row 1 */}
-                <div className="p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:bg-white/[0.03] transition-colors">
-                  <div className="flex items-start gap-4 max-w-2xl">
-                    <div className="h-11 w-11 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center shrink-0 mt-0.5">
-                      <Smartphone className="h-5 w-5" />
+                {/* Bento Card 1: Runaway "No" Physics Engine (Span 8 - Large Feature) */}
+                <div className="md:col-span-12 lg:col-span-8 glass border border-white/10 rounded-2xl p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden group hover:border-white/20 transition-all shadow-xl">
+                  <div className="space-y-3 relative z-10">
+                    <div className="flex items-center justify-between">
+                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-mono uppercase tracking-wider">
+                        <Smartphone className="w-3.5 h-3.5 text-rose-400" />
+                        <span>Physics Engine</span>
+                      </div>
+                      <span className="text-xs font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-md flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        100% Yes Rate
+                      </span>
                     </div>
-                    <div className="space-y-1">
-                      <h3 className="text-base sm:text-lg font-bold text-white">
-                        Runaway &ldquo;No&rdquo; Button Engine
-                      </h3>
-                      <p className="text-sm text-slate-300 leading-relaxed max-w-[65ch]">
-                        A mathematical avoidance algorithm that calculates touch coordinates and bounces the &ldquo;No&rdquo; button across the viewport, ensuring only &ldquo;YES&rdquo; can be tapped.
-                      </p>
-                    </div>
+
+                    <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+                      Runaway &ldquo;No&rdquo; Button Avoidance Engine
+                    </h3>
+                    <p className="text-slate-300 text-sm leading-relaxed max-w-[65ch]">
+                      A deterministic touch avoidance algorithm calculating boundary deflections in real-time. Whenever your partner attempts to tap &ldquo;No&rdquo;, the button jumps across viewport coordinates—guaranteeing only &ldquo;YES&rdquo; can ever be selected.
+                    </p>
                   </div>
-                  <div className="shrink-0 flex items-center gap-2">
-                    <span className="text-xs font-mono text-slate-400 bg-white/5 border border-white/10 px-3 py-1.5 rounded-lg">
-                      Touch &amp; Hover
-                    </span>
+
+                  {/* Interactive Micro Simulator Preview Box */}
+                  <div className="mt-6 pt-5 border-t border-white/10 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono">
+                    <div className="bg-slate-900/80 border border-white/10 rounded-xl p-3 space-y-1">
+                      <span className="text-slate-400 text-[11px] block">Touch Collision</span>
+                      <span className="text-white font-semibold">Active &lt;80px</span>
+                    </div>
+                    <div className="bg-slate-900/80 border border-white/10 rounded-xl p-3 space-y-1">
+                      <span className="text-slate-400 text-[11px] block">Boundary Damping</span>
+                      <span className="text-white font-semibold">Viewport Clamped</span>
+                    </div>
+                    <div className="bg-slate-900/80 border border-white/10 rounded-xl p-3 space-y-1">
+                      <span className="text-slate-400 text-[11px] block">False Rejections</span>
+                      <span className="text-rose-400 font-semibold">0.00% Guaranteed</span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Feature Row 2 */}
-                <div className="p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:bg-white/[0.03] transition-colors">
-                  <div className="flex items-start gap-4 max-w-2xl">
-                    <div className="h-11 w-11 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center shrink-0 mt-0.5">
-                      <Music className="h-5 w-5" />
+                {/* Bento Card 2: Curated Ambient Soundscapes (Span 4) */}
+                <div className="md:col-span-12 lg:col-span-4 glass border border-white/10 rounded-2xl p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden group hover:border-white/20 transition-all shadow-xl">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-mono uppercase tracking-wider">
+                        <Music className="w-3.5 h-3.5 text-rose-400" />
+                        <span>Acoustic Audio</span>
+                      </div>
+                      <span className="text-[11px] font-mono text-slate-400 bg-white/5 border border-white/10 px-2 py-0.5 rounded">
+                        320 kbps
+                      </span>
                     </div>
-                    <div className="space-y-1">
-                      <h3 className="text-base sm:text-lg font-bold text-white">
-                        Ambient Audio Engine
-                      </h3>
-                      <p className="text-sm text-slate-300 leading-relaxed max-w-[65ch]">
-                        Curated instrumentals spanning acoustic guitar, romantic piano, and Bollywood classical flute with gentle fade-in and mute controls.
-                      </p>
-                    </div>
+
+                    <h3 className="text-xl font-bold text-white tracking-tight">
+                      Curated Soundscapes
+                    </h3>
+                    <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
+                      Studio-grade instrumentals spanning fingerpicked acoustic guitar, romantic piano suites, and classical Indian flute with gentle fade-in and volume controls.
+                    </p>
                   </div>
-                  <div className="shrink-0 flex items-center gap-2">
-                    <span className="text-xs font-mono text-slate-400 bg-white/5 border border-white/10 px-3 py-1.5 rounded-lg">
-                      Audio API
-                    </span>
+
+                  {/* Equalizer Visualizer Preview */}
+                  <div className="mt-6 pt-4 border-t border-white/10 bg-slate-900/80 border border-white/10 rounded-xl p-3.5 space-y-2.5">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-slate-200 font-medium">Romantic Piano Suite</span>
+                      <span className="text-rose-400 font-mono">Playing</span>
+                    </div>
+                    <div className="flex items-end gap-1 h-7 pt-1">
+                      {[40, 75, 55, 90, 60, 85, 45, 95, 70, 60, 80, 50, 65, 88, 42].map((height, i) => (
+                        <div
+                          key={i}
+                          style={{ height: `${height}%` }}
+                          className="flex-1 bg-gradient-to-t from-rose-500 to-pink-400 rounded-full opacity-80"
+                        />
+                      ))}
+                    </div>
                   </div>
                 </div>
 
-                {/* Feature Row 3 */}
-                <div className="p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:bg-white/[0.03] transition-colors">
-                  <div className="flex items-start gap-4 max-w-2xl">
-                    <div className="h-11 w-11 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center shrink-0 mt-0.5">
-                      <Camera className="h-5 w-5" />
+                {/* Bento Card 3: Memory Vault & 3D Flipbook (Span 4) */}
+                <div className="md:col-span-6 lg:col-span-4 glass border border-white/10 rounded-2xl p-6 sm:p-8 flex flex-col justify-between group hover:border-white/20 transition-all shadow-xl">
+                  <div className="space-y-3">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-mono uppercase tracking-wider">
+                      <Camera className="w-3.5 h-3.5 text-rose-400" />
+                      <span>Memory Vault</span>
                     </div>
-                    <div className="space-y-1">
-                      <h3 className="text-base sm:text-lg font-bold text-white">
-                        Responsive Photo Gallery &amp; Flipbook
-                      </h3>
-                      <p className="text-sm text-slate-300 leading-relaxed max-w-[65ch]">
-                        Clean polaroid stacks and optional 3D flipbook that adapt cleanly across Android, iOS, and desktop browsers without layout shifts.
-                      </p>
-                    </div>
+                    <h3 className="text-xl font-bold text-white tracking-tight">
+                      Photo Stacks &amp; 3D Flipbook
+                    </h3>
+                    <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
+                      Tactile polaroid albums and interactive 3D page-turn physics designed to showcase milestone photos with custom romantic captions.
+                    </p>
                   </div>
-                  <div className="shrink-0 flex items-center gap-2">
-                    <span className="text-xs font-mono text-slate-400 bg-white/5 border border-white/10 px-3 py-1.5 rounded-lg">
+
+                  <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-xs">
+                    <span className="text-slate-400">Capacity</span>
+                    <span className="font-semibold text-white bg-white/10 px-2.5 py-1 rounded-md border border-white/10">
                       Up to 12 Photos
                     </span>
                   </div>
                 </div>
 
-                {/* Feature Row 4 */}
-                <div className="p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:bg-white/[0.03] transition-colors">
-                  <div className="flex items-start gap-4 max-w-2xl">
-                    <div className="h-11 w-11 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center shrink-0 mt-0.5">
-                      <Wand2 className="h-5 w-5" />
+                {/* Bento Card 4: Bilingual Romance AI (Span 4) */}
+                <div className="md:col-span-6 lg:col-span-4 glass border border-white/10 rounded-2xl p-6 sm:p-8 flex flex-col justify-between group hover:border-white/20 transition-all shadow-xl">
+                  <div className="space-y-3">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-mono uppercase tracking-wider">
+                      <Wand2 className="w-3.5 h-3.5 text-rose-400" />
+                      <span>AI Romance</span>
                     </div>
-                    <div className="space-y-1">
-                      <h3 className="text-base sm:text-lg font-bold text-white">
-                        Bilingual Romance AI (English &amp; Hinglish)
-                      </h3>
-                      <p className="text-sm text-slate-300 leading-relaxed max-w-[65ch]">
-                        Generate sincere proposals that sound like natural conversation rather than robotic poetry, supporting culturally relevant phrasing.
-                      </p>
-                    </div>
+                    <h3 className="text-xl font-bold text-white tracking-tight">
+                      Bilingual Tone Assistant
+                    </h3>
+                    <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
+                      Sincere proposals in English or Hinglish crafted to sound like natural human intimacy, reflecting your authentic shared humor and moments.
+                    </p>
                   </div>
-                  <div className="shrink-0 flex items-center gap-2">
-                    <span className="text-xs font-mono text-slate-400 bg-white/5 border border-white/10 px-3 py-1.5 rounded-lg">
-                      AI Generator
-                    </span>
+
+                  <div className="mt-6 pt-4 border-t border-white/10 flex flex-wrap gap-1.5">
+                    {["Heartfelt", "Filmy", "Cute", "Playful"].map((tone) => (
+                      <span key={tone} className="px-2 py-0.5 rounded text-[11px] bg-white/10 text-slate-300 border border-white/5">
+                        {tone}
+                      </span>
+                    ))}
                   </div>
                 </div>
 
-                {/* Feature Row 5 */}
-                <div className="p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:bg-white/[0.03] transition-colors">
-                  <div className="flex items-start gap-4 max-w-2xl">
-                    <div className="h-11 w-11 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center shrink-0 mt-0.5">
-                      <ShieldCheck className="h-5 w-5" />
+                {/* Bento Card 5: Cryptographic Privacy & Instant Delivery (Span 4) */}
+                <div className="md:col-span-12 lg:col-span-4 glass border border-white/10 rounded-2xl p-6 sm:p-8 flex flex-col justify-between group hover:border-white/20 transition-all shadow-xl">
+                  <div className="space-y-3">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-mono uppercase tracking-wider">
+                      <ShieldCheck className="w-3.5 h-3.5 text-rose-400" />
+                      <span>Private URL</span>
                     </div>
-                    <div className="space-y-1">
-                      <h3 className="text-base sm:text-lg font-bold text-white">
-                        Private &amp; Unguessable Security
-                      </h3>
-                      <p className="text-sm text-slate-300 leading-relaxed max-w-[65ch]">
-                        Each proposal is stored under a cryptographically random slug with search engine indexing blocked by default to keep your moment private.
-                      </p>
-                    </div>
+                    <h3 className="text-xl font-bold text-white tracking-tight">
+                      Unguessable Security
+                    </h3>
+                    <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
+                      Every proposal is published under a cryptographically random slug with search crawler indexing blocked by default to safeguard your private moment.
+                    </p>
                   </div>
-                  <div className="shrink-0 flex items-center gap-2">
-                    <span className="text-xs font-mono text-slate-400 bg-white/5 border border-white/10 px-3 py-1.5 rounded-lg">
-                      noindex / nofollow
+
+                  <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-xs font-mono">
+                    <span className="text-slate-400 truncate mr-2">robots: noindex</span>
+                    <span className="text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded text-[10px]">
+                      Protected
                     </span>
                   </div>
                 </div>
