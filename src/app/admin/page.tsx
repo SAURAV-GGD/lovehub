@@ -780,26 +780,45 @@ export default function AdminDashboardPage() {
   });
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-rose-500 selection:text-white">
+    <div className="min-h-screen bg-[#030712] text-slate-100 relative overflow-x-hidden selection:bg-rose-500 selection:text-white">
+      {/* Dynamic Animated Liquid Gradient Orbs */}
+      <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
+        {/* Orb 1: Hot Crimson & Pink Passion */}
+        <div className="absolute -top-[12%] -left-[10%] w-[480px] sm:w-[720px] h-[480px] sm:h-[720px] rounded-full bg-gradient-to-tr from-rose-600/30 via-pink-600/20 to-transparent blur-[120px] animate-liquid-1" />
+        {/* Orb 2: Royal Violet & Neon Indigo */}
+        <div className="absolute top-[25%] -right-[15%] w-[520px] sm:w-[780px] h-[520px] sm:h-[780px] rounded-full bg-gradient-to-bl from-violet-600/25 via-indigo-600/20 to-transparent blur-[140px] animate-liquid-2" />
+        {/* Orb 3: Bioluminescent Emerald / Teal Breeze */}
+        <div className="absolute -bottom-[15%] left-[20%] w-[480px] sm:w-[680px] h-[480px] sm:h-[680px] rounded-full bg-gradient-to-t from-teal-500/20 via-emerald-500/15 to-transparent blur-[130px] animate-liquid-3" />
+        {/* Luxury Micro-Dot Subtle Grid */}
+        <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.035)_1px,transparent_1px)] [background-size:28px_28px] opacity-70" />
+      </div>
+
       {/* Top Executive Navigation Bar */}
-      <header className="sticky top-0 z-40 bg-slate-900/90 border-b border-slate-800 backdrop-blur-md pt-[env(safe-area-inset-top,0px)]">
+      <header className="sticky top-0 z-40 bg-slate-950/75 border-b border-white/10 backdrop-blur-2xl pt-[env(safe-area-inset-top,0px)] shadow-xl shadow-black/40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-600 to-pink-500 flex items-center justify-center shadow-md shadow-rose-500/20 border border-rose-400/30">
-              <Shield className="w-5 h-5 text-white" />
+            <div className="relative group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-rose-500 to-pink-500 rounded-xl blur opacity-60 group-hover:opacity-100 transition duration-300" />
+              <div className="relative w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-600 via-pink-600 to-purple-600 flex items-center justify-center border border-white/20 shadow-inner">
+                <Shield className="w-5 h-5 text-white drop-shadow" />
+              </div>
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-lg font-black tracking-tight text-white">LoveHub</span>
-                <Badge className="bg-rose-950 text-rose-300 border-rose-800/60 text-[10px] font-semibold px-2 py-0.5">
-                  ADMIN CONSOLE
+                <span className="text-lg font-black tracking-tight bg-gradient-to-r from-white via-slate-100 to-rose-200 bg-clip-text text-transparent">
+                  LoveHub
+                </span>
+                <Badge className="bg-rose-950/80 text-rose-300 border-rose-500/40 text-[9px] sm:text-[10px] font-bold px-2 py-0.5 tracking-wider shadow-[0_0_12px_rgba(244,63,94,0.2)]">
+                  EXECUTIVE CONSOLE
                 </Badge>
               </div>
-              <p className="text-[11px] text-slate-400">Executive Management &amp; Unlimited Studio</p>
+              <p className="text-[10px] sm:text-[11px] text-slate-400 font-medium">
+                Autonomous Architecture &amp; VIP Studio
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Button
               variant="outline"
               size="sm"
@@ -808,17 +827,17 @@ export default function AdminDashboardPage() {
                 loadData();
               }}
               disabled={isRefreshing}
-              className="border-slate-800 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800 text-xs"
+              className="border-white/10 bg-slate-900/60 backdrop-blur-md text-slate-200 hover:text-white hover:bg-slate-800/80 text-xs shadow-sm"
             >
-              <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${isRefreshing ? "animate-spin" : ""}`} />
-              Sync Data
+              <RefreshCw className={`w-3.5 h-3.5 sm:mr-1.5 ${isRefreshing ? "animate-spin" : ""}`} />
+              <span className="hidden sm:inline">Sync Data</span>
             </Button>
 
             <Button
               asChild
               variant="ghost"
               size="sm"
-              className="text-slate-400 hover:text-white text-xs hidden sm:inline-flex"
+              className="text-slate-400 hover:text-white hover:bg-white/5 text-xs hidden md:inline-flex"
             >
               <Link href="/" target="_blank">
                 <ExternalLink className="w-3.5 h-3.5 mr-1.5" /> Live Site
@@ -829,71 +848,87 @@ export default function AdminDashboardPage() {
               variant="outline"
               size="sm"
               onClick={handleSignOut}
-              className="border-rose-950/80 bg-rose-950/40 text-rose-300 hover:bg-rose-900/60 hover:text-rose-100 text-xs"
+              className="border-rose-500/30 bg-rose-950/40 text-rose-300 hover:bg-rose-900/60 hover:text-rose-100 hover:border-rose-500/60 text-xs shadow-[0_0_15px_rgba(244,63,94,0.15)] transition-all"
             >
-              <LogOut className="w-3.5 h-3.5 mr-1.5" /> Sign Out
+              <LogOut className="w-3.5 h-3.5 sm:mr-1.5" />
+              <span className="hidden sm:inline">Sign Out</span>
             </Button>
           </div>
         </div>
       </header>
 
       {/* Main Workspace */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8">
         {/* Navigation Tabs Header */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-800 pb-4">
-            <TabsList className="bg-slate-900 border border-slate-800 p-1 rounded-xl">
-              <TabsTrigger
-                value="overview"
-                className="data-[state=active]:bg-rose-600 data-[state=active]:text-white text-xs sm:text-sm font-medium py-2 px-4 rounded-lg"
-              >
-                <Layers className="w-4 h-4 mr-2" /> Overview
-              </TabsTrigger>
-              <TabsTrigger
-                value="clients"
-                className="data-[state=active]:bg-rose-600 data-[state=active]:text-white text-xs sm:text-sm font-medium py-2 px-4 rounded-lg"
-              >
-                <Users className="w-4 h-4 mr-2" /> Clients &amp; Data ({clients.length})
-              </TabsTrigger>
-              <TabsTrigger
-                value="proposals"
-                className="data-[state=active]:bg-rose-600 data-[state=active]:text-white text-xs sm:text-sm font-medium py-2 px-4 rounded-lg"
-              >
-                <FileText className="w-4 h-4 mr-2" /> All Proposals ({proposals.length})
-              </TabsTrigger>
-              <TabsTrigger
-                value="birthdays"
-                className="data-[state=active]:bg-teal-600 data-[state=active]:text-white text-xs sm:text-sm font-medium py-2 px-4 rounded-lg"
-              >
-                <Cake className="w-4 h-4 mr-2" /> All Birthdays ({birthdays.length})
-              </TabsTrigger>
-              <TabsTrigger
-                value="creator"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-rose-500 data-[state=active]:to-pink-600 data-[state=active]:text-white text-xs sm:text-sm font-semibold py-2 px-4 rounded-lg text-rose-400"
-              >
-                <Sparkles className="w-4 h-4 mr-2" /> Create Proposal
-              </TabsTrigger>
-              <TabsTrigger
-                value="birthday-creator"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-teal-500 data-[state=active]:to-emerald-600 data-[state=active]:text-white text-xs sm:text-sm font-semibold py-2 px-4 rounded-lg text-teal-400"
-              >
-                <Gift className="w-4 h-4 mr-2" /> Create VIP Birthday
-              </TabsTrigger>
-            </TabsList>
+          {/* Action Row & Responsive Tab Switcher */}
+          <div className="space-y-4 border-b border-white/10 pb-5">
+            {/* Quick Action Launchers Bar */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]" />
+                <span className="text-xs uppercase tracking-widest font-semibold text-slate-400">
+                  Mission Command Center
+                </span>
+              </div>
+              <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
+                <Button
+                  onClick={() => setActiveTab("birthday-creator")}
+                  className="bg-gradient-to-r from-teal-500 via-emerald-500 to-teal-600 hover:from-teal-600 hover:to-emerald-700 text-white shadow-lg shadow-teal-500/20 text-xs sm:text-sm font-semibold rounded-xl border border-teal-300/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <Cake className="w-4 h-4 mr-1.5 shrink-0" />
+                  <span className="truncate">New Birthday</span>
+                </Button>
+                <Button
+                  onClick={() => setActiveTab("creator")}
+                  className="bg-gradient-to-r from-rose-500 via-pink-600 to-rose-600 hover:from-rose-600 hover:to-pink-700 text-white shadow-lg shadow-rose-500/25 text-xs sm:text-sm font-semibold rounded-xl border border-rose-300/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <Plus className="w-4 h-4 mr-1.5 shrink-0" />
+                  <span className="truncate">New Proposal</span>
+                </Button>
+              </div>
+            </div>
 
-            <div className="flex items-center gap-2">
-              <Button
-                onClick={() => setActiveTab("birthday-creator")}
-                className="bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white shadow-md shadow-teal-600/20 text-xs sm:text-sm"
-              >
-                <Cake className="w-4 h-4 mr-1.5" /> New Birthday Studio
-              </Button>
-              <Button
-                onClick={() => setActiveTab("creator")}
-                className="bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white shadow-md shadow-rose-600/20 text-xs sm:text-sm"
-              >
-                <Plus className="w-4 h-4 mr-1.5" /> New Proposal Studio
-              </Button>
+            {/* Smooth Horizontal Swiping Tabs Bar (Zero Overflow on Phone/Laptops) */}
+            <div className="w-full overflow-x-auto scrollbar-none py-1 -mx-4 px-4 sm:mx-0 sm:px-0">
+              <TabsList className="bg-slate-900/70 border border-white/10 p-1.5 rounded-2xl backdrop-blur-xl inline-flex w-max min-w-full sm:min-w-0 gap-1.5 shadow-xl shadow-black/30">
+                <TabsTrigger
+                  value="overview"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-rose-600 data-[state=active]:to-pink-600 data-[state=active]:text-white text-xs sm:text-sm font-medium py-2 px-3.5 sm:px-4 rounded-xl text-slate-300 hover:text-white transition-all shadow-sm"
+                >
+                  <Layers className="w-4 h-4 mr-1.5 shrink-0" /> Overview
+                </TabsTrigger>
+                <TabsTrigger
+                  value="clients"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-rose-600 data-[state=active]:to-pink-600 data-[state=active]:text-white text-xs sm:text-sm font-medium py-2 px-3.5 sm:px-4 rounded-xl text-slate-300 hover:text-white transition-all shadow-sm"
+                >
+                  <Users className="w-4 h-4 mr-1.5 shrink-0" /> Clients ({clients.length})
+                </TabsTrigger>
+                <TabsTrigger
+                  value="proposals"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-rose-600 data-[state=active]:to-pink-600 data-[state=active]:text-white text-xs sm:text-sm font-medium py-2 px-3.5 sm:px-4 rounded-xl text-slate-300 hover:text-white transition-all shadow-sm"
+                >
+                  <FileText className="w-4 h-4 mr-1.5 shrink-0" /> Proposals ({proposals.length})
+                </TabsTrigger>
+                <TabsTrigger
+                  value="birthdays"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-teal-600 data-[state=active]:to-emerald-600 data-[state=active]:text-white text-xs sm:text-sm font-medium py-2 px-3.5 sm:px-4 rounded-xl text-slate-300 hover:text-white transition-all shadow-sm"
+                >
+                  <Cake className="w-4 h-4 mr-1.5 shrink-0" /> Birthdays ({birthdays.length})
+                </TabsTrigger>
+                <TabsTrigger
+                  value="creator"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-rose-500 data-[state=active]:to-pink-600 data-[state=active]:text-white text-xs sm:text-sm font-semibold py-2 px-3.5 sm:px-4 rounded-xl text-rose-300 hover:text-rose-200 transition-all shadow-sm"
+                >
+                  <Sparkles className="w-4 h-4 mr-1.5 shrink-0" /> Create Proposal
+                </TabsTrigger>
+                <TabsTrigger
+                  value="birthday-creator"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-teal-500 data-[state=active]:to-emerald-600 data-[state=active]:text-white text-xs sm:text-sm font-semibold py-2 px-3.5 sm:px-4 rounded-xl text-teal-300 hover:text-teal-200 transition-all shadow-sm"
+                >
+                  <Gift className="w-4 h-4 mr-1.5 shrink-0" /> Create VIP Birthday
+                </TabsTrigger>
+              </TabsList>
             </div>
           </div>
 
@@ -901,17 +936,18 @@ export default function AdminDashboardPage() {
               TAB 1: OVERVIEW & ANALYTICS
              ======================================================== */}
           <TabsContent value="overview" className="space-y-6">
-            {/* Superpowers Banner */}
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-rose-950/70 via-slate-900 to-purple-950/60 border border-rose-800/40 p-6 shadow-xl">
-              <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="space-y-1.5 max-w-2xl">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-rose-300 text-xs font-semibold">
-                    <Crown className="w-3.5 h-3.5 text-rose-400" /> Admin Superpowers Active
+            {/* Superpowers Banner with Glowing Liquid Glass */}
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-rose-950/50 via-slate-900/80 to-purple-950/50 border border-white/10 p-6 sm:p-8 backdrop-blur-2xl shadow-[0_0_60px_-15px_rgba(225,29,72,0.3)] group">
+              <div className="absolute top-0 right-0 w-80 h-80 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
+                <div className="space-y-2 max-w-2xl">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs font-semibold shadow-inner">
+                    <Crown className="w-3.5 h-3.5 text-rose-400 animate-pulse" /> Admin Superpowers Active
                   </div>
-                  <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                  <h2 className="text-xl sm:text-3xl font-black text-white tracking-tight leading-tight">
                     Unlimited Proposals &amp; Multi-Version Creator Engine
                   </h2>
-                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-light">
                     As an administrator, you have unrestricted authority to inspect all client data,
                     upgrade customer tiers, and create unlimited proposals across <strong>Starter</strong>,{" "}
                     <strong>Pro</strong>, <strong>Premium</strong>, or bespoke <strong>Custom VIP</strong> versions.
@@ -920,7 +956,7 @@ export default function AdminDashboardPage() {
                 <div className="flex items-center gap-3 shrink-0">
                   <Button
                     onClick={() => setActiveTab("creator")}
-                    className="bg-rose-500 hover:bg-rose-600 text-white font-medium text-xs sm:text-sm shadow-lg shadow-rose-500/30"
+                    className="bg-gradient-to-r from-rose-500 via-pink-600 to-rose-600 hover:from-rose-600 hover:to-pink-700 text-white font-semibold text-xs sm:text-sm shadow-xl shadow-rose-500/30 rounded-xl px-5 py-2.5 border border-white/20 transition-all hover:scale-105 active:scale-95"
                   >
                     Launch Proposal Studio <ArrowRight className="w-4 h-4 ml-1.5" />
                   </Button>
@@ -928,56 +964,56 @@ export default function AdminDashboardPage() {
               </div>
             </div>
 
-            {/* Metric KPI Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card className="bg-slate-900/90 border-slate-800 p-4">
+            {/* Metric KPI Cards (Liquid Glassmorphism) */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              <Card className="bg-slate-900/60 border-white/10 backdrop-blur-xl p-4 sm:p-5 rounded-2xl shadow-xl hover:border-blue-500/40 hover:shadow-blue-500/10 transition-all duration-300 group">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium text-slate-400">Total Clients</span>
-                  <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400">
+                  <div className="p-2.5 rounded-xl bg-blue-500/15 text-blue-400 border border-blue-500/20 group-hover:scale-110 transition-transform">
                     <Users className="w-4 h-4" />
                   </div>
                 </div>
                 <div className="mt-3">
-                  <span className="text-2xl font-black text-white">{stats?.totalClients ?? clients.length}</span>
+                  <span className="text-2xl sm:text-3xl font-black text-white tracking-tight">{stats?.totalClients ?? clients.length}</span>
                   <p className="text-[11px] text-slate-400 mt-0.5">Registered customer profiles</p>
                 </div>
               </Card>
 
-              <Card className="bg-slate-900/90 border-slate-800 p-4">
+              <Card className="bg-slate-900/60 border-white/10 backdrop-blur-xl p-4 sm:p-5 rounded-2xl shadow-xl hover:border-rose-500/40 hover:shadow-rose-500/10 transition-all duration-300 group">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium text-slate-400">Saved Proposals</span>
-                  <div className="p-2 rounded-lg bg-rose-500/10 text-rose-400">
+                  <div className="p-2.5 rounded-xl bg-rose-500/15 text-rose-400 border border-rose-500/20 group-hover:scale-110 transition-transform">
                     <FileText className="w-4 h-4" />
                   </div>
                 </div>
                 <div className="mt-3">
-                  <span className="text-2xl font-black text-white">{stats?.totalProposals ?? proposals.length}</span>
+                  <span className="text-2xl sm:text-3xl font-black text-white tracking-tight">{stats?.totalProposals ?? proposals.length}</span>
                   <p className="text-[11px] text-slate-400 mt-0.5">Live romantic websites created</p>
                 </div>
               </Card>
 
-              <Card className="bg-slate-900/90 border-slate-800 p-4">
+              <Card className="bg-slate-900/60 border-white/10 backdrop-blur-xl p-4 sm:p-5 rounded-2xl shadow-xl hover:border-amber-500/40 hover:shadow-amber-500/10 transition-all duration-300 group">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium text-slate-400">Custom &amp; VIP</span>
-                  <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400">
+                  <div className="p-2.5 rounded-xl bg-amber-500/15 text-amber-400 border border-amber-500/20 group-hover:scale-110 transition-transform">
                     <Crown className="w-4 h-4" />
                   </div>
                 </div>
                 <div className="mt-3">
-                  <span className="text-2xl font-black text-white">{stats?.planCounts?.custom ?? 1}</span>
+                  <span className="text-2xl sm:text-3xl font-black text-white tracking-tight">{stats?.planCounts?.custom ?? 1}</span>
                   <p className="text-[11px] text-slate-400 mt-0.5">Bespoke customized proposals</p>
                 </div>
               </Card>
 
-              <Card className="bg-slate-900/90 border-slate-800 p-4">
+              <Card className="bg-slate-900/60 border-white/10 backdrop-blur-xl p-4 sm:p-5 rounded-2xl shadow-xl hover:border-emerald-500/40 hover:shadow-emerald-500/10 transition-all duration-300 group">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium text-slate-400">Hosted Photos</span>
-                  <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
+                  <div className="p-2.5 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 group-hover:scale-110 transition-transform">
                     <Camera className="w-4 h-4" />
                   </div>
                 </div>
                 <div className="mt-3">
-                  <span className="text-2xl font-black text-white">{stats?.totalPhotos ?? 8}</span>
+                  <span className="text-2xl sm:text-3xl font-black text-white tracking-tight">{stats?.totalPhotos ?? 8}</span>
                   <p className="text-[11px] text-slate-400 mt-0.5">Uploaded memory images</p>
                 </div>
               </Card>
@@ -986,7 +1022,7 @@ export default function AdminDashboardPage() {
             {/* Version Distribution & Recent Proposals */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Version Breakdown */}
-              <Card className="bg-slate-900/90 border-slate-800">
+              <Card className="bg-slate-900/60 border-white/10 backdrop-blur-xl shadow-xl">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base font-bold text-white flex items-center gap-2">
                     <Sliders className="w-4 h-4 text-rose-400" /> Version Breakdown
@@ -1107,7 +1143,7 @@ export default function AdminDashboardPage() {
               TAB 2: CLIENTS & THEIR SAVED DATA
              ======================================================== */}
           <TabsContent value="clients" className="space-y-6">
-            <Card className="bg-slate-900/90 border-slate-800">
+            <Card className="bg-slate-900/60 border-white/10 backdrop-blur-xl shadow-xl">
               <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4">
                 <div>
                   <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
@@ -1228,7 +1264,7 @@ export default function AdminDashboardPage() {
               TAB 3: ALL PROPOSALS & SAVED DATA
              ======================================================== */}
           <TabsContent value="proposals" className="space-y-6">
-            <Card className="bg-slate-900/90 border-slate-800">
+            <Card className="bg-slate-900/60 border-white/10 backdrop-blur-xl shadow-xl">
               <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4">
                 <div>
                   <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
@@ -1939,7 +1975,7 @@ export default function AdminDashboardPage() {
               TAB: VIP BIRTHDAY CREATION STUDIO
              ======================================================== */}
           <TabsContent value="birthday-creator" className="space-y-6">
-            <Card className="bg-slate-900/90 border-slate-800 shadow-2xl">
+            <Card className="bg-slate-900/60 border-white/10 backdrop-blur-xl shadow-xl shadow-2xl">
               <CardHeader className="bg-gradient-to-r from-teal-950/40 to-slate-900 border-b border-slate-800 pb-5">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
