@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { StoryPromiseCard } from "@/lib/proposal-types";
-import { Gift, Heart, Sparkles, ArrowRight, Mail, CheckCircle2, Ticket } from "lucide-react";
+import { Gift, Heart, Sparkles, ArrowRight, CheckCircle2, Ticket } from "lucide-react";
+import { toast } from "sonner";
 
 interface GiftSceneProps {
   boxTitle?: string;
@@ -26,17 +27,33 @@ export function GiftScene({
 }: GiftSceneProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [redeemedCards, setRedeemedCards] = useState<Record<string, boolean>>({});
+  const [showHandPrompt, setShowHandPrompt] = useState(true);
 
   const handleOpen = () => {
     setIsOpen(true);
+    setShowHandPrompt(true);
   };
 
-  const toggleRedeemCard = (cardId: string) => {
+  const toggleRedeemCard = (cardId: string, cardTitle: string) => {
+    const isCurrentlyRedeemed = !!redeemedCards[cardId];
     setRedeemedCards((prev) => ({
       ...prev,
-      [cardId]: !prev[cardId],
+      [cardId]: !isCurrentlyRedeemed,
     }));
+
+    if (!isCurrentlyRedeemed) {
+      if (typeof window !== "undefined" && "vibrate" in navigator) {
+        try {
+          navigator.vibrate(40);
+        } catch {
+          // Non-blocking
+        }
+      }
+      toast.success(`Claimed: "${cardTitle}"! Valid forever with all my love 💖`);
+    }
   };
+
+  const claimedCount = Object.values(redeemedCards).filter(Boolean).length;
 
   return (
     <div className="relative min-h-[85vh] flex flex-col items-center justify-center text-center px-4 py-8 max-w-xl mx-auto">
@@ -133,8 +150,8 @@ export function GiftScene({
             className="w-full flex flex-col items-center"
           >
             {/* Header */}
-            <div className="mb-6 space-y-1">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-pink-500/20 border border-pink-400/30 text-pink-300 text-xs font-medium mb-2">
+            <div className="mb-4 space-y-1">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-pink-500/20 border border-pink-400/30 text-pink-300 text-xs font-medium mb-1">
                 <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
                 <span>Gift Unlocked</span>
               </div>
@@ -146,8 +163,33 @@ export function GiftScene({
               </p>
             </div>
 
+            {/* Pop-up Interactive Hand Pointer Callout */}
+            <AnimatePresence>
+              {showHandPrompt && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className="mb-5 inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-gradient-to-r from-pink-500/25 via-rose-500/25 to-purple-500/25 border border-pink-400/40 shadow-xl backdrop-blur-md"
+                >
+                  <motion.span
+                    animate={{ y: [0, -5, 0], scale: [1, 1.15, 1] }}
+                    transition={{ repeat: Infinity, duration: 1.1, ease: "easeInOut" }}
+                    className="text-xl"
+                  >
+                    👆
+                  </motion.span>
+                  <span className="text-xs font-bold text-white tracking-wide">
+                    {claimedCount === 0
+                      ? "Tap any coupon to claim it! 👆🎟️"
+                      : `${claimedCount} coupon(s) claimed! Tap more to collect them all ✨`}
+                  </span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* Promise Cards Grid */}
-            <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
+            <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-3.5 mb-8">
               {cards.map((card) => {
                 const isRedeemed = !!redeemedCards[card.id];
                 return (
@@ -155,34 +197,66 @@ export function GiftScene({
                     key={card.id}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => toggleRedeemCard(card.id)}
-                    className={`cursor-pointer text-left p-4 rounded-2xl border transition-all relative overflow-hidden ${
+                    onClick={() => toggleRedeemCard(card.id, card.title)}
+                    className={`cursor-pointer text-left p-4.5 rounded-2xl border transition-all relative overflow-hidden flex flex-col justify-between ${
                       isRedeemed
-                        ? "bg-gradient-to-br from-pink-900/60 to-purple-900/60 border-pink-400 shadow-lg shadow-pink-500/20"
-                        : "bg-white/[0.08] hover:bg-white/[0.12] border-white/10"
+                        ? "bg-gradient-to-br from-pink-950/80 via-rose-950/70 to-purple-950/80 border-rose-400/80 shadow-lg shadow-pink-500/30 ring-1 ring-rose-400/50"
+                        : "bg-white/[0.08] hover:bg-white/[0.13] border-white/15 hover:border-pink-400/40"
                     }`}
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="w-8 h-8 rounded-full bg-pink-500/20 flex items-center justify-center text-pink-300">
-                        <Heart className="w-4 h-4 fill-pink-400" />
+                    {/* Top row */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="w-8 h-8 rounded-full bg-pink-500/20 flex items-center justify-center text-pink-300">
+                          <Heart className="w-4 h-4 fill-pink-400" />
+                        </div>
+                        <span
+                          className={`text-[10px] tracking-wider uppercase font-bold px-2 py-0.5 rounded-full ${
+                            isRedeemed
+                              ? "bg-rose-500 text-white"
+                              : "bg-white/10 text-pink-200"
+                          }`}
+                        >
+                          {isRedeemed ? "Claimed ✨" : "Love Coupon"}
+                        </span>
                       </div>
-                      <span className="text-[10px] tracking-wider uppercase font-semibold text-pink-300/80">
-                        {isRedeemed ? "Claimed ✨" : "Love Coupon"}
+                      <h3 className="text-sm font-bold text-white mb-1">
+                        {card.title}
+                      </h3>
+                      <p className="text-xs text-pink-100/80 leading-relaxed">
+                        {card.description}
+                      </p>
+                    </div>
+
+                    {/* Bottom claim action indicator */}
+                    <div className="mt-3.5 pt-2.5 border-t border-white/10 flex items-center justify-between">
+                      {isRedeemed ? (
+                        <div className="flex items-center gap-1.5 text-xs text-emerald-300 font-bold">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                          <span>Claimed with Love 💖</span>
+                        </div>
+                      ) : (
+                        <span className="text-[11px] text-pink-300 font-semibold flex items-center gap-1">
+                          <motion.span
+                            animate={{ y: [0, -3, 0] }}
+                            transition={{ repeat: Infinity, duration: 1.2 }}
+                          >
+                            👆
+                          </motion.span>
+                          <span>Tap to claim pass</span>
+                        </span>
+                      )}
+
+                      <span
+                        className={`text-[10px] font-bold px-2.5 py-1 rounded-full border transition-all ${
+                          isRedeemed
+                            ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                            : "bg-pink-500/20 text-pink-200 border-pink-400/30 hover:bg-pink-500 hover:text-white"
+                        }`}
+                      >
+                        {isRedeemed ? "Valid Forever ♾️" : "Claim Now"}
                       </span>
                     </div>
-                    <h3 className="text-sm font-semibold text-white mb-1">
-                      {card.title}
-                    </h3>
-                    <p className="text-xs text-pink-100/75 leading-relaxed">
-                      {card.description}
-                    </p>
-
-                    {isRedeemed && (
-                      <div className="mt-2.5 flex items-center gap-1 text-[11px] text-emerald-300 font-medium">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span>Ready to redeem anytime with you!</span>
-                      </div>
-                    )}
                   </motion.div>
                 );
               })}
@@ -190,8 +264,9 @@ export function GiftScene({
 
             {/* Next CTA to Finale */}
             <button
+              type="button"
               onClick={onProceed}
-              className="px-8 py-3.5 rounded-full font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 shadow-lg flex items-center gap-2 transform hover:scale-105 active:scale-95 transition-all"
+              className="px-8 py-3.5 rounded-full font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 shadow-lg flex items-center gap-2 transform hover:scale-105 active:scale-95 transition-all cursor-pointer"
             >
               <span>Our Forever Journey ♾️</span>
               <ArrowRight className="w-4 h-4" />

@@ -15,6 +15,20 @@ interface QuestionSceneProps {
   onProceed: () => void;
 }
 
+const DODGE_TEXTS = [
+  "NO 😈",
+  "Nice try! 😜",
+  "Can't click me! 🏃‍♀️",
+  "Nope! 🙈",
+  "Too slow! 💨",
+  "Still NO? 😂",
+  "Never! 🏃‍♂️",
+  "Almost! 😜",
+  "Not an option! 🤍",
+  "Just say YES! ✨",
+  "Destiny awaits! 💍",
+];
+
 export function QuestionScene({
   questionText = "Will you be my Valentine & Forever Person? ♾️",
   yesText = "YES 🤍✨",
@@ -30,29 +44,34 @@ export function QuestionScene({
   const [evadeCount, setEvadeCount] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Runaway logic: jumps away playfully within container bounds
+  // Classic infinite runaway logic: jumps away playfully FOREVER with zero surrender
   const moveNoButton = useCallback(() => {
     if (!runawayNo || hasAccepted) return;
 
-    // After 6 playful evades, stop evading and show a sweet surrender prompt
-    if (evadeCount >= 6) {
-      setNoPosition({ x: 0, y: 0 });
-      return;
-    }
-
+    // Pick random angles and dynamic leap distances
     const randomAngle = Math.random() * 2 * Math.PI;
-    const distance = 80 + Math.random() * 60; // 80-140px jump
-    const x = Math.cos(randomAngle) * distance;
-    const y = Math.sin(randomAngle) * distance;
+    const distance = 100 + Math.random() * 80; // 100-180px jump
+    let x = Math.cos(randomAngle) * distance;
+    let y = Math.sin(randomAngle) * distance;
+
+    // Bound securely within visible container area
+    x = Math.max(-140, Math.min(140, x));
+    y = Math.max(-90, Math.min(90, y));
 
     setNoPosition({ x, y });
     setEvadeCount((prev) => prev + 1);
-  }, [runawayNo, hasAccepted, evadeCount]);
+  }, [runawayNo, hasAccepted]);
 
   const handleYes = () => {
     setHasAccepted(true);
     onAccept();
   };
+
+  const currentNoLabel =
+    evadeCount === 0 ? noText : DODGE_TEXTS[evadeCount % DODGE_TEXTS.length];
+
+  // YES button grows slightly bigger with every failed dodge attempt (classic meme mechanic)
+  const yesScale = 1 + Math.min(evadeCount * 0.04, 0.35);
 
   return (
     <div
@@ -81,45 +100,52 @@ export function QuestionScene({
 
             {/* Interactive Buttons */}
             <div className="relative min-h-[140px] flex flex-col sm:flex-row items-center justify-center gap-4">
-              {/* YES Button */}
+              {/* YES Button (grows bigger with every dodge) */}
               <motion.button
-                whileHover={{ scale: 1.08 }}
-                whileTap={{ scale: 0.95 }}
+                animate={{ scale: yesScale }}
+                whileHover={{ scale: yesScale * 1.06 }}
+                whileTap={{ scale: yesScale * 0.95 }}
                 onClick={handleYes}
-                className="w-full sm:w-auto px-8 py-4 rounded-full font-bold text-lg text-white bg-gradient-to-r from-pink-500 via-rose-500 to-red-500 hover:from-pink-600 hover:to-red-600 shadow-xl shadow-pink-500/30 flex items-center justify-center gap-2 transition-all cursor-pointer z-10"
+                className="w-full sm:w-auto px-8 py-4 rounded-full font-bold text-lg text-white bg-gradient-to-r from-pink-500 via-rose-500 to-red-500 hover:from-pink-600 hover:to-red-600 shadow-xl shadow-pink-500/40 flex items-center justify-center gap-2 transition-all cursor-pointer z-20"
               >
                 <Sparkles className="w-5 h-5 text-yellow-200" />
                 <span>{yesText}</span>
               </motion.button>
 
-              {/* Runaway NO Button */}
+              {/* Classic Infinite Runaway NO Button */}
               <motion.button
                 animate={
                   noPosition
                     ? {
                         x: noPosition.x,
                         y: noPosition.y,
-                        transition: { type: "spring", stiffness: 350, damping: 20 },
+                        transition: { type: "spring", stiffness: 450, damping: 18 },
                       }
                     : {}
                 }
                 onMouseEnter={moveNoButton}
                 onTouchStart={moveNoButton}
+                onPointerDown={moveNoButton}
                 onClick={moveNoButton}
-                className="w-full sm:w-auto px-6 py-3.5 rounded-full font-medium text-sm text-white/70 bg-white/10 hover:bg-white/20 border border-white/10 transition-colors select-none"
+                className="w-full sm:w-auto px-6 py-3.5 rounded-full font-semibold text-sm text-white/80 bg-white/10 hover:bg-white/20 border border-white/15 transition-colors select-none cursor-pointer z-10"
               >
-                {evadeCount >= 6 ? "Okay, only YES 🤍" : noText}
+                {currentNoLabel}
               </motion.button>
             </div>
 
-            {/* Playful hint */}
-            {evadeCount > 0 && evadeCount < 6 && (
+            {/* Playful teasing hints that update with every dodge */}
+            {evadeCount > 0 && (
               <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-xs text-pink-300/80 mt-4 italic font-medium"
+                key={evadeCount}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-xs text-pink-300 font-medium mt-5 italic"
               >
-                Hehe, you can&apos;t click No! 🤭
+                {evadeCount === 1 && "Hehe, you can't click NO! 🤭"}
+                {evadeCount === 2 && "Still trying? NO is dodging forever! 🏃‍♀️"}
+                {evadeCount >= 3 && evadeCount < 6 && "Look how big YES is getting! It's destiny! ✨"}
+                {evadeCount >= 6 && evadeCount < 10 && "Infinite dodging active! Only YES exists here! 💍❤️"}
+                {evadeCount >= 10 && "10+ dodges! You know you want to click YES! 🥰"}
               </motion.p>
             )}
           </motion.div>
@@ -150,7 +176,7 @@ export function QuestionScene({
 
             <button
               onClick={onProceed}
-              className="px-8 py-3.5 rounded-full font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 shadow-lg flex items-center justify-center gap-2 mx-auto transform hover:scale-105 active:scale-95 transition-all"
+              className="px-8 py-3.5 rounded-full font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 shadow-lg flex items-center justify-center gap-2 mx-auto transform hover:scale-105 active:scale-95 transition-all cursor-pointer"
             >
               <span>Explore Our Memories 📸</span>
               <ArrowRight className="w-4 h-4" />

@@ -14,10 +14,14 @@ interface LetterSceneProps {
   onProceed: () => void;
 }
 
+const SPEED_1X = 55; // 1x: Gentle, slow romantic cadence where words breathe
+const SPEED_2X = 24; // 2x: Brisk reading
+const SPEED_3X = 10; // 3x: Fast skim
+
 export function LetterScene({
   title = "A Letter Straight From My Heart 💌",
   content,
-  typingSpeedMs = 25,
+  typingSpeedMs = SPEED_1X,
   showTypewriter = true,
   fontStyle = "playfair",
   waxSealText = "Sealed with Love 🤍",
@@ -26,7 +30,8 @@ export function LetterScene({
   const [displayedText, setDisplayedText] = useState("");
   const [isTyping, setIsTyping] = useState(showTypewriter);
   const [isPaused, setIsPaused] = useState(false);
-  const [speed, setSpeed] = useState(typingSpeedMs);
+  const [speedMode, setSpeedMode] = useState<"1x" | "2x" | "3x">("1x");
+  const [speed, setSpeed] = useState(SPEED_1X);
   const [soundEnabled, setSoundEnabled] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const indexRef = useRef(0);
@@ -111,6 +116,13 @@ export function LetterScene({
     setIsPaused((prev) => !prev);
   };
 
+  const handleSetSpeed = (mode: "1x" | "2x" | "3x") => {
+    setSpeedMode(mode);
+    if (mode === "1x") setSpeed(SPEED_1X);
+    if (mode === "2x") setSpeed(SPEED_2X);
+    if (mode === "3x") setSpeed(SPEED_3X);
+  };
+
   // Font style mapper
   const fontClass =
     fontStyle === "poppins"
@@ -136,25 +148,43 @@ export function LetterScene({
         </h2>
       </motion.div>
 
-      {/* Control bar: Speed, Play/Pause, Sound, Skip, Restart */}
+      {/* Control bar: Speed (1x default slow), Play/Pause, Sound, Skip, Restart */}
       <div className="flex flex-wrap items-center justify-between w-full max-w-md px-2 mb-3 text-xs text-pink-200/80 gap-2">
         <div className="flex items-center gap-1.5">
-          <span className="text-[11px] opacity-75">Speed:</span>
+          <span className="text-[11px] opacity-75 font-medium">Speed:</span>
           <button
-            onClick={() => setSpeed(45)}
-            className={`px-2 py-0.5 rounded transition-colors ${speed === 45 ? "bg-pink-500 text-white font-medium" : "bg-white/10 hover:bg-white/20"}`}
+            type="button"
+            onClick={() => handleSetSpeed("1x")}
+            className={`px-2.5 py-0.5 rounded transition-all cursor-pointer ${
+              speedMode === "1x"
+                ? "bg-pink-500 text-white font-bold shadow-xs scale-105"
+                : "bg-white/10 hover:bg-white/20 text-white/80"
+            }`}
+            title="1x Slow Emotional Pace (Default)"
           >
             1x
           </button>
           <button
-            onClick={() => setSpeed(20)}
-            className={`px-2 py-0.5 rounded transition-colors ${speed === 20 ? "bg-pink-500 text-white font-medium" : "bg-white/10 hover:bg-white/20"}`}
+            type="button"
+            onClick={() => handleSetSpeed("2x")}
+            className={`px-2.5 py-0.5 rounded transition-all cursor-pointer ${
+              speedMode === "2x"
+                ? "bg-pink-500 text-white font-bold shadow-xs scale-105"
+                : "bg-white/10 hover:bg-white/20 text-white/80"
+            }`}
+            title="2x Medium Pace"
           >
             2x
           </button>
           <button
-            onClick={() => setSpeed(10)}
-            className={`px-2 py-0.5 rounded transition-colors ${speed === 10 ? "bg-pink-500 text-white font-medium" : "bg-white/10 hover:bg-white/20"}`}
+            type="button"
+            onClick={() => handleSetSpeed("3x")}
+            className={`px-2.5 py-0.5 rounded transition-all cursor-pointer ${
+              speedMode === "3x"
+                ? "bg-pink-500 text-white font-bold shadow-xs scale-105"
+                : "bg-white/10 hover:bg-white/20 text-white/80"
+            }`}
+            title="3x Fast Pace"
           >
             3x
           </button>
@@ -163,8 +193,9 @@ export function LetterScene({
         <div className="flex items-center gap-2">
           {/* Sound toggle */}
           <button
+            type="button"
             onClick={() => setSoundEnabled((prev) => !prev)}
-            className={`flex items-center gap-1 px-2 py-0.5 rounded transition-colors ${
+            className={`flex items-center gap-1 px-2 py-0.5 rounded transition-colors cursor-pointer ${
               soundEnabled ? "bg-pink-500/30 text-pink-200 border border-pink-400/30" : "bg-white/10 text-white/60 hover:text-white"
             }`}
             title={soundEnabled ? "Mute typewriter sound" : "Enable typewriter sound"}
@@ -176,8 +207,9 @@ export function LetterScene({
           {/* Pause / Resume */}
           {isTyping && (
             <button
+              type="button"
               onClick={togglePause}
-              className="flex items-center gap-1 px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 transition-colors"
+              className="flex items-center gap-1 px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 transition-colors cursor-pointer"
             >
               {isPaused ? <Play className="w-3 h-3 text-emerald-400" /> : <Pause className="w-3 h-3 text-yellow-300" />}
               <span className="text-[11px]">{isPaused ? "Resume" : "Pause"}</span>
@@ -187,8 +219,9 @@ export function LetterScene({
           {/* Skip / Show All */}
           {isTyping && (
             <button
+              type="button"
               onClick={handleSkip}
-              className="flex items-center gap-1 hover:text-white transition-colors"
+              className="flex items-center gap-1 hover:text-white transition-colors cursor-pointer"
             >
               <FastForward className="w-3.5 h-3.5" />
               <span>Show All</span>
@@ -198,8 +231,9 @@ export function LetterScene({
           {/* Restart */}
           {!isTyping && (
             <button
+              type="button"
               onClick={handleRestart}
-              className="flex items-center gap-1 hover:text-white transition-colors"
+              className="flex items-center gap-1 hover:text-white transition-colors cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Restart</span>
@@ -243,8 +277,9 @@ export function LetterScene({
         className="mt-6"
       >
         <button
+          type="button"
           onClick={onProceed}
-          className="px-8 py-3.5 rounded-full font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 shadow-lg flex items-center gap-2 transform hover:scale-105 active:scale-95 transition-all"
+          className="px-8 py-3.5 rounded-full font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 shadow-lg flex items-center gap-2 transform hover:scale-105 active:scale-95 transition-all cursor-pointer"
         >
           <Sparkles className="w-4 h-4 text-yellow-300" />
           <span>Open Your Surprise Gift 🎁</span>
