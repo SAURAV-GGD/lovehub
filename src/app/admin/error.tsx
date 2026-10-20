@@ -32,7 +32,7 @@ export default function AdminError({
   }, [isChunkError]);
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 text-slate-100">
+    <div className="dark min-h-screen bg-slate-950 flex items-center justify-center p-4 text-slate-100">
       <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-2xl p-6 text-center space-y-6 shadow-2xl">
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
           <ShieldAlert className="h-7 w-7" />

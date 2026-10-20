@@ -159,7 +159,7 @@ export default function DashboardPage() {
 
   if (isSessionLoading) {
     return (
-      <div className="min-h-screen bg-[#07090E] flex items-center justify-center p-4 text-white">
+      <div className="dark min-h-screen bg-[#07090E] flex items-center justify-center p-4 text-white">
         <div className="space-y-4 w-full max-w-md text-center">
           <div className="w-14 h-14 mx-auto rounded-full bg-rose-500/20 border border-rose-500/40 flex items-center justify-center shadow-lg shadow-rose-500/20">
             <Heart className="h-7 w-7 text-rose-500 fill-rose-500 animate-pulse" />
@@ -174,7 +174,7 @@ export default function DashboardPage() {
   const userInitial = userName.charAt(0).toUpperCase();
 
   return (
-    <div className="relative min-h-screen bg-[#07090E] text-slate-100 selection:bg-rose-500 selection:text-white overflow-hidden">
+    <div className="dark relative min-h-screen bg-[#07090E] text-slate-100 selection:bg-rose-500 selection:text-white overflow-hidden">
       {/* Cinematic Ambient Glow Backlights */}
       <div className="absolute top-[-10%] left-[-10%] w-[550px] h-[550px] bg-rose-600/10 rounded-full blur-[160px] pointer-events-none" />
       <div className="absolute top-[5%] right-[-10%] w-[550px] h-[550px] bg-teal-500/10 rounded-full blur-[170px] pointer-events-none" />

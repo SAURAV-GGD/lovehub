@@ -192,7 +192,7 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
   return (
     <div className="space-y-4">
       {/* Tab Navigation */}
-      <div className="flex flex-wrap p-1 gap-1 bg-muted/60 dark:bg-muted/30 rounded-xl border border-border">
+      <div className="flex flex-wrap p-1 gap-1 bg-slate-100 dark:bg-slate-900/90 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
         <button
           type="button"
           onClick={() => {
@@ -209,8 +209,8 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
           }}
           className={`flex-1 min-w-[120px] py-2.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-all ${
             activeTab === "preset"
-              ? "bg-background text-primary shadow-sm border border-border/80 font-bold"
-              : "text-foreground/70 hover:text-foreground hover:bg-background/40"
+              ? "bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 shadow-sm border border-slate-200/90 dark:border-slate-700 font-bold"
+              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white/60 dark:hover:bg-slate-800/50"
           }`}
         >
           <Sparkles className="w-4 h-4 text-rose-500" />
@@ -233,8 +233,8 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
           }}
           className={`flex-1 min-w-[120px] py-2.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-all ${
             activeTab === "youtube"
-              ? "bg-background text-primary shadow-sm border border-border/80 font-bold"
-              : "text-foreground/70 hover:text-foreground hover:bg-background/40"
+              ? "bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 shadow-sm border border-slate-200/90 dark:border-slate-700 font-bold"
+              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white/60 dark:hover:bg-slate-800/50"
           }`}
         >
           <Youtube className="w-4 h-4 text-red-500" />
@@ -256,8 +256,8 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
           }}
           className={`flex-1 min-w-[120px] py-2.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-all ${
             activeTab === "custom"
-              ? "bg-background text-primary shadow-sm border border-border/80 font-bold"
-              : "text-foreground/70 hover:text-foreground hover:bg-background/40"
+              ? "bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 shadow-sm border border-slate-200/90 dark:border-slate-700 font-bold"
+              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white/60 dark:hover:bg-slate-800/50"
           }`}
         >
           <Upload className="w-4 h-4 text-indigo-500" />
@@ -273,11 +273,11 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
           }}
           className={`py-2.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
             activeTab === "none"
-              ? "bg-background text-foreground/80 shadow-sm border border-border/80 font-bold"
-              : "text-foreground/60 hover:text-foreground hover:bg-background/40"
+              ? "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 shadow-sm border border-slate-200/90 dark:border-slate-700 font-bold"
+              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white/60 dark:hover:bg-slate-800/50"
           }`}
         >
-          <VolumeX className="w-4 h-4 text-muted-foreground" />
+          <VolumeX className="w-4 h-4 text-slate-500 dark:text-slate-400" />
           <span>Muted</span>
         </button>
       </div>
@@ -285,8 +285,8 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
       {/* Tab 1: Curated Presets */}
       {activeTab === "preset" && (
         <div className="space-y-3">
-          <p className="text-xs text-foreground/70">
-            Handpicked royalty-free romantic tracks. Tap <strong className="text-foreground">Preview</strong> to listen, or select a track for your proposal.
+          <p className="text-xs text-slate-600 dark:text-slate-300">
+            Handpicked royalty-free romantic tracks. Tap <strong className="text-slate-900 dark:text-white font-semibold">Preview</strong> to listen, or select a track for your proposal.
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -300,8 +300,8 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
                   onClick={() => handleSelectPreset(preset.id)}
                   className={`p-3 rounded-xl border text-left cursor-pointer transition-all flex items-center justify-between gap-3 ${
                     isSelected
-                      ? "border-rose-500/80 bg-rose-50/50 dark:bg-rose-950/20 shadow-sm ring-1 ring-rose-500/30"
-                      : "border-border/70 hover:border-border hover:bg-muted/40"
+                      ? "border-rose-500 bg-rose-50/90 dark:bg-rose-950/40 shadow-sm ring-1 ring-rose-500/40"
+                      : "border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/70 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-100/90 dark:hover:bg-slate-800/80"
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
@@ -313,10 +313,10 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
                       }}
                       className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-transform ${
                         isPlaying
-                          ? "bg-rose-500 text-white animate-pulse"
+                          ? "bg-rose-500 text-white animate-pulse shadow-md shadow-rose-500/30"
                           : isSelected
-                          ? "bg-rose-500/20 text-rose-600 dark:text-rose-400 hover:scale-105"
-                          : "bg-muted text-foreground/70 hover:scale-105 hover:text-foreground"
+                          ? "bg-rose-500 text-white shadow-md shadow-rose-500/25 hover:scale-105"
+                          : "bg-slate-200/90 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:scale-105 hover:bg-slate-300 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white"
                       }`}
                       title={isPlaying ? "Stop Preview" : "Play Preview"}
                     >
@@ -325,14 +325,22 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
 
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-semibold text-foreground truncate">
+                        <span className={`text-xs font-semibold truncate ${
+                          isSelected
+                            ? "text-rose-950 dark:text-rose-100 font-bold"
+                            : "text-slate-900 dark:text-slate-100"
+                        }`}>
                           {preset.title}
                         </span>
                         {isSelected && (
                           <CheckCircle2 className="w-3.5 h-3.5 text-rose-500 shrink-0" />
                         )}
                       </div>
-                      <span className="text-[11px] text-foreground/60 block truncate">
+                      <span className={`text-[11px] block truncate ${
+                        isSelected
+                          ? "text-rose-700/90 dark:text-rose-300/90 font-medium"
+                          : "text-slate-500 dark:text-slate-400"
+                      }`}>
                         {preset.mood} • {preset.duration}
                       </span>
                     </div>
@@ -341,8 +349,8 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
                   <span
                     className={`text-[10px] font-medium px-2 py-0.5 rounded-full shrink-0 ${
                       isSelected
-                        ? "bg-rose-500 text-white"
-                        : "bg-muted text-foreground/60"
+                        ? "bg-rose-500 text-white font-semibold shadow-xs"
+                        : "bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300/60 dark:border-slate-700/60"
                     }`}
                   >
                     {isSelected ? "Active" : "Select"}
@@ -354,20 +362,20 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
         </div>
       )}
 
-      {/* Tab 2: YouTube Song Link (Option B - 100% Free / Zero Storage) */}
+      {/* Tab 2: YouTube Song Link */}
       {activeTab === "youtube" && (
-        <div className="space-y-4 rounded-xl border border-border/80 bg-muted/20 p-4">
+        <div className="space-y-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 p-4">
           <div className="space-y-1">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+              <label className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                 <Youtube className="w-4 h-4 text-red-500" />
                 Paste Any YouTube or YouTube Music Song Link
               </label>
-              <span className="text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold px-2 py-0.5 rounded-full border border-emerald-500/20">
+              <span className="text-[10px] bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-semibold px-2 py-0.5 rounded-full border border-emerald-500/20">
                 100% Free • Unlimited Songs
               </span>
             </div>
-            <p className="text-[11px] text-foreground/60">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
               No downloading needed! Copy your special song link from YouTube or YouTube Music app and paste below.
             </p>
           </div>
@@ -385,13 +393,13 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
                     handleVerifyYouTubeUrl(ytInput);
                   }
                 }}
-                className="w-full text-xs py-2.5 px-3 pr-8 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-rose-500/40"
+                className="w-full text-xs py-2.5 px-3 pr-8 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-rose-500/40"
               />
               {ytInput && (
                 <button
                   type="button"
                   onClick={() => setYtInput("")}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-foreground text-xs"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-xs"
                 >
                   ✕
                 </button>
@@ -417,7 +425,7 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
 
           {/* Quick Suggestions Chips */}
           <div className="space-y-1.5">
-            <span className="text-[11px] font-semibold text-foreground/70 flex items-center gap-1">
+            <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1">
               <Sparkles className="w-3 h-3 text-rose-500" />
               Popular Romantic Picks (Click to auto-fill):
             </span>
@@ -430,7 +438,7 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
                     setYtInput(item.url);
                     handleVerifyYouTubeUrl(item.url);
                   }}
-                  className="text-[11px] px-2.5 py-1 rounded-full bg-background border border-border hover:border-rose-400 hover:text-rose-500 transition-colors text-foreground/80"
+                  className="text-[11px] px-2.5 py-1 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-rose-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors shadow-xs"
                 >
                   🎵 {item.title}
                 </button>
@@ -440,10 +448,10 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
 
           {/* Connected YouTube Preview Card */}
           {value.type === "youtube" && value.youtubeVideoId && (
-            <div className="mt-3 p-3 bg-background rounded-xl border border-rose-500/40 shadow-sm flex items-center justify-between gap-3">
+            <div className="mt-3 p-3 bg-white dark:bg-slate-950 rounded-xl border border-rose-500/40 shadow-sm flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
                 {/* Thumbnail */}
-                <div className="w-16 h-12 rounded-lg overflow-hidden bg-black shrink-0 relative border border-border">
+                <div className="w-16 h-12 rounded-lg overflow-hidden bg-black shrink-0 relative border border-slate-200 dark:border-slate-800">
                   <img
                     src={ytMetadata?.thumbnail || getYouTubeThumbnail(value.youtubeVideoId)}
                     alt="YouTube Song Thumbnail"
@@ -460,12 +468,12 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
 
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-bold text-foreground truncate">
+                    <span className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
                       {value.musicTitle || ytMetadata?.title || "Connected YouTube Track"}
                     </span>
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                   </div>
-                  <span className="text-[11px] text-foreground/60 block truncate">
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block truncate">
                     Ready to stream on your proposal page
                   </span>
                 </div>
@@ -475,7 +483,7 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
                 href={value.youtubeUrl || `https://www.youtube.com/watch?v=${value.youtubeVideoId}`}
                 target="_blank"
                 rel="noreferrer"
-                className="text-[11px] text-rose-500 hover:underline flex items-center gap-1 shrink-0 px-2 py-1 bg-rose-50 dark:bg-rose-950/40 rounded-lg"
+                className="text-[11px] text-rose-600 dark:text-rose-400 font-semibold hover:underline flex items-center gap-1 shrink-0 px-2.5 py-1 bg-rose-50 dark:bg-rose-950/40 rounded-lg border border-rose-200/50 dark:border-rose-900/50"
               >
                 <span>View</span>
                 <ExternalLink className="w-3 h-3" />
@@ -484,14 +492,14 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
           )}
 
           {/* 3 Step Tutorial Accordion/Guide */}
-          <div className="pt-2 border-t border-border/50 text-[11px] text-foreground/60 space-y-1">
-            <div className="font-semibold text-foreground/80 flex items-center gap-1">
+          <div className="pt-2 border-t border-slate-200 dark:border-slate-800 text-[11px] text-slate-600 dark:text-slate-400 space-y-1">
+            <div className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
               <HelpCircle className="w-3.5 h-3.5 text-rose-500" />
               How it works in 3 easy steps:
             </div>
-            <ol className="list-decimal pl-4 space-y-0.5 text-[11px] text-foreground/70">
+            <ol className="list-decimal pl-4 space-y-0.5 text-[11px] text-slate-600 dark:text-slate-400">
               <li>Open YouTube or YouTube Music app.</li>
-              <li>Search your favorite song and tap <strong className="text-foreground">Share → Copy Link</strong>.</li>
+              <li>Search your favorite song and tap <strong className="text-slate-800 dark:text-slate-200 font-semibold">Share → Copy Link</strong>.</li>
               <li>Paste the link above — LoveHub will stream it directly with romantic autoplay!</li>
             </ol>
           </div>
@@ -501,18 +509,18 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
       {/* Tab 3: Upload Custom Audio / Voice Note */}
       {activeTab === "custom" && (
         <div className="space-y-3">
-          <p className="text-xs text-foreground/70">
+          <p className="text-xs text-slate-600 dark:text-slate-300">
             Upload your own audio file or recorded voice note (MP3, M4A, WAV up to 12MB).
           </p>
 
           {value.type === "custom" && value.customAudioUrl ? (
-            <div className="p-3 bg-muted/40 rounded-xl border border-indigo-500/40 flex items-center justify-between gap-3">
+            <div className="p-3 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-indigo-500/40 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-10 h-10 rounded-full bg-indigo-500/20 text-indigo-500 flex items-center justify-center shrink-0">
                   <FileAudio className="w-5 h-5" />
                 </div>
                 <div className="min-w-0">
-                  <span className="text-xs font-bold text-foreground block truncate">
+                  <span className="text-xs font-bold text-slate-900 dark:text-slate-100 block truncate">
                     {value.musicTitle || "Custom Audio File"}
                   </span>
                   <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
@@ -528,7 +536,7 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
                     const audio = new Audio(value.customAudioUrl);
                     audio.play().catch(() => toast.error("Could not play audio"));
                   }}
-                  className="p-2 rounded-lg bg-background border border-border text-foreground hover:bg-muted text-xs flex items-center gap-1"
+                  className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs flex items-center gap-1"
                   title="Test Play"
                 >
                   <Play className="w-3.5 h-3.5" />
@@ -555,16 +563,16 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
               className={`p-6 border-2 border-dashed rounded-xl text-center cursor-pointer transition-colors ${
                 isDragActive
                   ? "border-indigo-500 bg-indigo-50/20"
-                  : "border-border hover:border-indigo-400/80 bg-muted/20"
+                  : "border-slate-300 dark:border-slate-700 hover:border-indigo-400/80 bg-slate-50/60 dark:bg-slate-900/40"
               }`}
             >
               <input {...getInputProps()} />
-              <Upload className="w-8 h-8 text-foreground/40 mx-auto mb-2" />
-              <p className="text-xs font-semibold text-foreground">
+              <Upload className="w-8 h-8 text-slate-400 dark:text-slate-500 mx-auto mb-2" />
+              <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
                 Drop your MP3, M4A, or WAV file here, or{" "}
-                <span className="text-indigo-500 underline">browse</span>
+                <span className="text-indigo-600 dark:text-indigo-400 underline font-medium">browse</span>
               </p>
-              <p className="text-[10px] text-foreground/50 mt-1">
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
                 Max file size 12MB. Plays smoothly in all browsers.
               </p>
             </div>
@@ -574,8 +582,8 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
 
       {/* Tab 4: None */}
       {activeTab === "none" && (
-        <div className="p-4 bg-muted/20 rounded-xl border border-border text-center text-xs text-foreground/60">
-          <VolumeX className="w-6 h-6 text-foreground/40 mx-auto mb-1.5" />
+        <div className="p-4 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-200 dark:border-slate-800 text-center text-xs text-slate-600 dark:text-slate-400">
+          <VolumeX className="w-6 h-6 text-slate-400 dark:text-slate-500 mx-auto mb-1.5" />
           No background music will play on this proposal.
         </div>
       )}

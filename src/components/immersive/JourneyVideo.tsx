@@ -10,6 +10,10 @@ export default function JourneyVideo() {
     const v = ref.current;
     if (!v) return;
 
+    // Explicitly enforce muted attributes for Safari/iOS autoplay/scrub policy
+    v.muted = true;
+    (v as HTMLVideoElement & { defaultMuted?: boolean }).defaultMuted = true;
+
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     if (mediaQuery.matches) {
       try {
@@ -23,17 +27,25 @@ export default function JourneyVideo() {
     let last = -1;
     let primed = false;
 
-    // iOS unlocks scrubbing after first user touch gesture
+    // iOS Safari requires a user gesture (touch or scroll) to prime the video pipeline for scrubbing
     const unlock = () => {
-      v.play()
-        .then(() => v.pause())
-        .catch(() => {});
+      try {
+        const p = v.play();
+        if (p !== undefined) {
+          p.then(() => v.pause()).catch(() => {});
+        }
+      } catch {}
     };
-    window.addEventListener("touchstart", unlock, { once: true, passive: true });
+
+    const unlockEvents = ["touchstart", "touchend", "pointerdown", "scroll"] as const;
+    unlockEvents.forEach((evt) => {
+      window.addEventListener(evt, unlock, { once: true, passive: true });
+    });
 
     const loop = () => {
       const d = v.duration;
-      if (d && isFinite(d)) {
+      // Guard readyState >= 1 (HAVE_METADATA) to prevent iOS Safari throwing InvalidStateError on currentTime assignment
+      if (d && isFinite(d) && v.readyState >= 1) {
         const target = Math.min(Math.max(scrollState.progress, 0), 1) * (d - 0.05);
         if (!primed) {
           cur = target;
@@ -41,8 +53,12 @@ export default function JourneyVideo() {
         }
         cur += (target - cur) * 0.15;
         if (!v.seeking && Math.abs(cur - last) > 0.008) {
-          v.currentTime = cur;
-          last = cur;
+          try {
+            v.currentTime = cur;
+            last = cur;
+          } catch {
+            // Guard against edge-case seek rejections during high-frequency touch scrub
+          }
         }
         const scale = 1.0 + (cur / d) * 0.04;
         v.style.transform = `scale(${scale.toFixed(4)})`;
@@ -74,7 +90,9 @@ export default function JourneyVideo() {
     return () => {
       cancelAnimationFrame(raf);
       document.removeEventListener("visibilitychange", onVis);
-      window.removeEventListener("touchstart", unlock);
+      unlockEvents.forEach((evt) => {
+        window.removeEventListener(evt, unlock);
+      });
       mediaQuery.removeEventListener("change", handleMotionChange);
     };
   }, []);
@@ -83,11 +101,18 @@ export default function JourneyVideo() {
     <video
       ref={ref}
       id="journey-video"
-      className="fixed inset-0 z-0 h-full w-full object-cover pointer-events-none"
+      className="fixed inset-0 z-0 h-[100dvh] min-h-[100vh] w-full object-cover object-center pointer-events-none"
+      style={{
+        transform: "translateZ(0)",
+        WebkitTransform: "translateZ(0)",
+        willChange: "transform",
+      }}
       muted
       playsInline
-      preload="metadata"
+      preload="auto"
       poster="/video/hero-poster.jpg"
+      disablePictureInPicture
+      disableRemotePlayback
       aria-hidden="true"
       tabIndex={-1}
     >

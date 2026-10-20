@@ -780,7 +780,7 @@ export default function AdminDashboardPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[#030712] text-slate-100 relative overflow-x-hidden selection:bg-rose-500 selection:text-white">
+    <div className="dark min-h-screen bg-[#030712] text-slate-100 relative overflow-x-hidden selection:bg-rose-500 selection:text-white">
       {/* Dynamic Animated Liquid Gradient Orbs */}
       <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
         {/* Orb 1: Hot Crimson & Pink Passion */}

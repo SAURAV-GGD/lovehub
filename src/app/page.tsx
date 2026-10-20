@@ -81,7 +81,7 @@ export default function HomePage() {
       <JourneyVideo />
 
       {/* Cinematic Contrast Scrim (WCAG AA Compliant) */}
-      <div id="video-scrim" className="pointer-events-none fixed inset-0 z-0" />
+      <div id="video-scrim" className="pointer-events-none fixed inset-0 z-0 h-[100dvh] min-h-[100vh] w-full" />
 
       {/* Lenis Smooth Scroll & Progress Engine */}
       <ScrollDriver />
