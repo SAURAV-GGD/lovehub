@@ -16,6 +16,8 @@ import {
   FileAudio,
   Trash2,
   Search,
+  Mic,
+  StopCircle,
 } from "lucide-react";
 import { CURATED_MUSIC_PRESETS, extractYouTubeVideoId, getYouTubeThumbnail } from "@/lib/music";
 import { useDropzone } from "react-dropzone";
@@ -42,6 +44,12 @@ const POPULAR_YOUTUBE_SUGGESTIONS = [
   { title: "Until I Found You (Stephen Sanchez)", url: "https://www.youtube.com/watch?v=GxldQ9eX2wo" },
 ];
 
+function formatRecordTime(secs: number): string {
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+}
+
 export function MusicSelector({ value, onChange }: MusicSelectorProps) {
   const [activeTab, setActiveTab] = useState<"preset" | "youtube" | "custom" | "none">(
     value.type || "preset"
@@ -62,6 +70,13 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
       : null
   );
 
+  // In-browser Voice Note Recording
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordSeconds, setRecordSeconds] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const recordIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
   const previewAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // Sync tab with external value
@@ -71,7 +86,18 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
     }
   }, [value.type]);
 
-  // Cleanup audio preview when switching
+  // Cleanup audio preview & recording when switching
+  useEffect(() => {
+    return () => {
+      if (previewAudioRef.current) {
+        previewAudioRef.current.pause();
+      }
+      if (recordIntervalRef.current) {
+        clearInterval(recordIntervalRef.current);
+      }
+    };
+  }, []);
+
   const stopPreview = () => {
     if (previewAudioRef.current) {
       previewAudioRef.current.pause();
@@ -132,7 +158,6 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
         });
         toast.success(`Track selected: "${data.title}"`);
       } else {
-        // Fallback with videoId
         setYtMetadata({
           title: "Custom YouTube Track",
           thumbnail: getYouTubeThumbnail(videoId),
@@ -158,13 +183,13 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
     }
   };
 
-  // Custom audio file dropzone
+  // Custom audio file dropzone (Supports MP3, iOS M4A, WAV, AAC, CAF)
   const onDropAudio = (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
     if (!file) return;
 
-    if (file.size > 12 * 1024 * 1024) {
-      toast.error("Audio file must be under 12MB");
+    if (file.size > 15 * 1024 * 1024) {
+      toast.error("Audio file must be under 15MB");
       return;
     }
 
@@ -176,7 +201,7 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
         customAudioUrl: dataUrl,
         musicTitle: file.name.replace(/\.[^/.]+$/, ""),
       });
-      toast.success(`Custom track loaded: "${file.name}"`);
+      toast.success(`Track attached: "${file.name}"`);
     };
     reader.readAsDataURL(file);
   };
@@ -184,10 +209,64 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: onDropAudio,
     accept: {
-      "audio/*": [".mp3", ".m4a", ".wav", ".ogg", ".aac"],
+      "audio/*": [".mp3", ".m4a", ".wav", ".ogg", ".aac", ".caf", ".webm", ".mp4", ".flac"],
     },
     maxFiles: 1,
   });
+
+  // Voice Note Recording Handlers
+  const handleStartRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioChunksRef.current = [];
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, {
+          type: mediaRecorder.mimeType || "audio/mp4",
+        });
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const dataUrl = reader.result as string;
+          onChange({
+            type: "custom",
+            customAudioUrl: dataUrl,
+            musicTitle: "Personal Voice Note 🎙️",
+          });
+          toast.success("Voice note recorded & attached!");
+        };
+        reader.readAsDataURL(audioBlob);
+
+        stream.getTracks().forEach((track) => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      setRecordSeconds(0);
+      recordIntervalRef.current = setInterval(() => {
+        setRecordSeconds((prev) => prev + 1);
+      }, 1000);
+    } catch {
+      toast.error("Microphone access permission was not granted or not available");
+    }
+  };
+
+  const handleStopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      if (recordIntervalRef.current) {
+        clearInterval(recordIntervalRef.current);
+      }
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -207,7 +286,7 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
               });
             }
           }}
-          className={`flex-1 min-w-[120px] py-2.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-all ${
+          className={`flex-1 min-w-[120px] py-2.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${
             activeTab === "preset"
               ? "bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 shadow-sm border border-slate-200/90 dark:border-slate-700 font-bold"
               : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white/60 dark:hover:bg-slate-800/50"
@@ -231,7 +310,7 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
               });
             }
           }}
-          className={`flex-1 min-w-[120px] py-2.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-all ${
+          className={`flex-1 min-w-[120px] py-2.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${
             activeTab === "youtube"
               ? "bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 shadow-sm border border-slate-200/90 dark:border-slate-700 font-bold"
               : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white/60 dark:hover:bg-slate-800/50"
@@ -254,14 +333,14 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
               });
             }
           }}
-          className={`flex-1 min-w-[120px] py-2.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-all ${
+          className={`flex-1 min-w-[120px] py-2.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${
             activeTab === "custom"
               ? "bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 shadow-sm border border-slate-200/90 dark:border-slate-700 font-bold"
               : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white/60 dark:hover:bg-slate-800/50"
           }`}
         >
-          <Upload className="w-4 h-4 text-indigo-500" />
-          <span>Upload MP3 / Audio</span>
+          <Mic className="w-4 h-4 text-indigo-500" />
+          <span>Upload MP3 / Voice Note</span>
         </button>
 
         <button
@@ -271,7 +350,7 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
             setActiveTab("none");
             onChange({ type: "none", musicTitle: "No Music" });
           }}
-          className={`py-2.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+          className={`py-2.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
             activeTab === "none"
               ? "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 shadow-sm border border-slate-200/90 dark:border-slate-700 font-bold"
               : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white/60 dark:hover:bg-slate-800/50"
@@ -291,7 +370,9 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {CURATED_MUSIC_PRESETS.map((preset) => {
-              const isSelected = value.type === "preset" && (value.presetId === preset.id || (!value.presetId && preset.id === "romantic-piano"));
+              const isSelected =
+                value.type === "preset" &&
+                (value.presetId === preset.id || (!value.presetId && preset.id === "romantic-piano"));
               const isPlaying = previewingPreset === preset.id;
 
               return (
@@ -311,7 +392,7 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
                         e.stopPropagation();
                         togglePresetPreview(preset.id, preset.audioUrl);
                       }}
-                      className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-transform ${
+                      className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-transform cursor-pointer ${
                         isPlaying
                           ? "bg-rose-500 text-white animate-pulse shadow-md shadow-rose-500/30"
                           : isSelected
@@ -320,27 +401,35 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
                       }`}
                       title={isPlaying ? "Stop Preview" : "Play Preview"}
                     >
-                      {isPlaying ? <Square className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current ml-0.5" />}
+                      {isPlaying ? (
+                        <Square className="w-3.5 h-3.5 fill-current" />
+                      ) : (
+                        <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
+                      )}
                     </button>
 
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <span className={`text-xs font-semibold truncate ${
-                          isSelected
-                            ? "text-rose-950 dark:text-rose-100 font-bold"
-                            : "text-slate-900 dark:text-slate-100"
-                        }`}>
+                        <span
+                          className={`text-xs font-semibold truncate ${
+                            isSelected
+                              ? "text-rose-950 dark:text-rose-100 font-bold"
+                              : "text-slate-900 dark:text-slate-100"
+                          }`}
+                        >
                           {preset.title}
                         </span>
                         {isSelected && (
                           <CheckCircle2 className="w-3.5 h-3.5 text-rose-500 shrink-0" />
                         )}
                       </div>
-                      <span className={`text-[11px] block truncate ${
-                        isSelected
-                          ? "text-rose-700/90 dark:text-rose-300/90 font-medium"
-                          : "text-slate-500 dark:text-slate-400"
-                      }`}>
+                      <span
+                        className={`text-[11px] block truncate ${
+                          isSelected
+                            ? "text-rose-700/90 dark:text-rose-300/90 font-medium"
+                            : "text-slate-500 dark:text-slate-400"
+                        }`}
+                      >
                         {preset.mood} • {preset.duration}
                       </span>
                     </div>
@@ -399,7 +488,7 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
                 <button
                   type="button"
                   onClick={() => setYtInput("")}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-xs"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-xs cursor-pointer"
                 >
                   ✕
                 </button>
@@ -410,7 +499,7 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
               type="button"
               disabled={isFetchingYt || !ytInput}
               onClick={() => handleVerifyYouTubeUrl(ytInput)}
-              className="px-4 py-2 text-xs font-semibold rounded-lg bg-rose-600 hover:bg-rose-700 text-white disabled:opacity-50 transition-colors shrink-0 flex items-center gap-1.5 shadow-sm"
+              className="px-4 py-2 text-xs font-semibold rounded-lg bg-rose-600 hover:bg-rose-700 text-white disabled:opacity-50 transition-colors shrink-0 flex items-center gap-1.5 shadow-sm cursor-pointer"
             >
               {isFetchingYt ? (
                 <span>Loading...</span>
@@ -438,7 +527,7 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
                     setYtInput(item.url);
                     handleVerifyYouTubeUrl(item.url);
                   }}
-                  className="text-[11px] px-2.5 py-1 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-rose-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors shadow-xs"
+                  className="text-[11px] px-2.5 py-1 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-rose-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors shadow-xs cursor-pointer"
                 >
                   🎵 {item.title}
                 </button>
@@ -450,7 +539,6 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
           {value.type === "youtube" && value.youtubeVideoId && (
             <div className="mt-3 p-3 bg-white dark:bg-slate-950 rounded-xl border border-rose-500/40 shadow-sm flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
-                {/* Thumbnail */}
                 <div className="w-16 h-12 rounded-lg overflow-hidden bg-black shrink-0 relative border border-slate-200 dark:border-slate-800">
                   <img
                     src={ytMetadata?.thumbnail || getYouTubeThumbnail(value.youtubeVideoId)}
@@ -490,31 +578,18 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
               </a>
             </div>
           )}
-
-          {/* 3 Step Tutorial Accordion/Guide */}
-          <div className="pt-2 border-t border-slate-200 dark:border-slate-800 text-[11px] text-slate-600 dark:text-slate-400 space-y-1">
-            <div className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
-              <HelpCircle className="w-3.5 h-3.5 text-rose-500" />
-              How it works in 3 easy steps:
-            </div>
-            <ol className="list-decimal pl-4 space-y-0.5 text-[11px] text-slate-600 dark:text-slate-400">
-              <li>Open YouTube or YouTube Music app.</li>
-              <li>Search your favorite song and tap <strong className="text-slate-800 dark:text-slate-200 font-semibold">Share → Copy Link</strong>.</li>
-              <li>Paste the link above — LoveHub will stream it directly with romantic autoplay!</li>
-            </ol>
-          </div>
         </div>
       )}
 
-      {/* Tab 3: Upload Custom Audio / Voice Note */}
+      {/* Tab 3: Upload Custom Audio / iOS Voice Note */}
       {activeTab === "custom" && (
-        <div className="space-y-3">
+        <div className="space-y-3.5">
           <p className="text-xs text-slate-600 dark:text-slate-300">
-            Upload your own audio file or recorded voice note (MP3, M4A, WAV up to 12MB).
+            Upload your favorite local song or iOS Voice Memo (.mp3, .m4a, .wav up to 15MB), or record a personal voice message right here.
           </p>
 
           {value.type === "custom" && value.customAudioUrl ? (
-            <div className="p-3 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-indigo-500/40 flex items-center justify-between gap-3">
+            <div className="p-3 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-indigo-500/40 flex items-center justify-between gap-3 shadow-xs">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-10 h-10 rounded-full bg-indigo-500/20 text-indigo-500 flex items-center justify-center shrink-0">
                   <FileAudio className="w-5 h-5" />
@@ -524,7 +599,7 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
                     {value.musicTitle || "Custom Audio File"}
                   </span>
                   <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3" /> Custom track uploaded
+                    <CheckCircle2 className="w-3 h-3" /> Custom soundtrack loaded
                   </span>
                 </div>
               </div>
@@ -536,7 +611,7 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
                     const audio = new Audio(value.customAudioUrl);
                     audio.play().catch(() => toast.error("Could not play audio"));
                   }}
-                  className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs flex items-center gap-1"
+                  className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs flex items-center gap-1 cursor-pointer"
                   title="Test Play"
                 >
                   <Play className="w-3.5 h-3.5" />
@@ -550,7 +625,7 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
                       musicTitle: "",
                     });
                   }}
-                  className="p-2 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs"
+                  className="p-2 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs cursor-pointer"
                   title="Remove track"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -558,23 +633,65 @@ export function MusicSelector({ value, onChange }: MusicSelectorProps) {
               </div>
             </div>
           ) : (
-            <div
-              {...getRootProps()}
-              className={`p-6 border-2 border-dashed rounded-xl text-center cursor-pointer transition-colors ${
-                isDragActive
-                  ? "border-indigo-500 bg-indigo-50/20"
-                  : "border-slate-300 dark:border-slate-700 hover:border-indigo-400/80 bg-slate-50/60 dark:bg-slate-900/40"
-              }`}
-            >
-              <input {...getInputProps()} />
-              <Upload className="w-8 h-8 text-slate-400 dark:text-slate-500 mx-auto mb-2" />
-              <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                Drop your MP3, M4A, or WAV file here, or{" "}
-                <span className="text-indigo-600 dark:text-indigo-400 underline font-medium">browse</span>
-              </p>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
-                Max file size 12MB. Plays smoothly in all browsers.
-              </p>
+            <div className="space-y-3">
+              {/* Dropzone for Files (MP3, M4A, iOS Voice Memos) */}
+              <div
+                {...getRootProps()}
+                className={`p-6 border-2 border-dashed rounded-xl text-center cursor-pointer transition-colors ${
+                  isDragActive
+                    ? "border-indigo-500 bg-indigo-50/20"
+                    : "border-slate-300 dark:border-slate-700 hover:border-indigo-400/80 bg-slate-50/60 dark:bg-slate-900/40"
+                }`}
+              >
+                <input {...getInputProps()} />
+                <Upload className="w-7 h-7 text-indigo-500 mx-auto mb-2" />
+                <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                  Drop your MP3, iOS M4A, or Voice Memo here, or{" "}
+                  <span className="text-indigo-600 dark:text-indigo-400 underline font-bold">browse</span>
+                </p>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
+                  Supports MP3, iOS Voice Memos (M4A), WAV, AAC, CAF up to 15MB.
+                </p>
+              </div>
+
+              {/* Direct In-Browser Voice Recording Option */}
+              <div className="p-3.5 rounded-xl border border-rose-200 dark:border-rose-900/40 bg-rose-50/50 dark:bg-rose-950/20 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    isRecording ? "bg-red-500 text-white animate-pulse" : "bg-rose-100 dark:bg-rose-950 text-rose-600"
+                  }`}>
+                    <Mic className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h5 className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                      {isRecording ? `Recording in progress... (${formatRecordTime(recordSeconds)})` : "Record a Voice Note Directly"}
+                    </h5>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Speak directly into your phone or PC microphone for an intimate personal message
+                    </p>
+                  </div>
+                </div>
+
+                {isRecording ? (
+                  <button
+                    type="button"
+                    onClick={handleStopRecording}
+                    className="px-3.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-red-500/20 cursor-pointer animate-pulse shrink-0"
+                  >
+                    <StopCircle className="w-4 h-4" />
+                    <span>Stop &amp; Attach ({formatRecordTime(recordSeconds)})</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleStartRecording}
+                    className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-rose-300 dark:border-rose-800 hover:border-rose-500 text-rose-700 dark:text-rose-300 text-xs font-semibold flex items-center gap-1.5 shadow-2xs cursor-pointer shrink-0"
+                  >
+                    <Mic className="w-3.5 h-3.5 text-rose-500" />
+                    <span>Start Recording</span>
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </div>

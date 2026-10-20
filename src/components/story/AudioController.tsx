@@ -149,6 +149,8 @@ export function AudioController({
             videoId={resolvedVideoId}
             isPlaying={isPlaying}
             isMuted={!isPlaying}
+            startTimestampSeconds={startTimestampSeconds}
+            endTimestampSeconds={endTimestampSeconds}
           />
         </div>
       )}
@@ -157,7 +159,7 @@ export function AudioController({
       {autoplayBlocked && !isPlaying && (
         <button
           onClick={togglePlay}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-pink-600/90 hover:bg-pink-500 text-white shadow-lg text-xs font-medium animate-pulse"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-pink-600/90 hover:bg-pink-500 text-white shadow-lg text-xs font-medium animate-pulse cursor-pointer"
         >
           <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
           <span>Tap for music 🎵</span>
@@ -167,7 +169,7 @@ export function AudioController({
       {/* Audio toggle button */}
       <button
         onClick={togglePlay}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md border border-pink-500/30 text-white shadow-lg transition-all hover:scale-105 active:scale-95 group"
+        className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md border border-pink-500/30 text-white shadow-lg transition-all hover:scale-105 active:scale-95 group cursor-pointer"
         title={isPlaying ? "Mute music" : "Play music"}
         aria-label={isPlaying ? "Mute music" : "Play music"}
       >

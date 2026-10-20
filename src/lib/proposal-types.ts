@@ -333,7 +333,9 @@ export function ensureStoryConfig(proposal: Partial<ProposalData>): StoryConfig 
 
   return {
     version: 2,
-    enabledScenes: ["intro", "quiz", "question", "memories", "letter", "gift", "finale"],
+    enabledScenes: proposal.storyConfig?.enabledScenes?.length
+      ? proposal.storyConfig.enabledScenes
+      : ["intro", "quiz", "question", "memories", "letter", "gift", "finale"],
     relationshipStartDate: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString(),
     audio: {
       enabled: proposal.backgroundMusic !== "none",

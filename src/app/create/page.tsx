@@ -33,10 +33,13 @@ import {
   StoryQuizQuestion,
   StoryPromiseCard,
   StoryChapterConfig,
+  StorySceneId,
   ProposalData,
 } from "@/lib/proposal-types";
 import { getPlanConfig } from "@/lib/plans";
 import { MusicSelector, MusicSelectionState } from "@/components/music/music-selector";
+import { MusicTrimmerListener } from "@/components/music/MusicTrimmerListener";
+import { SceneFlowCustomizer } from "@/components/story/SceneFlowCustomizer";
 import { generateProposalMessage } from "@/lib/ai-generator";
 import { saveProposal, isSlugAvailable, getProposalUrl } from "@/lib/proposal-storage";
 import { PhonePreview } from "@/components/story/PhonePreview";
@@ -83,6 +86,16 @@ function CreateContent() {
   const [customQuestions, setCustomQuestions] = useState<StoryQuizQuestion[]>([]);
   const [giftType, setGiftType] = useState<"box" | "envelope" | "promise_cards" | "bouquet">("box");
   const [customGiftCards, setCustomGiftCards] = useState<StoryPromiseCard[]>([]);
+  const [enabledScenes, setEnabledScenes] = useState<StorySceneId[]>([
+    "intro",
+    "quiz",
+    "question",
+    "memories",
+    "letter",
+    "gift",
+    "finale",
+  ]);
+  const [firstSceneId, setFirstSceneId] = useState<StorySceneId>("intro");
   const [isMobilePreviewOpen, setIsMobilePreviewOpen] = useState(false);
   const [isExtractModalOpen, setIsExtractModalOpen] = useState(false);
   const [chatNotesText, setChatNotesText] = useState("");
@@ -123,6 +136,7 @@ function CreateContent() {
 
     base.letter.fontStyle = letterFontStyle;
     base.gift.giftType = giftType;
+    base.enabledScenes = enabledScenes;
     if (customGiftCards.length > 0) {
       base.gift.cards = customGiftCards;
     }
@@ -575,6 +589,7 @@ function CreateContent() {
               enableRunawayButton: enableRunawayNo,
             },
           }),
+          enabledScenes: enabledScenes,
           letter: {
             ...ensureStoryConfig({ yourName, partnerName }).letter,
             content: message,
@@ -1496,18 +1511,28 @@ function CreateContent() {
                   )}
 
                   {/* Story Experience Settings */}
-                  <div className="border border-pink-200 dark:border-pink-900/40 bg-pink-50/50 dark:bg-pink-950/20 rounded-2xl p-5 space-y-4">
+                  <div className="border border-rose-200/90 dark:border-rose-900/50 bg-rose-50/40 dark:bg-rose-950/20 rounded-2xl p-5 space-y-5 shadow-xs">
                     <div className="flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-pink-500" />
-                      <h4 className="text-sm font-bold text-foreground">
+                      <Sparkles className="w-4 h-4 text-rose-500" />
+                      <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
                         Interactive Story Experience Settings
                       </h4>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Scene Flow & Page Order Customizer */}
+                    <div className="pt-1">
+                      <SceneFlowCustomizer
+                        enabledScenes={enabledScenes}
+                        onEnabledScenesChange={setEnabledScenes}
+                        firstSceneId={firstSceneId}
+                        onFirstSceneChange={setFirstSceneId}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-rose-200/70 dark:border-rose-900/40">
                       {/* Relationship Start Date for Live Forever Timer */}
                       <div className="space-y-1.5">
-                        <Label htmlFor="relationshipStartDate" className="text-xs font-semibold text-foreground/80">
+                        <Label htmlFor="relationshipStartDate" className="text-xs font-bold text-slate-800 dark:text-slate-200">
                           Relationship Start Date (Forever Counter ♾️)
                         </Label>
                         <Input
@@ -1515,122 +1540,138 @@ function CreateContent() {
                           type="date"
                           value={relationshipStartDate}
                           onChange={(e) => setRelationshipStartDate(e.target.value)}
-                          className="h-9 text-xs bg-background"
+                          className="h-9 text-xs bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100"
                         />
-                        <p className="text-[11px] text-muted-foreground">
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
                           Powers the real-time live ticker in the finale scene
                         </p>
                       </div>
 
                       {/* Playful Runaway NO Button Toggle */}
                       <div className="space-y-1.5">
-                        <Label className="text-xs font-semibold text-foreground/80 block">
+                        <Label className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
                           Playful Runaway &ldquo;NO&rdquo; Button
                         </Label>
                         <button
                           type="button"
                           onClick={() => setEnableRunawayNo((prev) => !prev)}
-                          className={`w-full h-9 px-3 rounded-lg border text-xs font-medium flex items-center justify-between transition-colors ${
+                          className={`w-full h-9 px-3 rounded-lg border text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer ${
                             enableRunawayNo
-                              ? "bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-300"
-                              : "bg-muted border-border text-muted-foreground"
+                              ? "bg-rose-50 dark:bg-rose-950/50 border-rose-500 text-rose-800 dark:text-rose-200"
+                              : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-500"
                           }`}
                         >
                           <span>{enableRunawayNo ? "Enabled (Playfully hops away)" : "Disabled (Static button)"}</span>
                           <span className={`w-2 h-2 rounded-full ${enableRunawayNo ? "bg-rose-500 animate-pulse" : "bg-gray-400"}`} />
                         </button>
-                        <p className="text-[11px] text-muted-foreground">
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
                           Playfully evades clicks when your partner tries to decline
                         </p>
                       </div>
                     </div>
 
                     {/* Interactive Quiz Questions Editor */}
-                    <div className="pt-3 border-t border-pink-200/60 dark:border-pink-900/40 space-y-2">
-                      <Label className="text-xs font-semibold text-foreground/80 flex items-center gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5 text-pink-500" />
-                        <span>Customize Interactive Quiz (Scene 2)</span>
-                      </Label>
-                      <QuizEditor
-                        partnerName={partnerName}
-                        yourName={yourName}
-                        questions={customQuestions}
-                        onChange={setCustomQuestions}
-                      />
-                    </div>
-
-                    {/* Surprise Gift & Love Coupons Editor */}
-                    <div className="pt-4 border-t border-pink-200/60 dark:border-pink-900/40 space-y-2">
-                      <Label className="text-xs font-semibold text-foreground/80 flex items-center gap-1.5">
-                        <Gift className="w-3.5 h-3.5 text-pink-500" />
-                        <span>Customize Surprise Gift &amp; Love Coupons (Scene 6)</span>
-                      </Label>
-                      <GiftEditor
-                        giftType={giftType}
-                        cards={customGiftCards}
-                        onChange={({ giftType: newType, cards: newCards }) => {
-                          setGiftType(newType);
-                          setCustomGiftCards(newCards);
-                        }}
-                      />
-                    </div>
-
-                    {/* Audio Precision Trimmer */}
-                    {limits.hasMusic && musicSelection.type !== "none" && (
-                      <div className="pt-4 border-t border-pink-200/60 dark:border-pink-900/40 space-y-2">
-                        <Label className="text-xs font-semibold text-foreground/80 flex items-center gap-1.5">
-                          <Music className="w-3.5 h-3.5 text-pink-500" />
-                          <span>Soundtrack Start &amp; End Trimming (Optional)</span>
+                    {enabledScenes.includes("quiz") ? (
+                      <div className="pt-4 border-t border-rose-200/70 dark:border-rose-900/40 space-y-2">
+                        <Label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 uppercase tracking-wider">
+                          <Sparkles className="w-3.5 h-3.5 text-rose-500" />
+                          <span>Customize Interactive Quiz (Scene 2)</span>
                         </Label>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <label className="text-[11px] text-muted-foreground block mb-1">Start Time (seconds)</label>
-                            <Input
-                              type="number"
-                              min={0}
-                              value={audioStartSec}
-                              onChange={(e) => setAudioStartSec(Math.max(0, parseInt(e.target.value) || 0))}
-                              className="h-8 text-xs"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-[11px] text-muted-foreground block mb-1">End Time (seconds, optional)</label>
-                            <Input
-                              type="number"
-                              min={0}
-                              value={audioEndSec ?? ""}
-                              placeholder="e.g. 180"
-                              onChange={(e) => {
-                                const val = parseInt(e.target.value);
-                                setAudioEndSec(val > 0 ? val : undefined);
-                              }}
-                              className="h-8 text-xs"
-                            />
-                          </div>
-                        </div>
+                        <QuizEditor
+                          partnerName={partnerName}
+                          yourName={yourName}
+                          questions={customQuestions}
+                          onChange={setCustomQuestions}
+                        />
+                      </div>
+                    ) : (
+                      <div className="pt-4 border-t border-rose-200/70 dark:border-rose-900/40 text-xs text-slate-500 p-2.5 rounded-lg bg-slate-100/60 dark:bg-slate-900/40">
+                        Interactive Quiz (Scene 2) is currently omitted. You can re-enable it anytime in the Scene Flow above.
                       </div>
                     )}
+
+                    {/* Surprise Gift & Love Coupons Editor */}
+                    {enabledScenes.includes("gift") ? (
+                      <div className="pt-4 border-t border-rose-200/70 dark:border-rose-900/40 space-y-2">
+                        <Label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 uppercase tracking-wider">
+                          <Gift className="w-3.5 h-3.5 text-rose-500" />
+                          <span>Customize Surprise Gift &amp; Love Coupons (Scene 6)</span>
+                        </Label>
+                        <GiftEditor
+                          giftType={giftType}
+                          cards={customGiftCards}
+                          onChange={({ giftType: newType, cards: newCards }) => {
+                            setGiftType(newType);
+                            setCustomGiftCards(newCards);
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <div className="pt-4 border-t border-rose-200/70 dark:border-rose-900/40 text-xs text-slate-500 p-2.5 rounded-lg bg-slate-100/60 dark:bg-slate-900/40">
+                        Surprise Gift &amp; Coupons (Scene 6) is currently omitted. You can re-enable it anytime in the Scene Flow above.
+                      </div>
+                    )}
+
+                    {/* Interactive Audio Listener & Precision Trimmer */}
+                    {limits.hasMusic && musicSelection.type !== "none" ? (
+                      <div className="pt-4 border-t border-rose-200/70 dark:border-rose-900/40 space-y-2">
+                        <Label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 uppercase tracking-wider">
+                          <Music className="w-3.5 h-3.5 text-rose-500" />
+                          <span>Soundtrack Listener &amp; Trimming Controls</span>
+                        </Label>
+                        <MusicTrimmerListener
+                          musicSelection={musicSelection}
+                          startSec={audioStartSec}
+                          endSec={audioEndSec}
+                          onStartSecChange={setAudioStartSec}
+                          onEndSecChange={setAudioEndSec}
+                          hasMusicPlan={limits.hasMusic}
+                        />
+                      </div>
+                    ) : !limits.hasMusic ? (
+                      <div className="pt-4 border-t border-rose-200/70 dark:border-rose-900/40">
+                        <div className="p-3.5 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-white dark:bg-slate-900 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-2xs">
+                          <div className="space-y-0.5 text-center sm:text-left">
+                            <h5 className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center justify-center sm:justify-start gap-1.5">
+                              <Music className="w-3.5 h-3.5 text-rose-500" />
+                              <span>Background Music &amp; Voice Note Trimmer</span>
+                            </h5>
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                              Upload MP3s, iOS Voice Memos, YouTube songs, and trim audio timing with Romantic (₹69) or Premium (₹169).
+                            </p>
+                          </div>
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => setPlanKey("romantic")}
+                            className="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shrink-0 cursor-pointer shadow-xs"
+                          >
+                            Upgrade for ₹69
+                          </Button>
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
 
                   {/* Preview Summary */}
-                  <div className="bg-muted/50 rounded-xl p-6 space-y-4">
-                    <h3 className="font-semibold">Proposal Summary</h3>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-3 shadow-2xs">
+                    <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm">Proposal Summary</h3>
+                    <div className="grid grid-cols-2 gap-4 text-xs">
                       <div>
-                        <span className="text-foreground/60">From:</span>
-                        <p className="font-medium">{yourName}</p>
+                        <span className="text-slate-500 dark:text-slate-400 block">From:</span>
+                        <p className="font-semibold text-slate-900 dark:text-slate-100">{yourName || "Me"}</p>
                       </div>
                       <div>
-                        <span className="text-foreground/60">To:</span>
-                        <p className="font-medium">{partnerName}</p>
+                        <span className="text-slate-500 dark:text-slate-400 block">To:</span>
+                        <p className="font-semibold text-slate-900 dark:text-slate-100">{partnerName || "My Love"}</p>
                       </div>
                       <div>
-                        <span className="text-foreground/60">Photos:</span>
-                        <p className="font-medium">{photos.length}</p>
+                        <span className="text-slate-500 dark:text-slate-400 block">Story Flow:</span>
+                        <p className="font-semibold text-slate-900 dark:text-slate-100">{enabledScenes.length} of 7 Scenes</p>
                       </div>
                       <div>
-                        <span className="text-foreground/60">Plan:</span>
-                        <p className="font-medium capitalize">{planKey}</p>
+                        <span className="text-slate-500 dark:text-slate-400 block">Plan:</span>
+                        <p className="font-semibold capitalize text-rose-600 dark:text-rose-400">{planKey}</p>
                       </div>
                     </div>
                   </div>

@@ -128,27 +128,27 @@ export function QuizEditor({
     <div className="space-y-4">
       {/* Preset theme buttons */}
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xs text-muted-foreground font-medium">Quick Presets:</span>
+        <span className="text-xs text-slate-600 dark:text-slate-400 font-semibold">Quick Presets:</span>
         <button
           type="button"
           onClick={() => applyPreset("cute")}
-          className="text-xs px-2.5 py-1 rounded-full bg-pink-500/10 hover:bg-pink-500/20 text-pink-600 dark:text-pink-300 font-medium border border-pink-500/20 transition-colors"
+          className="text-xs px-3 py-1.5 rounded-full bg-white dark:bg-slate-900 hover:bg-rose-50 dark:hover:bg-rose-950/50 text-rose-700 dark:text-rose-300 font-medium border border-rose-200 dark:border-rose-800 transition-colors shadow-2xs cursor-pointer"
         >
-          🌸 Cute & Romantic
+          🌸 Cute &amp; Romantic
         </button>
         <button
           type="button"
           onClick={() => applyPreset("filmy")}
-          className="text-xs px-2.5 py-1 rounded-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-300 font-medium border border-amber-500/20 transition-colors"
+          className="text-xs px-3 py-1.5 rounded-full bg-white dark:bg-slate-900 hover:bg-amber-50 dark:hover:bg-amber-950/50 text-amber-700 dark:text-amber-300 font-medium border border-amber-200 dark:border-amber-800 transition-colors shadow-2xs cursor-pointer"
         >
           🎬 Bollywood Filmy
         </button>
         <button
           type="button"
           onClick={() => applyPreset("funny")}
-          className="text-xs px-2.5 py-1 rounded-full bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-300 font-medium border border-purple-500/20 transition-colors"
+          className="text-xs px-3 py-1.5 rounded-full bg-white dark:bg-slate-900 hover:bg-purple-50 dark:hover:bg-purple-950/50 text-purple-700 dark:text-purple-300 font-medium border border-purple-200 dark:border-purple-800 transition-colors shadow-2xs cursor-pointer"
         >
-          😜 Playful & Foodie
+          😜 Playful &amp; Foodie
         </button>
       </div>
 
@@ -160,48 +160,48 @@ export function QuizEditor({
           return (
             <div
               key={q.id || qIdx}
-              className="rounded-2xl border border-border bg-card p-3.5 space-y-3 transition-all"
+              className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3.5 space-y-3 transition-all shadow-xs"
             >
               <button
                 type="button"
                 onClick={() => setExpandedIndex(isExpanded ? null : qIdx)}
-                className="w-full flex items-center justify-between text-left font-semibold text-xs text-foreground hover:text-primary transition-colors cursor-pointer"
+                className="w-full flex items-center justify-between text-left font-semibold text-xs text-slate-800 dark:text-slate-100 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer"
               >
                 <div className="flex items-center gap-2 truncate pr-2">
-                  <span className="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] shrink-0 font-bold">
+                  <span className="w-5 h-5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center text-[10px] shrink-0 font-bold border border-rose-500/20">
                     {qIdx + 1}
                   </span>
                   <span className="truncate">{q.question}</span>
                 </div>
                 {isExpanded ? (
-                  <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" />
+                  <ChevronUp className="w-4 h-4 text-slate-500 shrink-0" />
                 ) : (
-                  <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />
+                  <ChevronDown className="w-4 h-4 text-slate-500 shrink-0" />
                 )}
               </button>
 
               {isExpanded && (
-                <div className="space-y-3 pt-2 border-t border-border/60 text-xs">
+                <div className="space-y-3 pt-2 border-t border-slate-200/80 dark:border-slate-800/80 text-xs">
                   {/* Question Title Input */}
                   <div className="space-y-1">
-                    <Label className="text-[11px] text-muted-foreground">Question Text</Label>
+                    <Label className="text-[11px] font-bold text-slate-700 dark:text-slate-300">Question Text</Label>
                     <Input
                       value={q.question}
                       onChange={(e) => handleUpdateQuestion(qIdx, { question: e.target.value })}
-                      className="h-8 text-xs bg-background"
+                      className="h-9 text-xs bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus-visible:ring-rose-500/20 focus-visible:border-rose-500"
                       placeholder="e.g. Who fell in love first?"
                     />
                   </div>
 
                   {/* Options List */}
                   <div className="space-y-1.5">
-                    <Label className="text-[11px] text-muted-foreground">Options</Label>
+                    <Label className="text-[11px] font-bold text-slate-700 dark:text-slate-300">Options</Label>
                     {q.options.map((opt, oIdx) => (
                       <Input
                         key={oIdx}
                         value={opt}
                         onChange={(e) => handleUpdateOption(qIdx, oIdx, e.target.value)}
-                        className="h-8 text-xs bg-background mb-1"
+                        className="h-8 text-xs bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus-visible:ring-rose-500/20 focus-visible:border-rose-500 mb-1"
                         placeholder={`Option ${oIdx + 1}`}
                       />
                     ))}
@@ -209,13 +209,13 @@ export function QuizEditor({
 
                   {/* Reveal Reaction Message */}
                   <div className="space-y-1">
-                    <Label className="text-[11px] text-muted-foreground">
+                    <Label className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
                       Sweet Reaction Message (Shown after partner answers)
                     </Label>
                     <Input
                       value={q.reactionMessage || ""}
                       onChange={(e) => handleUpdateQuestion(qIdx, { reactionMessage: e.target.value })}
-                      className="h-8 text-xs bg-background"
+                      className="h-8 text-xs bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus-visible:ring-rose-500/20 focus-visible:border-rose-500"
                       placeholder="e.g. Honestly, destiny already knew from day one! 🤍"
                     />
                   </div>

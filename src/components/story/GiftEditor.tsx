@@ -91,46 +91,46 @@ export function GiftEditor({ giftType, cards, onChange }: GiftEditorProps) {
     <div className="space-y-6">
       {/* Gift Style Selector */}
       <div>
-        <label className="block text-xs font-semibold text-pink-200 uppercase tracking-wider mb-2">
+        <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-2.5">
           Surprise Presentation Style
         </label>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-2.5">
           <button
             type="button"
             onClick={() => handleTypeSelect("box")}
-            className={`p-3 rounded-2xl border text-center transition-all flex flex-col items-center gap-1.5 ${
+            className={`p-3.5 rounded-xl border text-center transition-all flex flex-col items-center gap-1.5 cursor-pointer ${
               activeType === "box"
-                ? "bg-pink-600/30 border-pink-400 text-white shadow-lg"
-                : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10"
+                ? "bg-rose-50 dark:bg-rose-950/50 border-rose-500 text-rose-950 dark:text-rose-100 shadow-sm ring-2 ring-rose-500/25 font-bold"
+                : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-rose-300 hover:bg-rose-50/40 shadow-2xs"
             }`}
           >
-            <Gift className="w-5 h-5 text-pink-400" />
+            <Gift className="w-5 h-5 text-rose-500" />
             <span className="text-xs font-semibold">3D Gift Box</span>
           </button>
 
           <button
             type="button"
             onClick={() => handleTypeSelect("envelope")}
-            className={`p-3 rounded-2xl border text-center transition-all flex flex-col items-center gap-1.5 ${
+            className={`p-3.5 rounded-xl border text-center transition-all flex flex-col items-center gap-1.5 cursor-pointer ${
               activeType === "envelope"
-                ? "bg-pink-600/30 border-pink-400 text-white shadow-lg"
-                : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10"
+                ? "bg-rose-50 dark:bg-rose-950/50 border-rose-500 text-rose-950 dark:text-rose-100 shadow-sm ring-2 ring-rose-500/25 font-bold"
+                : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-rose-300 hover:bg-rose-50/40 shadow-2xs"
             }`}
           >
-            <Mail className="w-5 h-5 text-rose-400" />
+            <Mail className="w-5 h-5 text-rose-500" />
             <span className="text-xs font-semibold">Sealed Envelope</span>
           </button>
 
           <button
             type="button"
             onClick={() => handleTypeSelect("promise_cards")}
-            className={`p-3 rounded-2xl border text-center transition-all flex flex-col items-center gap-1.5 ${
+            className={`p-3.5 rounded-xl border text-center transition-all flex flex-col items-center gap-1.5 cursor-pointer ${
               activeType === "promise_cards"
-                ? "bg-pink-600/30 border-pink-400 text-white shadow-lg"
-                : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10"
+                ? "bg-rose-50 dark:bg-rose-950/50 border-rose-500 text-rose-950 dark:text-rose-100 shadow-sm ring-2 ring-rose-500/25 font-bold"
+                : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-rose-300 hover:bg-rose-50/40 shadow-2xs"
             }`}
           >
-            <Ticket className="w-5 h-5 text-purple-400" />
+            <Ticket className="w-5 h-5 text-purple-500" />
             <span className="text-xs font-semibold">Love Coupons</span>
           </button>
         </div>
@@ -138,7 +138,7 @@ export function GiftEditor({ giftType, cards, onChange }: GiftEditorProps) {
 
       {/* Preset Quick-Add Pills */}
       <div>
-        <label className="block text-xs font-semibold text-pink-200 uppercase tracking-wider mb-2">
+        <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-2">
           Quick Preset Coupons (Tap to Add)
         </label>
         <div className="flex flex-wrap gap-2">
@@ -147,9 +147,9 @@ export function GiftEditor({ giftType, cards, onChange }: GiftEditorProps) {
               key={idx}
               type="button"
               onClick={() => handleAddPreset(preset)}
-              className="text-xs px-3 py-1.5 rounded-full bg-white/5 hover:bg-pink-600/20 border border-white/10 hover:border-pink-500/40 text-pink-100 transition-all flex items-center gap-1"
+              className="text-xs px-3 py-1.5 rounded-full bg-white dark:bg-slate-900 hover:bg-rose-50 dark:hover:bg-rose-950/50 border border-rose-200 dark:border-rose-800/80 hover:border-rose-400 text-rose-800 dark:text-rose-200 transition-all flex items-center gap-1.5 shadow-2xs font-medium cursor-pointer"
             >
-              <Plus className="w-3 h-3 text-pink-400" />
+              <Plus className="w-3.5 h-3.5 text-rose-500" />
               <span>{preset.title}</span>
             </button>
           ))}
@@ -159,14 +159,14 @@ export function GiftEditor({ giftType, cards, onChange }: GiftEditorProps) {
       {/* Editable Cards List */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <label className="text-xs font-semibold text-pink-200 uppercase tracking-wider">
+          <label className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
             Custom Love Coupons ({cardList.length}/8)
           </label>
           {cardList.length < 8 && (
             <button
               type="button"
               onClick={handleAddNew}
-              className="text-xs text-pink-400 hover:text-pink-300 flex items-center gap-1 font-medium"
+              className="text-xs text-rose-600 hover:text-rose-700 dark:text-rose-400 font-semibold flex items-center gap-1 cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Add Custom Coupon</span>
@@ -177,17 +177,17 @@ export function GiftEditor({ giftType, cards, onChange }: GiftEditorProps) {
         {cardList.map((card, idx) => (
           <div
             key={card.id || idx}
-            className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/10 space-y-2 relative group"
+            className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-2.5 relative group"
           >
             <div className="flex items-center justify-between gap-2">
-              <span className="text-[11px] font-semibold text-pink-400 flex items-center gap-1">
-                <Heart className="w-3 h-3 fill-pink-400" /> Coupon #{idx + 1}
+              <span className="text-xs font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+                <Heart className="w-3.5 h-3.5 fill-rose-500 text-rose-500" /> Coupon #{idx + 1}
               </span>
               {cardList.length > 1 && (
                 <button
                   type="button"
                   onClick={() => handleDelete(idx)}
-                  className="text-white/40 hover:text-rose-400 transition-colors p-1"
+                  className="text-slate-400 hover:text-rose-600 transition-colors p-1 cursor-pointer"
                   title="Remove coupon"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -198,14 +198,14 @@ export function GiftEditor({ giftType, cards, onChange }: GiftEditorProps) {
             <Input
               value={card.title}
               onChange={(e) => handleCardUpdate(idx, "title", e.target.value)}
-              placeholder="Coupon Title (e.g. Dinner Date)"
-              className="bg-black/40 border-white/15 text-white text-xs h-8 rounded-lg"
+              placeholder="Coupon Title (e.g. Candlelight Dinner Date)"
+              className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 text-xs h-9 rounded-lg placeholder:text-slate-400 focus-visible:ring-rose-500/20 focus-visible:border-rose-500"
             />
             <Textarea
               value={card.description}
               onChange={(e) => handleCardUpdate(idx, "description", e.target.value)}
               placeholder="What does this coupon promise?"
-              className="bg-black/40 border-white/15 text-white text-xs min-h-[50px] rounded-lg"
+              className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 text-xs min-h-[58px] rounded-lg placeholder:text-slate-400 focus-visible:ring-rose-500/20 focus-visible:border-rose-500 resize-none"
               rows={2}
             />
           </div>

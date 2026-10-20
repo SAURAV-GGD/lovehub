@@ -6,6 +6,8 @@ interface YouTubeAudioPlayerProps {
   videoId: string;
   isPlaying: boolean;
   isMuted: boolean;
+  startTimestampSeconds?: number;
+  endTimestampSeconds?: number;
   onReady?: () => void;
   onError?: () => void;
 }
@@ -39,6 +41,8 @@ export function YouTubeAudioPlayer({
   videoId,
   isPlaying,
   isMuted,
+  startTimestampSeconds = 0,
+  endTimestampSeconds,
   onReady,
   onError,
 }: YouTubeAudioPlayerProps) {
@@ -58,18 +62,27 @@ export function YouTubeAudioPlayer({
           } catch {}
         }
 
+        const playerVars: Record<string, any> = {
+          autoplay: isPlaying ? 1 : 0,
+          controls: 0,
+          loop: 1,
+          playlist: videoId,
+          modestbranding: 1,
+          rel: 0,
+          playsinline: 1,
+          enablejsapi: 1,
+        };
+
+        if (startTimestampSeconds > 0) {
+          playerVars.start = startTimestampSeconds;
+        }
+        if (endTimestampSeconds && endTimestampSeconds > startTimestampSeconds) {
+          playerVars.end = endTimestampSeconds;
+        }
+
         playerRef.current = new window.YT.Player(containerId, {
           videoId,
-          playerVars: {
-            autoplay: isPlaying ? 1 : 0,
-            controls: 0,
-            loop: 1,
-            playlist: videoId,
-            modestbranding: 1,
-            rel: 0,
-            playsinline: 1,
-            enablejsapi: 1,
-          },
+          playerVars,
           events: {
             onReady: (event) => {
               if (!isMounted) return;
@@ -78,6 +91,11 @@ export function YouTubeAudioPlayer({
               } else {
                 event.target.unMute();
                 event.target.setVolume(80);
+              }
+              if (startTimestampSeconds > 0) {
+                try {
+                  event.target.seekTo(startTimestampSeconds, true);
+                } catch {}
               }
               if (isPlaying) {
                 event.target.playVideo();
@@ -90,6 +108,11 @@ export function YouTubeAudioPlayer({
             onStateChange: (event) => {
               // Auto-loop if ended
               if (window.YT?.PlayerState && event.data === window.YT.PlayerState.ENDED) {
+                if (startTimestampSeconds > 0) {
+                  try {
+                    event.target.seekTo(startTimestampSeconds, true);
+                  } catch {}
+                }
                 event.target.playVideo();
               }
             },
@@ -122,39 +145,42 @@ export function YouTubeAudioPlayer({
         } catch {}
       }
     };
-  }, [videoId]);
+  }, [videoId, startTimestampSeconds, endTimestampSeconds]);
 
   // Sync play/pause
   useEffect(() => {
     if (!playerRef.current) return;
     try {
+      if (typeof playerRef.current.getPlayerState !== "function") return;
+
       if (isPlaying) {
-        playerRef.current.playVideo?.();
+        playerRef.current.playVideo();
       } else {
-        playerRef.current.pauseVideo?.();
+        playerRef.current.pauseVideo();
       }
     } catch {}
   }, [isPlaying]);
 
-  // Sync mute/unmute
+  // Sync mute
   useEffect(() => {
     if (!playerRef.current) return;
     try {
+      if (typeof playerRef.current.isMuted !== "function") return;
+
       if (isMuted) {
-        playerRef.current.mute?.();
+        playerRef.current.mute();
       } else {
-        playerRef.current.unMute?.();
-        playerRef.current.setVolume?.(80);
-        if (isPlaying) {
-          playerRef.current.playVideo?.();
-        }
+        playerRef.current.unMute();
+        playerRef.current.setVolume(80);
       }
     } catch {}
-  }, [isMuted, isPlaying]);
+  }, [isMuted]);
 
   return (
-    <div className="fixed -bottom-[9999px] -left-[9999px] w-1 h-1 opacity-0 pointer-events-none overflow-hidden" aria-hidden="true">
-      <div id={containerId} />
-    </div>
+    <div
+      id={containerId}
+      className="pointer-events-none opacity-0 fixed -top-96 -left-96 w-10 h-10"
+      aria-hidden="true"
+    />
   );
 }
