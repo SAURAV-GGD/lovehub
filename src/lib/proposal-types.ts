@@ -47,6 +47,9 @@ export interface ProposalData {
     youtubeVideoId?: string;
     youtubeUrl?: string;
     musicTitle?: string;
+    startTimestampSeconds?: number;
+    endTimestampSeconds?: number;
+    volume?: number;
     vipBadge?: string;
   };
   storyConfig?: StoryConfig;
@@ -355,14 +358,29 @@ export function ensureStoryConfig(proposal: Partial<ProposalData>): StoryConfig 
       : ["intro", "quiz", "question", "memories", "letter", "gift", "finale"],
     relationshipStartDate: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString(),
     audio: {
-      enabled: proposal.backgroundMusic !== "none",
-      musicType: proposal.customConfig?.musicType || (proposal.customConfig?.youtubeVideoId ? "youtube" : "preset"),
-      presetName: proposal.backgroundMusic || "romantic-piano",
-      customMusicUrl: proposal.customConfig?.customMusicUrl,
-      youtubeUrl: proposal.customConfig?.youtubeUrl,
-      youtubeVideoId: proposal.customConfig?.youtubeVideoId,
-      musicTitle: proposal.customConfig?.musicTitle || "Romantic Melody",
+      enabled: proposal.storyConfig?.audio?.enabled ?? (proposal.backgroundMusic !== "none"),
+      musicType:
+        proposal.storyConfig?.audio?.musicType ||
+        (proposal.customConfig?.musicType as any) ||
+        (proposal.customConfig?.youtubeVideoId || proposal.customConfig?.youtubeUrl ? "youtube" : "preset"),
+      presetName: proposal.storyConfig?.audio?.presetName || proposal.backgroundMusic || "romantic-piano",
+      customMusicUrl: proposal.storyConfig?.audio?.customMusicUrl || (proposal.customConfig?.customMusicUrl as string | undefined),
+      youtubeUrl: proposal.storyConfig?.audio?.youtubeUrl || (proposal.customConfig?.youtubeUrl as string | undefined),
+      youtubeVideoId:
+        proposal.storyConfig?.audio?.youtubeVideoId ||
+        (proposal.customConfig?.youtubeVideoId as string | undefined) ||
+        (proposal.backgroundMusic?.startsWith("yt:") ? proposal.backgroundMusic.replace("yt:", "") : undefined),
+      musicTitle: proposal.storyConfig?.audio?.musicTitle || (proposal.customConfig?.musicTitle as string | undefined) || "Romantic Melody",
+      startTimestampSeconds:
+        proposal.storyConfig?.audio?.startTimestampSeconds ??
+        (proposal.customConfig?.startTimestampSeconds as number | undefined) ??
+        0,
+      endTimestampSeconds:
+        proposal.storyConfig?.audio?.endTimestampSeconds ??
+        (proposal.customConfig?.endTimestampSeconds as number | undefined),
+      volume: proposal.storyConfig?.audio?.volume ?? (proposal.customConfig?.volume as number | undefined) ?? 0.8,
       earphonesNotice: true,
+      ...proposal.storyConfig?.audio,
     },
     intro: {
       headline: `For My Forever ${partnerName} 🤍`,

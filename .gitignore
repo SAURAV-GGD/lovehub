@@ -51,3 +51,6 @@ next-env.d.ts
 # Root temporary preview files
 /*.gif
 
+
+*.mp4
+public/*.mp4

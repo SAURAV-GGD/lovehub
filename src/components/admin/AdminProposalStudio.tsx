@@ -346,6 +346,13 @@ export function AdminProposalStudio({
         enableHeartburst,
         enableSlideshow,
         vipBadge: creatorPlan === "custom" ? vipBadgeText : undefined,
+        musicType: musicSelection.type,
+        youtubeUrl: musicSelection.youtubeUrl,
+        youtubeVideoId: musicSelection.youtubeVideoId,
+        customMusicUrl: musicSelection.customAudioUrl,
+        musicTitle: musicSelection.musicTitle,
+        startTimestampSeconds: audioStartSec > 0 ? audioStartSec : undefined,
+        endTimestampSeconds: audioEndSec,
       },
     };
 
@@ -615,6 +622,8 @@ export function AdminProposalStudio({
         youtubeVideoId: musicSelection.youtubeVideoId,
         customMusicUrl: musicSelection.customAudioUrl,
         musicTitle: musicSelection.musicTitle,
+        startTimestampSeconds: audioStartSec > 0 ? audioStartSec : undefined,
+        endTimestampSeconds: audioEndSec,
       },
       storyConfig: previewProposal.storyConfig,
       status: "final" as const,

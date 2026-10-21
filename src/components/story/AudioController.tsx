@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { Volume2, VolumeX, Music, Sparkles } from "lucide-react";
+import { Volume2, VolumeX, Sparkles } from "lucide-react";
 import { getPresetAudioUrl, extractYouTubeVideoId } from "@/lib/music";
 import { YouTubeAudioPlayer } from "@/components/music/youtube-audio-player";
 
@@ -28,7 +28,7 @@ export function AudioController({
   autoStart = false,
   startTimestampSeconds = 0,
   endTimestampSeconds,
-  volume = 0.5,
+  volume = 0.8,
 }: AudioControllerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
@@ -38,10 +38,19 @@ export function AudioController({
   const resolvedVideoId =
     youtubeVideoId || (youtubeUrl ? extractYouTubeVideoId(youtubeUrl) || "" : "");
 
+  const resolvedMusicType =
+    musicType === "youtube" || resolvedVideoId
+      ? "youtube"
+      : musicType === "custom" && customMusicUrl
+      ? "custom"
+      : musicType === "none"
+      ? "none"
+      : "preset";
+
   const audioSrc =
-    musicType === "custom" && customMusicUrl
+    resolvedMusicType === "custom" && customMusicUrl
       ? customMusicUrl
-      : musicType === "preset"
+      : resolvedMusicType === "preset"
       ? getPresetAudioUrl(presetName)
       : null;
 
@@ -67,9 +76,8 @@ export function AudioController({
   const togglePlay = useCallback(() => {
     setHasInteracted(true);
     setAutoplayBlocked(false);
-    if (!audioRef.current && musicType !== "youtube") return;
 
-    if (musicType === "youtube") {
+    if (resolvedMusicType === "youtube") {
       setIsPlaying((prev) => !prev);
       return;
     }
@@ -82,9 +90,9 @@ export function AudioController({
         playAudio();
       }
     }
-  }, [isPlaying, musicType, playAudio]);
+  }, [isPlaying, resolvedMusicType, playAudio]);
 
-  // Handle timestamp limits and looping
+  // Handle timestamp limits and looping for HTML audio
   useEffect(() => {
     const el = audioRef.current;
     if (!el || !endTimestampSeconds) return;
@@ -99,28 +107,41 @@ export function AudioController({
     return () => el.removeEventListener("timeupdate", onTimeUpdate);
   }, [endTimestampSeconds, startTimestampSeconds]);
 
-  // Autoplay attempt on mount or interaction
+  // Autoplay attempt on autoStart trigger (e.g. clicking Start Story button)
   useEffect(() => {
-    if (autoStart && !hasInteracted && audioRef.current) {
-      playAudio();
-    }
-  }, [autoStart, hasInteracted, playAudio]);
-
-  // Global one-time interaction listener to unblock autoplay if blocked
-  useEffect(() => {
-    if (!autoplayBlocked) return;
-
-    const handleFirstTap = () => {
-      if (autoplayBlocked && audioRef.current) {
+    if (autoStart) {
+      setIsPlaying(true);
+      setAutoplayBlocked(false);
+      if (audioRef.current) {
         playAudio();
+      }
+    }
+  }, [autoStart, playAudio]);
+
+  // Global one-time user interaction listener to unblock audio on mobile / desktop browsers
+  useEffect(() => {
+    const handleFirstGesture = () => {
+      setHasInteracted(true);
+      setIsPlaying(true);
+      setAutoplayBlocked(false);
+      if (audioRef.current) {
+        audioRef.current.volume = Math.max(0, Math.min(1, volume));
+        audioRef.current.play().catch(() => {});
       }
     };
 
-    window.addEventListener("pointerdown", handleFirstTap, { once: true });
-    return () => window.removeEventListener("pointerdown", handleFirstTap);
-  }, [autoplayBlocked, playAudio]);
+    window.addEventListener("click", handleFirstGesture, { once: true });
+    window.addEventListener("touchstart", handleFirstGesture, { once: true });
+    window.addEventListener("pointerdown", handleFirstGesture, { once: true });
 
-  if (musicType === "none") return null;
+    return () => {
+      window.removeEventListener("click", handleFirstGesture);
+      window.removeEventListener("touchstart", handleFirstGesture);
+      window.removeEventListener("pointerdown", handleFirstGesture);
+    };
+  }, [volume]);
+
+  if (resolvedMusicType === "none") return null;
 
   return (
     <div className="fixed top-[max(1rem,env(safe-area-inset-top,1rem))] right-[max(1rem,env(safe-area-inset-right,1rem))] z-50 flex items-center gap-2">
@@ -142,17 +163,15 @@ export function AudioController({
         />
       )}
 
-      {/* Hidden YouTube background player if musicType is YouTube */}
-      {musicType === "youtube" && resolvedVideoId && (
-        <div className="hidden">
-          <YouTubeAudioPlayer
-            videoId={resolvedVideoId}
-            isPlaying={isPlaying}
-            isMuted={!isPlaying}
-            startTimestampSeconds={startTimestampSeconds}
-            endTimestampSeconds={endTimestampSeconds}
-          />
-        </div>
+      {/* YouTube background player - NOT hidden with display:none so browser audio remains 100% active */}
+      {resolvedMusicType === "youtube" && resolvedVideoId && (
+        <YouTubeAudioPlayer
+          videoId={resolvedVideoId}
+          isPlaying={isPlaying}
+          isMuted={!isPlaying}
+          startTimestampSeconds={startTimestampSeconds}
+          endTimestampSeconds={endTimestampSeconds}
+        />
       )}
 
       {/* Autoplay blocked notification pill */}

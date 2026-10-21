@@ -728,6 +728,15 @@ export default function ProposalPage() {
               videoId={youtubeVideoId}
               isPlaying={isPlaying && !isMuted}
               isMuted={isMuted}
+              startTimestampSeconds={
+                proposal.customConfig?.startTimestampSeconds ??
+                proposal.storyConfig?.audio?.startTimestampSeconds ??
+                0
+              }
+              endTimestampSeconds={
+                proposal.customConfig?.endTimestampSeconds ??
+                proposal.storyConfig?.audio?.endTimestampSeconds
+              }
             />
           ) : audioSourceUrl ? (
             <audio ref={audioRef} loop muted={isMuted} autoPlay playsInline>

@@ -583,6 +583,8 @@ function CreateContent() {
           youtubeVideoId: musicSelection.youtubeVideoId,
           customMusicUrl: musicSelection.customAudioUrl,
           musicTitle: musicSelection.musicTitle,
+          startTimestampSeconds: audioStartSec > 0 ? audioStartSec : undefined,
+          endTimestampSeconds: audioEndSec,
           enableRunawayButton: enableRunawayNo,
           enableSlideshow: true,
         },
