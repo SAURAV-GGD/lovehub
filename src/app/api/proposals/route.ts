@@ -135,8 +135,10 @@ export async function POST(request: NextRequest) {
       const c = (validated.content as any) || {};
       const inp = (validated.input as any) || {};
       await createAdminProposal({
+        id: proposalId,
         assignedClientId: userId,
         status: isAlreadyPaid ? "final" : "draft",
+        isPaid: isAlreadyPaid,
         yourName: c.yourName || inp.yourName || "Someone Special",
         partnerName: c.partnerName || inp.partnerName || "My Love",
         relationshipType: c.relationshipType || inp.relationshipType || "girlfriend",

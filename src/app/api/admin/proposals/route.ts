@@ -3,6 +3,7 @@ import { getAdminSessionFromRequest } from "@/lib/admin-auth";
 import {
   getAdminProposals,
   createAdminProposal,
+  updateAdminProposal,
   deleteAdminProposal,
   CreateAdminProposalInput,
 } from "@/lib/admin-store";
@@ -75,6 +76,68 @@ export async function POST(request: NextRequest) {
     return apiSuccess(created, 201);
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Failed to create admin proposal";
+    return apiError(msg, "INTERNAL_ERROR", 500);
+  }
+}
+
+
+export async function PUT(request: NextRequest) {
+  const session = getAdminSessionFromRequest(request);
+  if (!session) {
+    return apiError("Unauthorized: Admin credentials required", "UNAUTHORIZED", 401);
+  }
+
+  try {
+    const body = await request.json();
+    if (!body.id) {
+      return apiError("Proposal ID is required for editing", "VALIDATION_ERROR", 400);
+    }
+
+    if (!body.yourName || !body.partnerName || !body.message) {
+      return apiError(
+        "Sender name (yourName), partner name, and message are required",
+        "VALIDATION_ERROR",
+        400
+      );
+    }
+
+    const plan: PlanType = (body.plan || "custom") as PlanType;
+    const input: CreateAdminProposalInput = {
+      id: body.id,
+      title: body.title,
+      clientName: body.partnerName,
+      assignedClientId: body.assignedClientId,
+      assignedClientEmail: body.assignedClientEmail,
+      assignedClientName: body.assignedClientName,
+      plan,
+      yourName: body.yourName,
+      partnerName: body.partnerName,
+      relationshipType: body.relationshipType || "girlfriend",
+      yourGender: body.yourGender,
+      yourPronouns: body.yourPronouns,
+      partnerGender: body.partnerGender,
+      partnerPronouns: body.partnerPronouns,
+      tone: body.tone || "deep-romantic",
+      language: body.language || "english",
+      message: body.message,
+      photos: body.photos || [],
+      photoCaptions: body.photoCaptions || [],
+      backgroundMusic: body.backgroundMusic || "romantic-piano",
+      customSlug: body.customSlug,
+      customConfig: body.customConfig || {},
+      storyConfig: body.storyConfig,
+      status: body.status || "final",
+      isPublic: body.isPublic !== false,
+      isPaid: body.isPaid !== false,
+    };
+
+    const updated = await updateAdminProposal(body.id, input);
+    if (!updated) {
+      return apiError("Proposal not found", "NOT_FOUND", 404);
+    }
+    return apiSuccess(updated);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Failed to update admin proposal";
     return apiError(msg, "INTERNAL_ERROR", 500);
   }
 }

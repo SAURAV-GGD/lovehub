@@ -1,7 +1,7 @@
 import { db } from "@/db";
 import { user, proposals, subscriptions } from "@/db/schema";
 import { desc, eq, or } from "drizzle-orm";
-import { PlanType, ProposalData, StoryConfig, ensureStoryConfig } from "./proposal-types";
+import { PlanType, ProposalData, StoryConfig, GenderPronoun, ensureStoryConfig } from "./proposal-types";
 
 export interface ClientItem {
   id: string;
@@ -518,6 +518,7 @@ export async function getProposalByIdOrSlug(idOrSlug: string): Promise<ProposalR
 }
 
 export interface CreateAdminProposalInput {
+  id?: string;
   title?: string;
   clientName?: string;
   assignedClientId?: string;
@@ -527,6 +528,10 @@ export interface CreateAdminProposalInput {
   yourName: string;
   partnerName: string;
   relationshipType: string;
+  yourGender?: "male" | "female" | "custom";
+  yourPronouns?: GenderPronoun;
+  partnerGender?: "male" | "female" | "custom";
+  partnerPronouns?: GenderPronoun;
   tone: string;
   language: string;
   message: string;
@@ -538,6 +543,7 @@ export interface CreateAdminProposalInput {
   storyConfig?: StoryConfig;
   status?: "draft" | "final";
   isPublic?: boolean;
+  isPaid?: boolean;
 }
 
 /**
@@ -546,7 +552,9 @@ export interface CreateAdminProposalInput {
 export async function createAdminProposal(
   input: CreateAdminProposalInput
 ): Promise<ProposalRecord> {
-  const proposalId = `prop_${Math.random().toString(36).substring(2, 10)}${Math.random().toString(36).substring(2, 10)}`;
+  const proposalId =
+    input.id ||
+    `prop_${Math.random().toString(36).substring(2, 10)}${Math.random().toString(36).substring(2, 10)}`;
   const slug =
     input.customSlug?.trim() ||
     `${(input.yourName || "love").toLowerCase().replace(/[^a-z0-9]/g, "-")}-and-${(input.partnerName || "forever").toLowerCase().replace(/[^a-z0-9]/g, "-")}-${Math.random().toString(36).substring(2, 6)}`;
@@ -554,12 +562,25 @@ export async function createAdminProposal(
   const resolvedUserId = input.assignedClientId || "admin-master";
   const resolvedUserName = input.assignedClientName || input.yourName || "Admin Superuser";
   const resolvedUserEmail = input.assignedClientEmail || "admin@lovehub.com";
+  const isAdminUser = Boolean(
+    !input.assignedClientId ||
+    input.assignedClientId === "admin-master" ||
+    input.assignedClientId.startsWith("admin-")
+  );
+
+  const isPaid = input.isPaid !== undefined
+    ? input.isPaid
+    : (input.status ? input.status === "final" : isAdminUser);
 
   const fullContent: ProposalData = {
     id: slug,
     yourName: input.yourName,
     partnerName: input.partnerName,
     relationshipType: input.relationshipType as ProposalData["relationshipType"],
+    yourGender: input.yourGender,
+    yourPronouns: input.yourPronouns,
+    partnerGender: input.partnerGender,
+    partnerPronouns: input.partnerPronouns,
     tone: input.tone as ProposalData["tone"],
     language: input.language as ProposalData["language"],
     message: input.message,
@@ -568,8 +589,9 @@ export async function createAdminProposal(
     backgroundMusic: input.backgroundMusic || "romantic-piano",
     customSlug: slug,
     plan: input.plan,
+    isPaid: isPaid,
     createdAt: new Date(),
-    createdByAdmin: true,
+    createdByAdmin: isAdminUser,
     assignedClientEmail: resolvedUserEmail,
     customConfig: {
       enableRunawayButton: input.customConfig?.enableRunawayButton !== false,
@@ -591,10 +613,8 @@ export async function createAdminProposal(
     title: input.title || `Proposal for ${input.partnerName} (${input.plan.toUpperCase()})`,
     clientName: input.partnerName,
     plan: input.plan,
-    createdByAdmin: input.assignedClientId
-      ? Boolean(input.assignedClientId.startsWith("admin-") || input.assignedClientId === "admin-master")
-      : true,
-    status: input.status || "final",
+    createdByAdmin: isAdminUser,
+    status: input.status || (isPaid ? "final" : "draft"),
     isPublic: input.isPublic !== false,
     slug,
     createdAt: new Date().toISOString(),
@@ -619,7 +639,7 @@ export async function createAdminProposal(
         title: newRecord.title,
         clientName: newRecord.clientName,
         plan: input.plan,
-        createdByAdmin: true,
+        createdByAdmin: isAdminUser,
         input: newRecord.input,
         content: newRecord.content,
         status: newRecord.status,
@@ -660,6 +680,117 @@ export async function createAdminProposal(
 /**
  * Delete a proposal from both DB and memory store
  */
+
+/**
+ * Update an existing proposal (Admin Authority to edit any field)
+ */
+export async function updateAdminProposal(
+  id: string,
+  input: CreateAdminProposalInput
+): Promise<ProposalRecord | null> {
+  const existing = await getProposalByIdOrSlug(id);
+  const slug =
+    input.customSlug?.trim() ||
+    existing?.slug ||
+    `${(input.yourName || "love").toLowerCase().replace(/[^a-z0-9]/g, "-")}-and-${(input.partnerName || "forever").toLowerCase().replace(/[^a-z0-9]/g, "-")}-${Math.random().toString(36).substring(2, 6)}`;
+
+  const resolvedUserId = input.assignedClientId || existing?.userId || "admin-master";
+  const resolvedUserName = input.assignedClientName || input.yourName || existing?.userName || "Admin Superuser";
+  const resolvedUserEmail = input.assignedClientEmail || existing?.userEmail || "admin@lovehub.com";
+
+  const fullContent: ProposalData = {
+    id: slug,
+    yourName: input.yourName,
+    partnerName: input.partnerName,
+    relationshipType: input.relationshipType as ProposalData["relationshipType"],
+    yourGender: input.yourGender,
+    yourPronouns: input.yourPronouns,
+    partnerGender: input.partnerGender,
+    partnerPronouns: input.partnerPronouns,
+    tone: input.tone as ProposalData["tone"],
+    language: input.language as ProposalData["language"],
+    message: input.message,
+    photos: input.photos || [],
+    photoCaptions: input.photoCaptions || [],
+    backgroundMusic: input.backgroundMusic || "romantic-piano",
+    customSlug: slug,
+    plan: input.plan,
+    isPaid: input.isPaid !== false,
+    createdAt: existing?.createdAt ? new Date(existing.createdAt) : new Date(),
+    createdByAdmin: true,
+    assignedClientEmail: resolvedUserEmail,
+    customConfig: {
+      enableRunawayButton: input.customConfig?.enableRunawayButton !== false,
+      enableConfetti: input.customConfig?.enableConfetti !== false,
+      enableHeartburst: input.customConfig?.enableHeartburst !== false,
+      enableSlideshow: input.customConfig?.enableSlideshow !== false,
+      vipBadge: (input.customConfig?.vipBadge as string) || (input.plan === "custom" ? "Admin VIP Custom Edition" : undefined),
+      ...input.customConfig,
+    },
+  };
+
+  fullContent.storyConfig = input.storyConfig || ensureStoryConfig(fullContent);
+
+  const updatedRecord: ProposalRecord = {
+    id: existing?.id || id,
+    userId: resolvedUserId,
+    userName: resolvedUserName,
+    userEmail: resolvedUserEmail,
+    title: input.title || `Proposal for ${input.partnerName} (${input.plan.toUpperCase()})`,
+    clientName: input.partnerName,
+    plan: input.plan,
+    createdByAdmin: true,
+    status: (input.status as "draft" | "final") || "final",
+    isPublic: input.isPublic !== false,
+    slug,
+    createdAt: existing?.createdAt || new Date().toISOString(),
+    input: {
+      yourName: input.yourName,
+      partnerName: input.partnerName,
+      relationshipType: input.relationshipType,
+      yourGender: input.yourGender,
+      yourPronouns: input.yourPronouns,
+      partnerGender: input.partnerGender,
+      partnerPronouns: input.partnerPronouns,
+      tone: input.tone,
+      language: input.language,
+      plan: input.plan,
+      assignedClientEmail: resolvedUserEmail,
+    },
+    content: fullContent as unknown as Record<string, unknown>,
+  };
+
+  try {
+    if (await isDbAvailable()) {
+      await db
+        .update(proposals)
+        .set({
+          title: updatedRecord.title,
+          clientName: updatedRecord.clientName,
+          plan: input.plan,
+          input: updatedRecord.input,
+          content: updatedRecord.content,
+          status: updatedRecord.status,
+          isPublic: updatedRecord.isPublic,
+          slug,
+          updatedAt: new Date(),
+        })
+        .where(or(eq(proposals.id, id), eq(proposals.slug, id)));
+    }
+  } catch (err) {
+    console.warn("DB update failed, updated in-memory fallback store:", err);
+  }
+
+  const idx = globalFallbackStore.proposals.findIndex((p) => p.id === id || p.slug === id);
+  if (idx !== -1) {
+    globalFallbackStore.proposals[idx] = updatedRecord;
+  } else {
+    globalFallbackStore.proposals.unshift(updatedRecord);
+  }
+
+  return updatedRecord;
+}
+
 export async function deleteAdminProposal(id: string): Promise<boolean> {
   try {
     if (await isDbAvailable()) {

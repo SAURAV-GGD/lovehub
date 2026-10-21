@@ -38,6 +38,7 @@ import {
   Film,
   Video,
   Link2,
+  Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -76,6 +77,7 @@ import {
 import { MusicSelector, MusicSelectionState } from "@/components/music/music-selector";
 import { saveProposal } from "@/lib/proposal-storage";
 import { compressImageFile, saveBirthday } from "@/lib/birthday-storage";
+import { AdminProposalStudio } from "@/components/admin/AdminProposalStudio";
 
 interface ClientItem {
   id: string;
@@ -171,6 +173,7 @@ export default function AdminDashboardPage() {
   const [clientProposalsModal, setClientProposalsModal] = useState<ProposalItem[]>([]);
   const [createdProposalModal, setCreatedProposalModal] = useState<ProposalItem | null>(null);
   const [createdBirthdayModal, setCreatedBirthdayModal] = useState<BirthdayRecord | null>(null);
+  const [editingProposalForStudio, setEditingProposalForStudio] = useState<ProposalItem | null>(null);
 
   // Proposal Creator States
   const [creatorPlan, setCreatorPlan] = useState<PlanType>("custom");
@@ -877,7 +880,10 @@ export default function AdminDashboardPage() {
                   <span className="truncate">New Birthday</span>
                 </Button>
                 <Button
-                  onClick={() => setActiveTab("creator")}
+                  onClick={() => {
+                    setEditingProposalForStudio(null);
+                    setActiveTab("creator");
+                  }}
                   className="bg-rose-600 hover:bg-rose-500 text-white shadow-sm text-xs sm:text-sm font-semibold rounded-xl border border-rose-400/20 transition-all hover:translate-y-[-1px] active:translate-y-[0px]"
                 >
                   <Plus className="w-4 h-4 mr-1.5 shrink-0" />
@@ -951,7 +957,10 @@ export default function AdminDashboardPage() {
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   <Button
-                    onClick={() => setActiveTab("creator")}
+                    onClick={() => {
+                      setEditingProposalForStudio(null);
+                      setActiveTab("creator");
+                    }}
                     className="bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs sm:text-sm shadow-sm rounded-xl px-5 py-2.5 border border-rose-400/20 transition-all hover:translate-y-[-1px] active:translate-y-[0px]"
                   >
                     Launch Proposal Studio <ArrowRight className="w-4 h-4 ml-1.5" />
@@ -1236,8 +1245,22 @@ export default function AdminDashboardPage() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => {
-                                  setAssignedClient(client.id);
-                                  setYourName(client.name);
+                                  setEditingProposalForStudio({
+                                    id: "",
+                                    userId: client.id,
+                                    userEmail: client.email,
+                                    userName: client.name,
+                                    title: `Proposal for ${client.name}`,
+                                    clientName: null,
+                                    plan: client.plan || "custom",
+                                    createdByAdmin: true,
+                                    status: "draft",
+                                    isPublic: true,
+                                    slug: null,
+                                    createdAt: new Date().toISOString(),
+                                    input: { yourName: client.name },
+                                    content: { yourName: client.name, plan: client.plan || "custom" },
+                                  });
                                   setActiveTab("creator");
                                 }}
                                 className="border-slate-800 bg-slate-950 text-slate-300 hover:text-white text-xs h-8"
@@ -1371,6 +1394,18 @@ export default function AdminDashboardPage() {
                             <td className="py-3.5 px-4 text-right">
                               <div className="flex items-center justify-end gap-1.5">
                                 <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setEditingProposalForStudio(item);
+                                    setActiveTab("creator");
+                                  }}
+                                  className="border-slate-800 bg-slate-950 text-rose-300 hover:text-white text-xs h-7 px-2"
+                                  title="Edit Proposal in Studio"
+                                >
+                                  <Pencil className="w-3 h-3 mr-1" /> Edit
+                                </Button>
+                                <Button
                                   asChild
                                   variant="outline"
                                   size="sm"
@@ -1420,429 +1455,25 @@ export default function AdminDashboardPage() {
           </TabsContent>
 
           {/* ========================================================
-              TAB 4: UNLIMITED ADMIN PROPOSAL CREATOR
+              TAB 4: UNLIMITED ADMIN PROPOSAL CREATOR & STUDIO
              ======================================================== */}
           <TabsContent value="creator" className="space-y-6">
-            <Card className="bg-slate-900/95 border-slate-800 shadow-2xl">
-              <CardHeader className="border-b border-slate-800/80 pb-5">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-rose-500 to-pink-500 flex items-center justify-center text-white">
-                        <Sparkles className="w-4 h-4" />
-                      </div>
-                      <CardTitle className="text-xl font-black text-white tracking-tight">
-                        Admin Proposal Studio
-                      </CardTitle>
-                      <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-xs">
-                        Unlimited Mode
-                      </Badge>
-                    </div>
-                    <CardDescription className="text-xs sm:text-sm text-slate-400">
-                      Create unlimited proposals with any plan version (Starter, Pro, Premium, Custom VIP) and custom features.
-                    </CardDescription>
-                  </div>
-
-                  {/* Version Picker Buttons */}
-                  <div className="flex items-center gap-1.5 p-1 bg-slate-950 border border-slate-800 rounded-xl">
-                    {(["starter", "pro", "premium", "custom"] as PlanType[]).map((plan) => (
-                      <button
-                        key={plan}
-                        type="button"
-                        onClick={() => setCreatorPlan(plan)}
-                        className={`text-xs font-semibold px-3 py-1.5 rounded-lg capitalize transition-all ${
-                          creatorPlan === plan
-                            ? "bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow"
-                            : "text-slate-400 hover:text-slate-200"
-                        }`}
-                      >
-                        {plan}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </CardHeader>
-
-              <CardContent className="pt-6">
-                <form onSubmit={handleCreateProposal} className="space-y-6">
-                  {/* Plan Version Highlight Banner */}
-                  <div
-                    className={`rounded-xl p-4 border flex items-center justify-between gap-4 ${
-                      creatorPlan === "custom"
-                        ? "bg-amber-950/30 border-amber-800/50 text-amber-200"
-                        : creatorPlan === "premium"
-                        ? "bg-purple-950/30 border-purple-800/50 text-purple-200"
-                        : creatorPlan === "pro"
-                        ? "bg-rose-950/30 border-rose-800/50 text-rose-200"
-                        : "bg-slate-900 border-slate-800 text-slate-200"
-                    }`}
-                  >
-                    <div className="space-y-0.5">
-                      <span className="font-bold text-sm uppercase tracking-wide flex items-center gap-1.5">
-                        <Crown className="w-4 h-4" /> Version: {creatorPlan} Mode
-                      </span>
-                      <p className="text-xs opacity-90">
-                        {creatorPlan === "custom" &&
-                          "VIP Bespoke Edition: Unlimited photos, custom vanity slug, runaway NO button, fireworks, custom soundtracks, and VIP insignia."}
-                        {creatorPlan === "premium" &&
-                          "Premium Edition: Deluxe memory slideshow, custom URL slug, full soundtrack selection, and confetti explosions."}
-                        {creatorPlan === "pro" &&
-                          "Pro Edition: Romantic background audio, interactive runaway NO button, and confetti bursts."}
-                        {creatorPlan === "starter" &&
-                          "Starter Edition: Clean and heartfelt proposal, lightweight and instant."}
-                      </p>
-                    </div>
-                    <Badge className="bg-white/10 text-white border-white/20 text-xs shrink-0">
-                      Unlimited Quota
-                    </Badge>
-                  </div>
-
-                  {/* Client Assignment */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-950/60 p-4 rounded-xl border border-slate-800/80">
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-semibold text-slate-300">
-                        Assign To Client Account
-                      </Label>
-                      <Select value={assignedClient} onValueChange={setAssignedClient}>
-                        <SelectTrigger className="bg-slate-900 border-slate-700 text-slate-100 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-slate-900 border-slate-800 text-slate-200 text-xs">
-                          <SelectItem value="admin">Admin Self (Superuser)</SelectItem>
-                          <SelectItem value="custom">New / Custom Client Email</SelectItem>
-                          {clients.map((c) => (
-                            <SelectItem key={c.id} value={c.id}>
-                              {c.name} ({c.email})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {assignedClient === "custom" && (
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="space-y-1.5">
-                          <Label className="text-xs font-semibold text-slate-300">
-                            Client Name
-                          </Label>
-                          <Input
-                            placeholder="John Doe"
-                            value={customClientName}
-                            onChange={(e) => setCustomClientName(e.target.value)}
-                            className="bg-slate-900 border-slate-700 text-xs text-slate-100"
-                          />
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label className="text-xs font-semibold text-slate-300">
-                            Client Email
-                          </Label>
-                          <Input
-                            placeholder="john@example.com"
-                            value={customClientEmail}
-                            onChange={(e) => setCustomClientEmail(e.target.value)}
-                            className="bg-slate-900 border-slate-700 text-xs text-slate-100"
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Core Sender & Partner Info */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="admin-your-name" className="text-xs font-semibold text-slate-300">
-                        Sender Name (From)
-                      </Label>
-                      <Input
-                        id="admin-your-name"
-                        placeholder="Your Name"
-                        value={yourName}
-                        onChange={(e) => setYourName(e.target.value)}
-                        className="bg-slate-950 border-slate-800 text-xs text-slate-100"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="admin-partner-name" className="text-xs font-semibold text-slate-300">
-                        Partner / Recipient Name (To)
-                      </Label>
-                      <Input
-                        id="admin-partner-name"
-                        placeholder="Partner's Name"
-                        value={partnerName}
-                        onChange={(e) => setPartnerName(e.target.value)}
-                        className="bg-slate-950 border-slate-800 text-xs text-slate-100"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  {/* Relationship, Tone & Language */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-semibold text-slate-300">Relationship</Label>
-                      <Select
-                        value={relationshipType}
-                        onValueChange={(v) => setRelationshipType(v as RelationshipType)}
-                      >
-                        <SelectTrigger className="bg-slate-950 border-slate-800 text-xs text-slate-100">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-slate-900 border-slate-800 text-slate-200 text-xs">
-                          {Object.entries(relationshipLabels).map(([k, v]) => (
-                            <SelectItem key={k} value={k}>
-                              {v}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-semibold text-slate-300">Romantic Tone</Label>
-                      <Select value={tone} onValueChange={(v) => setTone(v as ToneType)}>
-                        <SelectTrigger className="bg-slate-950 border-slate-800 text-xs text-slate-100">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-slate-900 border-slate-800 text-slate-200 text-xs">
-                          {Object.entries(toneLabels).map(([k, v]) => (
-                            <SelectItem key={k} value={k}>
-                              {v}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-semibold text-slate-300">Language</Label>
-                      <Select value={language} onValueChange={(v) => setLanguage(v as LanguageType)}>
-                        <SelectTrigger className="bg-slate-950 border-slate-800 text-xs text-slate-100">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-slate-900 border-slate-800 text-slate-200 text-xs">
-                          {Object.entries(languageLabels).map(([k, v]) => (
-                            <SelectItem key={k} value={k}>
-                              {v}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  {/* Proposal Message Editor with AI Assist */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="admin-message" className="text-xs font-semibold text-slate-300">
-                        Proposal Message / Love Letter
-                      </Label>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleAiGenerate}
-                        disabled={isAiGenerating}
-                        className="border-rose-800/80 bg-rose-950/40 text-rose-300 hover:bg-rose-900/60 text-xs h-7"
-                      >
-                        <Wand2 className="w-3.5 h-3.5 mr-1.5" />
-                        {isAiGenerating ? "Generating..." : "Generate with AI"}
-                      </Button>
-                    </div>
-                    <Textarea
-                      id="admin-message"
-                      rows={5}
-                      placeholder="Write the heartfelt proposal message here, or click 'Generate with AI'..."
-                      value={message}
-                      onChange={(e) => setMessage(e.target.value)}
-                      className="bg-slate-950 border-slate-800 text-xs text-slate-100 resize-y"
-                      required
-                    />
-                  </div>
-
-                  {/* Unlimited Photos & Captions */}
-                  <div className="space-y-3 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      <div>
-                        <Label className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
-                          <Camera className="w-4 h-4 text-rose-400" /> Photo Gallery (Unlimited)
-                        </Label>
-                        <p className="text-[11px] text-slate-400">
-                          Admin mode permits unlimited photos. Upload memory pictures or paste image URLs.
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="cursor-pointer inline-flex items-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors shadow-sm">
-                          <Upload className="w-3.5 h-3.5" />
-                          <span>{isCompressingProposalPhotos ? "Optimizing..." : "Upload Photos"}</span>
-                          <input
-                            type="file"
-                            multiple
-                            accept="image/*"
-                            disabled={isCompressingProposalPhotos}
-                            onChange={handlePhotoUpload}
-                            className="hidden"
-                          />
-                        </label>
-                      </div>
-                    </div>
-
-                    {/* Quick URL adder */}
-                    <div className="flex items-center gap-2 pt-1">
-                      <div className="relative flex-1">
-                        <Link2 className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-                        <Input
-                          placeholder="Or paste direct image URL (https://...)"
-                          value={urlPhotoInput}
-                          onChange={(e) => setUrlPhotoInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              handleAddPhotoByUrl();
-                            }
-                          }}
-                          className="pl-8 h-8 text-xs bg-slate-900 border-slate-800 text-slate-200"
-                        />
-                      </div>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={handleAddPhotoByUrl}
-                        className="h-8 text-xs border-slate-800 bg-slate-900 text-slate-300 hover:bg-slate-800"
-                      >
-                        + Add URL
-                      </Button>
-                    </div>
-
-                    {photos.length > 0 && (
-                      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3 pt-2">
-                        {photos.map((photo, i) => (
-                          <div key={i} className="relative group rounded-xl overflow-hidden bg-slate-900 border border-slate-800">
-                            <img src={photo} alt={`Memory ${i + 1}`} className="w-full h-24 object-cover" />
-                            <button
-                              type="button"
-                              onClick={() => removePhoto(i)}
-                              className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                            <Input
-                              placeholder="Caption..."
-                              value={photoCaptions[i] || ""}
-                              onChange={(e) => {
-                                const newCaps = [...photoCaptions];
-                                newCaps[i] = e.target.value;
-                                setPhotoCaptions(newCaps);
-                              }}
-                              className="h-6 text-[10px] bg-slate-950 border-0 rounded-none text-slate-200"
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Soundtrack Selection (Presets, YouTube, Custom) */}
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-slate-300 flex items-center justify-between">
-                      <span className="flex items-center gap-1.5">
-                        <Music className="w-3.5 h-3.5 text-rose-400" /> Background Audio Soundtrack
-                      </span>
-                      <span className="text-[11px] text-slate-400">
-                        {musicSelection.type === "none"
-                          ? "Muted"
-                          : musicSelection.musicTitle || "Custom Track"}
-                      </span>
-                    </Label>
-                    <MusicSelector value={musicSelection} onChange={setMusicSelection} />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label htmlFor="admin-custom-slug" className="text-xs font-semibold text-slate-300">
-                      Custom Vanity URL Slug (Optional)
-                    </Label>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs text-slate-400 font-mono">/proposal/</span>
-                      <Input
-                        id="admin-custom-slug"
-                        placeholder="e.g. forever-with-you"
-                        value={customSlug}
-                        onChange={(e) => setCustomSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"))}
-                        className="bg-slate-950 border-slate-800 text-xs text-slate-100 font-mono"
-                      />
-                    </div>
-                  </div>
-
-                  {/* VIP Custom Feature Toggles */}
-                  {creatorPlan === "custom" && (
-                    <div className="bg-amber-950/20 border border-amber-900/40 p-4 rounded-xl space-y-3">
-                      <span className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
-                        <Crown className="w-3.5 h-3.5" /> Bespoke VIP Settings
-                      </span>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-                        <label className="flex items-center gap-2 cursor-pointer text-slate-300">
-                          <input
-                            type="checkbox"
-                            checked={enableRunaway}
-                            onChange={(e) => setEnableRunaway(e.target.checked)}
-                            className="rounded border-slate-700 text-rose-500"
-                          />
-                          <span>Runaway &quot;No&quot; Button</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer text-slate-300">
-                          <input
-                            type="checkbox"
-                            checked={enableConfetti}
-                            onChange={(e) => setEnableConfetti(e.target.checked)}
-                            className="rounded border-slate-700 text-rose-500"
-                          />
-                          <span>Celebration Confetti</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer text-slate-300">
-                          <input
-                            type="checkbox"
-                            checked={enableHeartburst}
-                            onChange={(e) => setEnableHeartburst(e.target.checked)}
-                            className="rounded border-slate-700 text-rose-500"
-                          />
-                          <span>Heartburst Explosion</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer text-slate-300">
-                          <input
-                            type="checkbox"
-                            checked={enableSlideshow}
-                            onChange={(e) => setEnableSlideshow(e.target.checked)}
-                            className="rounded border-slate-700 text-rose-500"
-                          />
-                          <span>Auto Memory Slideshow</span>
-                        </label>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Submit Proposal CTA */}
-                  <div className="pt-2 flex justify-end gap-3">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={resetCreatorForm}
-                      className="border-slate-800 bg-slate-900 text-slate-300 hover:text-white text-xs"
-                    >
-                      Clear Form
-                    </Button>
-                    <Button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-bold py-2.5 px-6 shadow-xl shadow-rose-600/30 text-xs sm:text-sm cursor-pointer"
-                    >
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      {isSubmitting ? "Generating Proposal..." : `Create Unlimited ${creatorPlan.toUpperCase()} Proposal`}
-                    </Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
+            <AdminProposalStudio
+              clients={clients}
+              initialProposal={editingProposalForStudio}
+              onProposalSaved={(savedProp, isEdit) => {
+                if (isEdit) {
+                  setProposals((prev) => prev.map((p) => p.id === savedProp.id ? savedProp : p));
+                } else {
+                  setProposals((prev) => [savedProp, ...prev]);
+                }
+                fetch("/api/admin/stats")
+                  .then((r) => r.json())
+                  .then((j) => j.success && setStats(j.data));
+              }}
+              onCancelEdit={() => setEditingProposalForStudio(null)}
+              onViewProposal={(slugOrId) => window.open(`/proposal/${slugOrId}`, "_blank")}
+            />
           </TabsContent>
 
           {/* ========================================================

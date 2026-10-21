@@ -17,7 +17,9 @@ export interface ProposalData {
   id: string;
   yourName: string;
   partnerName: string;
+  yourGender?: "male" | "female" | "custom";
   yourPronouns?: GenderPronoun;
+  partnerGender?: "male" | "female" | "custom";
   partnerPronouns?: GenderPronoun;
   relationshipType: RelationshipType;
   tone: ToneType;
