@@ -1898,15 +1898,47 @@ function CreateContent() {
 
         {/* Mobile Live Preview Dialog */}
         <Dialog open={isMobilePreviewOpen} onOpenChange={setIsMobilePreviewOpen}>
-          <DialogContent className="max-w-sm p-2 bg-transparent border-none shadow-none flex justify-center">
-            <DialogHeader className="sr-only">
-              <DialogTitle>Live Phone Preview</DialogTitle>
+          <DialogContent
+            showCloseButton={false}
+            className="max-w-md w-[95vw] max-h-[92vh] p-3 sm:p-4 bg-zinc-950/95 backdrop-blur-xl border border-zinc-800 rounded-3xl shadow-2xl flex flex-col items-center overflow-y-auto overflow-x-hidden"
+          >
+            <DialogHeader className="w-full max-w-[340px] flex flex-row items-center justify-between pb-2 mb-1 border-b border-zinc-800/80">
+              <div className="flex items-center gap-2 text-rose-400">
+                <Smartphone className="w-4 h-4" />
+                <DialogTitle className="text-xs font-bold tracking-wide text-zinc-100 uppercase">
+                  Live Phone Preview
+                </DialogTitle>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsMobilePreviewOpen(false)}
+                className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 hover:text-white border border-rose-500/30 text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer"
+                aria-label="Close Preview"
+              >
+                <X className="w-3.5 h-3.5" />
+                <span>Close</span>
+              </button>
             </DialogHeader>
+
             <PhonePreview
               proposal={previewProposal}
               activeSceneId={activeSceneId}
               onSceneChange={setActiveSceneId}
+              onClose={() => setIsMobilePreviewOpen(false)}
             />
+
+            {/* Bottom Clear Return/Close Action Button */}
+            <div className="w-full max-w-[340px] pt-3 pb-2 flex justify-center">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsMobilePreviewOpen(false)}
+                className="w-full bg-zinc-900/90 border-zinc-700/80 text-zinc-200 hover:bg-zinc-800 hover:text-white rounded-full py-2.5 text-xs font-semibold gap-2 shadow-lg cursor-pointer active:scale-98"
+              >
+                <X className="w-4 h-4 text-rose-400" />
+                <span>Close Preview & Return to Editor</span>
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
 

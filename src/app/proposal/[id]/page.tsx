@@ -598,17 +598,29 @@ export default function ProposalPage() {
               </span>
             </div>
 
-            <Link
-              href={`/checkout?plan=${planConfig.id}&proposalId=${proposal?.id || id}`}
-            >
-              <Button
-                size="sm"
-                className="h-8 px-3 bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs gap-1.5 rounded-lg shadow-sm"
+            <div className="flex items-center gap-2">
+              <Link href={`/create?plan=${planConfig.id}`}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 px-2.5 bg-white/10 hover:bg-white/20 text-white text-xs gap-1 border-white/20 rounded-lg cursor-pointer"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                  <span className="hidden xs:inline">Back to </span><span>Editor</span>
+                </Button>
+              </Link>
+              <Link
+                href={`/checkout?plan=${planConfig.id}&proposalId=${proposal?.id || id}`}
               >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Unlock Link (₹{planConfig.priceRupees})</span>
-              </Button>
-            </Link>
+                <Button
+                  size="sm"
+                  className="h-8 px-3 bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs gap-1.5 rounded-lg shadow-sm"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Unlock Link (₹{planConfig.priceRupees})</span>
+                </Button>
+              </Link>
+            </div>
           </div>
         )}
 
@@ -651,17 +663,29 @@ export default function ProposalPage() {
             </span>
           </div>
 
-          <Link
-            href={`/checkout?plan=${planConfig.id}&proposalId=${proposal?.id || id}`}
-          >
-            <Button
-              size="sm"
-              className="h-9 px-4 bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs gap-1.5 rounded-lg shadow-sm"
+          <div className="flex items-center gap-2">
+            <Link href={`/create?plan=${planConfig.id}`}>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-9 px-3 bg-white/10 hover:bg-white/20 text-white text-xs gap-1 border-white/20 rounded-lg cursor-pointer"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+                <span className="hidden xs:inline">Back to </span><span>Editor</span>
+              </Button>
+            </Link>
+            <Link
+              href={`/checkout?plan=${planConfig.id}&proposalId=${proposal?.id || id}`}
             >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Unlock Link (₹{planConfig.priceRupees})</span>
-            </Button>
-          </Link>
+              <Button
+                size="sm"
+                className="h-9 px-4 bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs gap-1.5 rounded-lg shadow-sm"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Unlock Link (₹{planConfig.priceRupees})</span>
+              </Button>
+            </Link>
+          </div>
         </div>
       )}
 

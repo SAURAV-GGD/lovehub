@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ProposalData, StoryConfig, StorySceneId, ensureStoryConfig } from "@/lib/proposal-types";
 import { AudioController } from "./AudioController";
@@ -26,36 +26,37 @@ export function StoryPlayer({
   onSceneChange,
   onResponseLogged,
 }: StoryPlayerProps) {
-  const storyConfig = ensureStoryConfig(proposal);
-  const enabledScenes = storyConfig.enabledScenes || [
-    "intro",
-    "quiz",
-    "question",
-    "memories",
-    "letter",
-    "gift",
-    "finale",
-  ];
+  const storyConfig = useMemo(() => ensureStoryConfig(proposal), [proposal]);
+  const enabledScenesKey = storyConfig.enabledScenes?.join(",") || "intro,quiz,question,memories,letter,gift,finale";
+  const enabledScenes: StorySceneId[] = useMemo(
+    () =>
+      storyConfig.enabledScenes || [
+        "intro",
+        "quiz",
+        "question",
+        "memories",
+        "letter",
+        "gift",
+        "finale",
+      ],
+    [enabledScenesKey]
+  );
 
   const [currentSceneIndex, setCurrentSceneIndex] = useState(0);
   const [audioAutoStart, setAudioAutoStart] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
 
-  // Synchronize with external activeSceneId requests (e.g. from editor preview buttons)
+  // Synchronize with external activeSceneId requests (e.g. from editor preview buttons) safely without re-triggering loops
   useEffect(() => {
     if (activeSceneId) {
       const idx = enabledScenes.indexOf(activeSceneId);
-      if (idx !== -1) {
+      if (idx !== -1 && idx !== currentSceneIndex) {
         setCurrentSceneIndex(idx);
       }
     }
-  }, [activeSceneId, enabledScenes]);
+  }, [activeSceneId, enabledScenes, currentSceneIndex]);
 
   const currentSceneId: StorySceneId = enabledScenes[currentSceneIndex] || "intro";
-
-  useEffect(() => {
-    onSceneChange?.(currentSceneId);
-  }, [currentSceneId, onSceneChange]);
 
   // Post response events to server
   const logResponse = useCallback(
@@ -77,16 +78,21 @@ export function StoryPlayer({
   );
 
   const goToNextScene = useCallback(() => {
-    setCurrentSceneIndex((prev) => Math.min(prev + 1, enabledScenes.length - 1));
-  }, [enabledScenes.length]);
+    setCurrentSceneIndex((prev) => {
+      const nextIdx = Math.min(prev + 1, enabledScenes.length - 1);
+      onSceneChange?.(enabledScenes[nextIdx]);
+      return nextIdx;
+    });
+  }, [enabledScenes, onSceneChange]);
 
   const goToScene = useCallback(
     (index: number) => {
       if (index >= 0 && index < enabledScenes.length) {
         setCurrentSceneIndex(index);
+        onSceneChange?.(enabledScenes[index]);
       }
     },
-    [enabledScenes.length]
+    [enabledScenes, onSceneChange]
   );
 
   // Scene 1 Start: Begins music playback and proceeds to Quiz

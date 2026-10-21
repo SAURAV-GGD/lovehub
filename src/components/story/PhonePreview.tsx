@@ -1,14 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { ProposalData, StorySceneId, ensureStoryConfig } from "@/lib/proposal-types";
 import { StoryPlayer } from "./StoryPlayer";
-import { RotateCcw, Smartphone, Eye, Sparkles } from "lucide-react";
+import { RotateCcw, Smartphone, Eye, Sparkles, X } from "lucide-react";
 
 interface PhonePreviewProps {
   proposal: ProposalData;
   activeSceneId?: StorySceneId;
   onSceneChange?: (sceneId: StorySceneId) => void;
+  onClose?: () => void;
   className?: string;
 }
 
@@ -26,19 +27,25 @@ export function PhonePreview({
   proposal,
   activeSceneId,
   onSceneChange,
+  onClose,
   className = "",
 }: PhonePreviewProps) {
   const [remountKey, setRemountKey] = useState(0);
-  const storyConfig = ensureStoryConfig(proposal);
-  const enabledScenes: StorySceneId[] = storyConfig.enabledScenes || [
-    "intro",
-    "quiz",
-    "question",
-    "memories",
-    "letter",
-    "gift",
-    "finale",
-  ];
+  const storyConfig = useMemo(() => ensureStoryConfig(proposal), [proposal]);
+  const enabledScenesKey = storyConfig.enabledScenes?.join(",") || "intro,quiz,question,memories,letter,gift,finale";
+  const enabledScenes: StorySceneId[] = useMemo(
+    () =>
+      storyConfig.enabledScenes || [
+        "intro",
+        "quiz",
+        "question",
+        "memories",
+        "letter",
+        "gift",
+        "finale",
+      ],
+    [enabledScenesKey]
+  );
 
   const handleRestart = () => {
     setRemountKey((prev) => prev + 1);
@@ -55,15 +62,28 @@ export function PhonePreview({
           <Smartphone className="w-3.5 h-3.5" />
           <span>Live Phone Simulation</span>
         </span>
-        <button
-          type="button"
-          onClick={handleRestart}
-          className="flex items-center gap-1 text-[11px] hover:text-foreground transition-colors cursor-pointer"
-          title="Restart Preview to Beginning"
-        >
-          <RotateCcw className="w-3 h-3" />
-          <span>Restart</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleRestart}
+            className="flex items-center gap-1 text-[11px] hover:text-foreground transition-colors cursor-pointer"
+            title="Restart Preview to Beginning"
+          >
+            <RotateCcw className="w-3 h-3" />
+            <span>Restart</span>
+          </button>
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex items-center gap-1 text-[11px] font-bold text-white bg-rose-600 hover:bg-rose-700 active:scale-95 px-2.5 py-0.5 rounded-full shadow-sm transition-all cursor-pointer"
+              title="Close Preview"
+            >
+              <X className="w-3 h-3" />
+              <span>Close</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* 1-Tap Scene Jump Navigation Bar */}
