@@ -5,6 +5,7 @@ import { Group, Mesh, MathUtils, Color } from "three";
 import { useFrame } from "@react-three/fiber";
 import { Float, MeshDistortMaterial } from "@react-three/drei";
 import { scrollState } from "@/lib/immersive/scrollState";
+import { getSharedHeartGeometry } from "./heartGeometry";
 
 interface CrystalItem {
   id: number;
@@ -26,6 +27,7 @@ interface CrystalItem {
 export function ScrollCrystals() {
   const groupRef = useRef<Group>(null);
   const crystalRefs = useRef<(Mesh | null)[]>([]);
+  const heartGeom = useMemo(() => getSharedHeartGeometry(), []);
 
   // Curated layout of 3D floating crystals distributed along the page journey
   const crystals = useMemo<CrystalItem[]>(() => [
@@ -218,16 +220,16 @@ export function ScrollCrystals() {
             scale={c.scale}
           >
             {c.type === "heart-gem" && (
-              <icosahedronGeometry args={[1.1, 0]} />
+              <primitive object={heartGeom} attach="geometry" />
             )}
             {c.type === "diamond" && (
-              <octahedronGeometry args={[1.0, 0]} />
+              <octahedronGeometry args={[0.9, 0]} />
             )}
             {c.type === "torus-band" && (
-              <torusKnotGeometry args={[0.8, 0.24, 72, 16, 2, 3]} />
+              <torusGeometry args={[0.9, 0.08, 16, 64]} />
             )}
             {c.type === "octa" && (
-              <octahedronGeometry args={[1.2, 1]} />
+              <primitive object={heartGeom} attach="geometry" />
             )}
 
             <MeshDistortMaterial
