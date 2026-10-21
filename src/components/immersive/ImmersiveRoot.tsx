@@ -2,10 +2,13 @@
 
 import { Canvas } from "@react-three/fiber";
 import { PerformanceMonitor } from "@react-three/drei";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { TIER_CONFIG, nextLowerTier, type Tier } from "@/lib/immersive/quality";
 import { CameraRig } from "./CameraRig";
 import { Petals } from "./Petals";
+import { ScrollCrystals } from "@/components/3d/ScrollCrystals";
+import { StarDustField } from "@/components/3d/StarDustField";
+import { FooterStarlightWave } from "@/components/3d/FooterStarlightWave";
 
 export default function ImmersiveRoot({ initialTier }: { initialTier: Tier }) {
   const [tier, setTier] = useState<Tier>(initialTier);
@@ -41,7 +44,20 @@ export default function ImmersiveRoot({ initialTier }: { initialTier: Tier }) {
           onFallback={() => setTier((t) => nextLowerTier(t))}
         />
         <CameraRig />
-        <Petals count={cfg.petals} />
+        
+        <Suspense fallback={null}>
+          {/* 1. Luminous 3D StarDust & Sparkles spanning the entire depth */}
+          <StarDustField count={cfg.petals * 2} />
+
+          {/* 2. Floating 3D Love Crystals & Faceted Prisms that travel with scroll */}
+          {tier !== "low" && <ScrollCrystals />}
+
+          {/* 3. Falling cherry blossom romantic petals */}
+          <Petals count={cfg.petals} />
+
+          {/* 4. Undulating 3D Starlight Wave horizon near the Footer */}
+          <FooterStarlightWave />
+        </Suspense>
       </Canvas>
     </div>
   );

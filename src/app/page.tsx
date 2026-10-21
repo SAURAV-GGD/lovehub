@@ -6,6 +6,7 @@ import { InteractiveDemo } from "@/components/home/interactive-demo";
 import ScrollDriver from "@/components/immersive/ScrollDriver";
 import ImmersiveLoader from "@/components/immersive/ImmersiveLoader";
 import { Reveal } from "@/components/immersive/Reveal";
+import { Card3DTilt } from "@/components/3d/Card3DTilt";
 import {
   WebsiteJsonLd,
   OrganizationJsonLd,
@@ -275,7 +276,9 @@ export default function HomePage() {
               <div className="grid grid-cols-1 md:grid-cols-12 gap-5 lg:gap-6">
                 
                 {/* Bento Card 1: Runaway "No" Physics Engine (Span 8 - Large Feature) */}
-                <div className="md:col-span-12 lg:col-span-8 glass border border-white/10 rounded-2xl p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden group hover:border-white/20 transition-all shadow-xl">
+                <Card3DTilt className="md:col-span-12 lg:col-span-8 h-full">
+                  <div className="h-full glass border border-white/10 rounded-2xl p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden group hover:border-white/20 transition-all shadow-xl">
+
                   <div className="space-y-3 relative z-10">
                     <div className="flex items-center justify-between">
                       <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-mono uppercase tracking-wider">
@@ -312,9 +315,12 @@ export default function HomePage() {
                     </div>
                   </div>
                 </div>
+                </Card3DTilt>
 
                 {/* Bento Card 2: Curated Ambient Soundscapes (Span 4) */}
-                <div className="md:col-span-12 lg:col-span-4 glass border border-white/10 rounded-2xl p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden group hover:border-white/20 transition-all shadow-xl">
+                <Card3DTilt className="md:col-span-12 lg:col-span-4 h-full">
+                  <div className="h-full glass border border-white/10 rounded-2xl p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden group hover:border-white/20 transition-all shadow-xl">
+
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-mono uppercase tracking-wider">
@@ -351,9 +357,12 @@ export default function HomePage() {
                     </div>
                   </div>
                 </div>
+                </Card3DTilt>
 
                 {/* Bento Card 3: Memory Vault & 3D Flipbook (Span 4) */}
-                <div className="md:col-span-6 lg:col-span-4 glass border border-white/10 rounded-2xl p-6 sm:p-8 flex flex-col justify-between group hover:border-white/20 transition-all shadow-xl">
+                <Card3DTilt className="md:col-span-6 lg:col-span-4 h-full">
+                  <div className="h-full glass border border-white/10 rounded-2xl p-6 sm:p-8 flex flex-col justify-between group hover:border-white/20 transition-all shadow-xl">
+
                   <div className="space-y-3">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-mono uppercase tracking-wider">
                       <Camera className="w-3.5 h-3.5 text-rose-400" />
@@ -374,9 +383,12 @@ export default function HomePage() {
                     </span>
                   </div>
                 </div>
+                </Card3DTilt>
 
                 {/* Bento Card 4: Bilingual Romance AI (Span 4) */}
-                <div className="md:col-span-6 lg:col-span-4 glass border border-white/10 rounded-2xl p-6 sm:p-8 flex flex-col justify-between group hover:border-white/20 transition-all shadow-xl">
+                <Card3DTilt className="md:col-span-6 lg:col-span-4 h-full">
+                  <div className="h-full glass border border-white/10 rounded-2xl p-6 sm:p-8 flex flex-col justify-between group hover:border-white/20 transition-all shadow-xl">
+
                   <div className="space-y-3">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-mono uppercase tracking-wider">
                       <Wand2 className="w-3.5 h-3.5 text-rose-400" />
@@ -398,9 +410,12 @@ export default function HomePage() {
                     ))}
                   </div>
                 </div>
+                </Card3DTilt>
 
                 {/* Bento Card 5: Cryptographic Privacy & Instant Delivery (Span 4) */}
-                <div className="md:col-span-12 lg:col-span-4 glass border border-white/10 rounded-2xl p-6 sm:p-8 flex flex-col justify-between group hover:border-white/20 transition-all shadow-xl">
+                <Card3DTilt className="md:col-span-12 lg:col-span-4 h-full">
+                  <div className="h-full glass border border-white/10 rounded-2xl p-6 sm:p-8 flex flex-col justify-between group hover:border-white/20 transition-all shadow-xl">
+
                   <div className="space-y-3">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-mono uppercase tracking-wider">
                       <ShieldCheck className="w-3.5 h-3.5 text-rose-400" />
@@ -421,6 +436,7 @@ export default function HomePage() {
                     </span>
                   </div>
                 </div>
+                </Card3DTilt>
 
               </div>
             </Reveal>
@@ -473,9 +489,9 @@ export default function HomePage() {
                 {ALL_PLANS.map((plan) => {
                   const isFeatured = plan.featured;
                   return (
+                    <Card3DTilt key={plan.id} className="h-full">
                     <div
-                      key={plan.id}
-                      className={`flex flex-col justify-between glass rounded-2xl p-6 sm:p-7 transition-all relative ${
+                      className={`h-full flex flex-col justify-between glass rounded-2xl p-6 sm:p-7 transition-all relative ${
                         isFeatured
                           ? "border-2 border-rose-500 bg-slate-950/85 shadow-2xl md:-translate-y-2 z-10"
                           : "border border-white/10 bg-slate-950/70"
@@ -553,6 +569,7 @@ export default function HomePage() {
                         </p>
                       </div>
                     </div>
+                    </Card3DTilt>
                   );
                 })}
 

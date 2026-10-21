@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Heart, ArrowUpRight, Play, Menu, X, ArrowDown } from "lucide-react";
+import { Heart, ArrowUpRight, Play, ArrowDown } from "lucide-react";
 import JourneyVideo from "@/components/immersive/JourneyVideo";
+import { Hero3DKeepsake } from "@/components/3d/Hero3DKeepsake";
 
 export function MotionHero() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -73,9 +74,12 @@ export function MotionHero() {
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="md:hidden p-2.5 rounded-full backdrop-blur-md bg-white/15 border border-white/30 text-white shadow-lg active:scale-95 transition-transform"
-            aria-label="Toggle navigation"
           >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            <div className="w-5 h-4 flex flex-col justify-between">
+              <span className="w-full h-0.5 bg-white rounded-full" />
+              <span className="w-full h-0.5 bg-white rounded-full" />
+              <span className="w-full h-0.5 bg-white rounded-full" />
+            </div>
           </button>
         </div>
 
@@ -126,9 +130,9 @@ export function MotionHero() {
       </header>
 
       {/* Main Center Content (Hero Focal Point) */}
-      <div className="relative z-20 max-w-6xl mx-auto px-5 sm:px-8 text-center my-auto py-12 sm:py-16">
+      <div className="relative z-20 max-w-6xl mx-auto px-5 sm:px-8 text-center my-auto py-10 sm:py-14">
         {/* Top Product Pill Badge */}
-        <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full backdrop-blur-md bg-white/15 border border-white/25 text-white text-xs sm:text-sm font-medium shadow-md mb-6 sm:mb-8">
+        <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full backdrop-blur-md bg-white/15 border border-white/25 text-white text-xs sm:text-sm font-medium shadow-md mb-5 sm:mb-7">
           <span className="bg-white text-slate-950 font-bold px-2 py-0.5 rounded-full text-[10px] sm:text-xs tracking-wider uppercase">
             Product
           </span>
@@ -138,19 +142,22 @@ export function MotionHero() {
         </div>
 
         {/* Big Luxury Italic Serif Headline */}
-        <h1 className="font-[family-name:var(--font-playfair)] italic text-4xl sm:text-6xl md:text-7xl lg:text-[84px] xl:text-[92px] leading-[1.04] text-white tracking-tight drop-shadow-[0_4px_30px_rgba(0,0,0,0.6)] max-w-5xl mx-auto mb-6">
+        <h1 className="font-[family-name:var(--font-playfair)] italic text-4xl sm:text-6xl md:text-7xl lg:text-[84px] xl:text-[92px] leading-[1.04] text-white tracking-tight drop-shadow-[0_4px_30px_rgba(0,0,0,0.6)] max-w-5xl mx-auto mb-5">
           Venture Past The Ordinary
           <br />
           Into An Eternal Yes
         </h1>
 
         {/* Clean Sans Subtitle */}
-        <p className="font-sans text-sm sm:text-base md:text-lg text-white/90 drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)] max-w-[65ch] mx-auto leading-relaxed mb-8 sm:mb-10 font-normal">
+        <p className="font-sans text-sm sm:text-base md:text-lg text-white/90 drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)] max-w-[65ch] mx-auto leading-relaxed mb-6 sm:mb-8 font-normal">
           Build a personal proposal website with your own photos, background music, a custom note in English or Hinglish, and an interactive runaway &ldquo;No&rdquo; button.
         </p>
 
+        {/* Interactive 3D Keepsake Love Crystal (Hero 3D Highlight) */}
+        <Hero3DKeepsake />
+
         {/* Authentic Social Proof & Trust Strip */}
-        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-white/80 mb-8 sm:mb-10 font-sans">
+        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-white/80 mb-6 sm:mb-8 font-sans">
           <div className="flex items-center gap-2">
             <span className="flex -space-x-1.5">
               <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-rose-500/90 text-[10px] font-bold text-white ring-1 ring-black/40">R</span>
