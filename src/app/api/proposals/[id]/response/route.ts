@@ -79,22 +79,24 @@ export async function GET(request: NextRequest, { params }: Params) {
       return apiError("Proposal ID is required", "BAD_REQUEST", 400);
     }
 
-    // 1. Identify User or Admin Session
+    // 1. Identify User or Admin Session (check admin first synchronously)
     let authenticatedUserId: string | null = null;
     let isAdmin = false;
-    try {
-      const userSession = await auth.api.getSession({ headers: request.headers });
-      if (userSession?.user?.id) {
-        authenticatedUserId = userSession.user.id;
-      }
-    } catch {}
 
-    if (!authenticatedUserId) {
-      const adminSession = getAdminSessionFromRequest(request);
-      if (adminSession?.email) {
-        isAdmin = true;
-        authenticatedUserId = `admin-${adminSession.email.split("@")[0]}`;
-      }
+    const adminSession = getAdminSessionFromRequest(request);
+    if (adminSession?.email) {
+      isAdmin = true;
+      authenticatedUserId = `admin-${adminSession.email.split("@")[0]}`;
+    } else {
+      try {
+        const userSession = await Promise.race([
+          auth.api.getSession({ headers: request.headers }),
+          new Promise<null>((_, reject) => setTimeout(() => reject(new Error("auth_timeout")), 2000)),
+        ]).catch(() => null);
+        if (userSession?.user?.id) {
+          authenticatedUserId = userSession.user.id;
+        }
+      } catch {}
     }
 
     if (!authenticatedUserId) {

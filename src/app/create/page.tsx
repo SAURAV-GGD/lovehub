@@ -1594,6 +1594,46 @@ function CreateContent() {
                         value={musicSelection}
                         onChange={setMusicSelection}
                       />
+
+                      {/* Interactive Audio Listener & Precision Trimmer */}
+                      {limits.hasMusic && musicSelection.type !== "none" ? (
+                        <div className="pt-3 border-t border-rose-200/70 dark:border-rose-900/40 space-y-2">
+                          <Label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 uppercase tracking-wider">
+                            <Music className="w-3.5 h-3.5 text-rose-500" />
+                            <span>Soundtrack Listener &amp; Trimming Controls</span>
+                          </Label>
+                          <MusicTrimmerListener
+                            musicSelection={musicSelection}
+                            startSec={audioStartSec}
+                            endSec={audioEndSec}
+                            onStartSecChange={setAudioStartSec}
+                            onEndSecChange={setAudioEndSec}
+                            hasMusicPlan={limits.hasMusic}
+                          />
+                        </div>
+                      ) : !limits.hasMusic ? (
+                        <div className="pt-3 border-t border-rose-200/70 dark:border-rose-900/40">
+                          <div className="p-3.5 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-white dark:bg-slate-900 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-2xs">
+                            <div className="space-y-0.5 text-center sm:text-left">
+                              <h5 className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center justify-center sm:justify-start gap-1.5">
+                                <Music className="w-3.5 h-3.5 text-rose-500" />
+                                <span>Background Music &amp; Voice Note Trimmer</span>
+                              </h5>
+                              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                                Upload MP3s, iOS Voice Memos, YouTube songs, and trim audio timing with Romantic (₹69) or Premium (₹169).
+                              </p>
+                            </div>
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={() => setPlanKey("romantic")}
+                              className="bg-rose-600 hover:bg-rose-500 text-white text-xs shrink-0 rounded-lg cursor-pointer"
+                            >
+                              Unlock Trimmer (₹69)
+                            </Button>
+                          </div>
+                        </div>
+                      ) : null}
                     </div>
                   )}
 
@@ -1750,46 +1790,6 @@ function CreateContent() {
                         Surprise Gift &amp; Coupons (Scene 6) is currently omitted. You can re-enable it anytime in the Scene Flow above.
                       </div>
                     )}
-
-                    {/* Interactive Audio Listener & Precision Trimmer */}
-                    {limits.hasMusic && musicSelection.type !== "none" ? (
-                      <div className="pt-4 border-t border-rose-200/70 dark:border-rose-900/40 space-y-2">
-                        <Label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 uppercase tracking-wider">
-                          <Music className="w-3.5 h-3.5 text-rose-500" />
-                          <span>Soundtrack Listener &amp; Trimming Controls</span>
-                        </Label>
-                        <MusicTrimmerListener
-                          musicSelection={musicSelection}
-                          startSec={audioStartSec}
-                          endSec={audioEndSec}
-                          onStartSecChange={setAudioStartSec}
-                          onEndSecChange={setAudioEndSec}
-                          hasMusicPlan={limits.hasMusic}
-                        />
-                      </div>
-                    ) : !limits.hasMusic ? (
-                      <div className="pt-4 border-t border-rose-200/70 dark:border-rose-900/40">
-                        <div className="p-3.5 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-white dark:bg-slate-900 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-2xs">
-                          <div className="space-y-0.5 text-center sm:text-left">
-                            <h5 className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center justify-center sm:justify-start gap-1.5">
-                              <Music className="w-3.5 h-3.5 text-rose-500" />
-                              <span>Background Music &amp; Voice Note Trimmer</span>
-                            </h5>
-                            <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                              Upload MP3s, iOS Voice Memos, YouTube songs, and trim audio timing with Romantic (₹69) or Premium (₹169).
-                            </p>
-                          </div>
-                          <Button
-                            type="button"
-                            size="sm"
-                            onClick={() => setPlanKey("romantic")}
-                            className="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shrink-0 cursor-pointer shadow-xs"
-                          >
-                            Upgrade for ₹69
-                          </Button>
-                        </div>
-                      </div>
-                    ) : null}
                   </div>
 
                   {/* Preview Summary */}

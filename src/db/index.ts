@@ -21,6 +21,7 @@ export const pool = new Pool({
     !isLocalhost && connectionString
       ? { rejectUnauthorized: false }
       : undefined,
+  connectionTimeoutMillis: process.env.NODE_ENV === "test" ? 1500 : 5000,
 });
 
 export const db = drizzle(pool, { schema });
