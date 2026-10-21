@@ -184,19 +184,33 @@ const RunawayNoButton = ({
       curY = rect.top;
     }
 
-    // Minimum jump distance across the screen (at least 38% of viewport)
-    const minJumpDistance = Math.min(vw, vh) * 0.38;
+    // Minimum jump distance across the screen (at least 35% of viewport)
+    const minJumpDistance = Math.min(vw, vh) * 0.35;
+
+    // Detect YES button position to ensure NO NEVER lands on or hides behind YES
+    const yesBtn = document.querySelector('[data-yes-button="true"]');
+    const yesRect = yesBtn?.getBoundingClientRect();
+    const safeYesBuffer = 32;
+    const isOverlappingYes = (candX: number, candTop: number) => {
+      if (!yesRect) return false;
+      return !(
+        candX + buttonWidth < yesRect.left - safeYesBuffer ||
+        candX > yesRect.right + safeYesBuffer ||
+        candTop + buttonHeight < yesRect.top - safeYesBuffer ||
+        candTop > yesRect.bottom + safeYesBuffer
+      );
+    };
 
     let targetX = curX;
     let targetY = curY;
     let attempts = 0;
 
-    while (attempts < 15) {
+    while (attempts < 25) {
       const candidateX = minX + Math.random() * (maxX - minX);
       const candidateY = minY + Math.random() * (maxY - minY);
       const dist = Math.hypot(candidateX - curX, candidateY - curY);
 
-      if (dist >= minJumpDistance) {
+      if (dist >= minJumpDistance && !isOverlappingYes(candidateX, candidateY)) {
         targetX = candidateX;
         targetY = candidateY;
         break;
@@ -204,10 +218,25 @@ const RunawayNoButton = ({
       attempts++;
     }
 
-    // Fallback: pick opposite quadrant if random selection didn't exceed minJumpDistance
+    // Fallback: pick opposite quadrant or far corner avoiding YES button
     if (targetX === curX && targetY === curY) {
-      targetX = curX > vw / 2 ? minX + 24 : maxX - 24;
-      targetY = curY > vh / 2 ? minY + 24 : maxY - 24;
+      const cornerCandidates = [
+        { x: minX + 16, y: minY + 16 },
+        { x: maxX - 16, y: minY + 16 },
+        { x: minX + 16, y: maxY - 16 },
+        { x: maxX - 16, y: maxY - 16 },
+      ].filter((c) => !isOverlappingYes(c.x, c.y));
+
+      if (cornerCandidates.length > 0) {
+        cornerCandidates.sort(
+          (a, b) => Math.hypot(b.x - curX, b.y - curY) - Math.hypot(a.x - curX, a.y - curY)
+        );
+        targetX = cornerCandidates[0].x;
+        targetY = cornerCandidates[0].y;
+      } else {
+        targetX = curX > vw / 2 ? minX + 24 : maxX - 24;
+        targetY = curY > vh / 2 ? minY + 24 : maxY - 24;
+      }
     }
 
     setIsDodging(true);
@@ -844,6 +873,7 @@ export default function ProposalPage() {
                     transition={{ type: "spring", stiffness: 350, damping: 20 }}
                   >
                     <Button
+                      data-yes-button="true"
                       size="lg"
                       onClick={handleYes}
                       className="text-xl px-10 py-7 bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white shadow-xl hover:shadow-2xl transition-all shadow-rose-500/30"

@@ -43,24 +43,139 @@ export function QuestionScene({
   const [noPosition, setNoPosition] = useState<{ x: number; y: number } | null>(null);
   const [evadeCount, setEvadeCount] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const yesButtonRef = useRef<HTMLButtonElement>(null);
+  const noButtonRef = useRef<HTMLButtonElement>(null);
+  const initialNoPosRef = useRef<{ left: number; top: number } | null>(null);
 
-  // Classic infinite runaway logic: jumps away playfully FOREVER with zero surrender
-  const moveNoButton = useCallback(() => {
-    if (!runawayNo || hasAccepted) return;
+  // Dynamic runaway logic: jumps away across 100% of the visible phone screen
+  // Guaranteed zero box clipping and strictly avoids landing on or behind the YES button
+  const moveNoButton = useCallback(
+    (e?: React.SyntheticEvent) => {
+      if (!runawayNo || hasAccepted) return;
 
-    // Pick random angles and dynamic leap distances
-    const randomAngle = Math.random() * 2 * Math.PI;
-    const distance = 100 + Math.random() * 80; // 100-180px jump
-    let x = Math.cos(randomAngle) * distance;
-    let y = Math.sin(randomAngle) * distance;
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
 
-    // Bound securely within visible container area
-    x = Math.max(-140, Math.min(140, x));
-    y = Math.max(-90, Math.min(90, y));
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        navigator.vibrate(30);
+      }
 
-    setNoPosition({ x, y });
-    setEvadeCount((prev) => prev + 1);
-  }, [runawayNo, hasAccepted]);
+      const container = containerRef.current;
+      const noBtn = noButtonRef.current;
+      const yesBtn = yesButtonRef.current;
+
+      // Detect the visible phone screen / preview frame container
+      const scrollContainer = container?.closest(".overflow-y-auto") as HTMLElement | null;
+      const screenRect = scrollContainer
+        ? scrollContainer.getBoundingClientRect()
+        : {
+            left: 0,
+            top: 0,
+            right: typeof window !== "undefined" ? window.innerWidth : 400,
+            bottom: typeof window !== "undefined" ? window.innerHeight : 800,
+            width: typeof window !== "undefined" ? window.innerWidth : 400,
+            height: typeof window !== "undefined" ? window.innerHeight : 800,
+          };
+
+      const yesRect = yesBtn?.getBoundingClientRect();
+      const btnWidth = noBtn?.offsetWidth || 110;
+      const btnHeight = noBtn?.offsetHeight || 44;
+
+      // Capture initial unshifted position of the NO button on first dodge
+      if (!initialNoPosRef.current && noBtn) {
+        const curRect = noBtn.getBoundingClientRect();
+        const curX = noPosition?.x || 0;
+        const curY = noPosition?.y || 0;
+        initialNoPosRef.current = {
+          left: curRect.left - curX,
+          top: curRect.top - curY,
+        };
+      }
+
+      const origPos = initialNoPosRef.current || {
+        left: screenRect.left + screenRect.width / 2,
+        top: screenRect.top + screenRect.height / 2 + 50,
+      };
+
+      // Screen boundary limits: allows free runaway across 100% of the phone screen
+      const padX = 14;
+      const padTop = 64; // Under top header / notch
+      const padBottom = 28; // Above bottom home bar
+
+      const minLeft = screenRect.left + padX;
+      const maxLeft = Math.max(minLeft + 10, screenRect.right - btnWidth - padX);
+      const minTop = screenRect.top + padTop;
+      const maxTop = Math.max(minTop + 10, screenRect.bottom - btnHeight - padBottom);
+
+      // Current position in screen coordinates
+      const curScreenLeft = noPosition ? origPos.left + noPosition.x : origPos.left;
+      const curScreenTop = noPosition ? origPos.top + noPosition.y : origPos.top;
+
+      // Minimum jump distance (at least 30% of screen dimension)
+      const minJumpDist = Math.min(screenRect.width, screenRect.height) * 0.3;
+
+      // Safe buffer around YES button so NO NEVER lands on or hides behind YES
+      const safeYesBuffer = 32;
+      const isOverlappingYes = (candLeft: number, candTop: number) => {
+        if (!yesRect) return false;
+        const candRight = candLeft + btnWidth;
+        const candBottom = candTop + btnHeight;
+        const noOverlap =
+          candRight < yesRect.left - safeYesBuffer ||
+          candLeft > yesRect.right + safeYesBuffer ||
+          candBottom < yesRect.top - safeYesBuffer ||
+          candTop > yesRect.bottom + safeYesBuffer;
+        return !noOverlap;
+      };
+
+      let targetLeft = curScreenLeft;
+      let targetTop = curScreenTop;
+      let found = false;
+
+      // Try up to 25 randomized positions across the full phone screen
+      for (let i = 0; i < 25; i++) {
+        const candLeft = minLeft + Math.random() * (maxLeft - minLeft);
+        const candTop = minTop + Math.random() * (maxTop - minTop);
+        const dist = Math.hypot(candLeft - curScreenLeft, candTop - curScreenTop);
+
+        if (dist >= minJumpDist && !isOverlappingYes(candLeft, candTop)) {
+          targetLeft = candLeft;
+          targetTop = candTop;
+          found = true;
+          break;
+        }
+      }
+
+      // Fallback: pick one of 4 corners furthest from YES and current position
+      if (!found) {
+        const corners = [
+          { left: minLeft, top: minTop },
+          { left: maxLeft, top: minTop },
+          { left: minLeft, top: maxTop },
+          { left: maxLeft, top: maxTop },
+        ];
+        const safeCorners = corners.filter((c) => !isOverlappingYes(c.left, c.top));
+        const candidates = safeCorners.length > 0 ? safeCorners : corners;
+        candidates.sort(
+          (a, b) =>
+            Math.hypot(b.left - curScreenLeft, b.top - curScreenTop) -
+            Math.hypot(a.left - curScreenLeft, a.top - curScreenTop)
+        );
+        targetLeft = candidates[0].left;
+        targetTop = candidates[0].top;
+      }
+
+      // Convert target screen coords to transform offset from original position
+      const nextX = Math.round(targetLeft - origPos.left);
+      const nextY = Math.round(targetTop - origPos.top);
+
+      setNoPosition({ x: nextX, y: nextY });
+      setEvadeCount((prev) => prev + 1);
+    },
+    [runawayNo, hasAccepted, noPosition]
+  );
 
   const handleYes = () => {
     setHasAccepted(true);
@@ -86,7 +201,7 @@ export function QuestionScene({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 1.05 }}
             transition={{ duration: 0.5 }}
-            className="w-full bg-white/[0.07] backdrop-blur-xl border border-white/15 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden"
+            className="w-full bg-white/[0.07] backdrop-blur-xl border border-white/15 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-visible"
           >
             {/* Romantic Icon Header */}
             <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-pink-500/20 border border-pink-500/40 flex items-center justify-center text-pink-400 shadow-inner">
@@ -102,6 +217,8 @@ export function QuestionScene({
             <div className="relative min-h-[140px] flex flex-col sm:flex-row items-center justify-center gap-4">
               {/* YES Button (grows bigger with every dodge) */}
               <motion.button
+                ref={yesButtonRef}
+                data-yes-button="true"
                 animate={{ scale: yesScale }}
                 whileHover={{ scale: yesScale * 1.06 }}
                 whileTap={{ scale: yesScale * 0.95 }}
@@ -112,14 +229,23 @@ export function QuestionScene({
                 <span>{yesText}</span>
               </motion.button>
 
-              {/* Classic Infinite Runaway NO Button */}
+              {/* Invisible placeholder when escaped to maintain card layout stability */}
+              {noPosition && (
+                <div
+                  className="w-28 h-12 pointer-events-none opacity-0 select-none hidden sm:inline-block"
+                  aria-hidden="true"
+                />
+              )}
+
+              {/* Classic Infinite Runaway NO Button - Escapes all boxes across entire phone screen */}
               <motion.button
+                ref={noButtonRef}
                 animate={
                   noPosition
                     ? {
                         x: noPosition.x,
                         y: noPosition.y,
-                        transition: { type: "spring", stiffness: 450, damping: 18 },
+                        transition: { type: "spring", stiffness: 450, damping: 20 },
                       }
                     : {}
                 }
@@ -127,7 +253,11 @@ export function QuestionScene({
                 onTouchStart={moveNoButton}
                 onPointerDown={moveNoButton}
                 onClick={moveNoButton}
-                className="w-full sm:w-auto px-6 py-3.5 rounded-full font-semibold text-sm text-white/80 bg-white/10 hover:bg-white/20 border border-white/15 transition-colors select-none cursor-pointer z-10"
+                className={`rounded-full font-semibold text-sm transition-all select-none cursor-pointer z-40 shadow-xl backdrop-blur-md ${
+                  noPosition
+                    ? "px-5 py-2.5 bg-gradient-to-r from-rose-600 to-pink-600 text-white border-2 border-white/70 shadow-rose-500/50 scale-105 whitespace-nowrap inline-block"
+                    : "w-full sm:w-auto px-6 py-3.5 text-white/80 bg-white/10 hover:bg-white/20 border border-white/15"
+                }`}
               >
                 {currentNoLabel}
               </motion.button>

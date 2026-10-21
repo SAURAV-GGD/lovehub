@@ -61,14 +61,14 @@ export function BirthdayRunawayTreat({
       if (!container) return;
 
       const rect = container.getBoundingClientRect();
-      const maxX = Math.max(120, (rect.width - 150) / 2);
-      const maxY = 90;
+      const maxX = Math.max(140, (rect.width - 120) / 2);
+      const maxY = 150;
 
       // Calculate random offset with minimum jump distance
       const signX = Math.random() > 0.5 ? 1 : -1;
       const signY = Math.random() > 0.5 ? 1 : -1;
-      const newX = signX * (50 + Math.random() * (maxX - 50));
-      const newY = signY * (30 + Math.random() * (maxY - 30));
+      const newX = signX * (60 + Math.random() * (maxX - 60));
+      const newY = signY * (50 + Math.random() * (maxY - 50));
 
       setPosition({ x: newX, y: newY });
       setHasEscaped(true);
@@ -82,7 +82,7 @@ export function BirthdayRunawayTreat({
   };
 
   return (
-    <section className="bg-gradient-to-br from-amber-50 via-white to-rose-50 rounded-3xl p-6 sm:p-10 shadow-xl border border-amber-200/80 relative overflow-hidden text-center space-y-6">
+    <section className="bg-gradient-to-br from-amber-50 via-white to-rose-50 rounded-3xl p-6 sm:p-10 shadow-xl border border-amber-200/80 relative overflow-visible text-center space-y-6">
       {/* Decorative ambient elements */}
       <div className="absolute -top-12 -right-12 w-36 h-36 bg-amber-200/40 rounded-full blur-2xl pointer-events-none" />
       <div className="absolute -bottom-12 -left-12 w-36 h-36 bg-rose-200/40 rounded-full blur-2xl pointer-events-none" />
