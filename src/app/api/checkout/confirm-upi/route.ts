@@ -179,6 +179,12 @@ export async function POST(request: NextRequest) {
             updatedContent.isPermanent = true;
             delete updatedContent.expiresAt;
             delete updatedContent.retentionDays;
+          } else if (plan === "extend_30" || plan === "extend" || plan === "extension") {
+            const currentExpires = Number(currentContent.expiresAt) || Date.now();
+            const base = Math.max(Date.now(), currentExpires);
+            updatedContent.isPermanent = false;
+            updatedContent.retentionDays = 30;
+            updatedContent.expiresAt = base + 30 * 24 * 60 * 60 * 1000;
           } else {
             // Pro Plan: Stored for 30 days
             updatedContent.isPermanent = false;

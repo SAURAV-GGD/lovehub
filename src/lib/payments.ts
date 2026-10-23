@@ -41,8 +41,14 @@ export const PLAN_PRICING = {
   },
   premium: {
     name: PLANS.premium.name,
-    amount: PLANS.premium.priceRupees, // ₹169
+    amount: PLANS.premium.priceRupees, // ₹669
     amountPaise: PLANS.premium.pricePaise,
+    currency: "inr",
+  },
+  extend_30: {
+    name: PLANS.extend_30.name,
+    amount: PLANS.extend_30.priceRupees, // ₹69
+    amountPaise: PLANS.extend_30.pricePaise,
     currency: "inr",
   },
 };

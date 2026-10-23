@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Heart, Check, ArrowLeft, Shield, Lock, ArrowRight, Loader2 } from "lucide-react";
+import { Heart, Check, ArrowLeft, Shield, Lock, ArrowRight, Loader2, Clock, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";

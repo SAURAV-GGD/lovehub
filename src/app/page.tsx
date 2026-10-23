@@ -251,6 +251,16 @@ export default function HomePage() {
                   </div>
                 </div>
               </div>
+
+                {/* Validity & Extension Notice Banner */}
+                <div className="mt-8 max-w-2xl mx-auto p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md text-center space-y-1.5">
+                  <p className="text-xs sm:text-sm text-slate-200 font-medium">
+                    ⏳ <strong>Proposal Link Validity:</strong> Starter (₹69) &amp; Romantic (₹169) links stay live for 30 days.
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    Need more time? Extend any link for +30 days anytime for just <strong className="text-rose-400">₹69</strong>, or choose <strong className="text-amber-300">VIP Keepsake (₹669)</strong> to keep it live forever with zero auto-delete restriction!
+                  </p>
+                </div>
             </Reveal>
           </div>
         </section>
@@ -519,13 +529,28 @@ export default function HomePage() {
                         </div>
 
                         {/* Price Row */}
-                        <div className="py-2 border-y border-white/10 flex items-baseline gap-1.5">
-                          <span className="text-4xl font-extrabold text-white font-sans tracking-tight">
-                            ₹{plan.priceRupees}
-                          </span>
-                          <span className="text-xs text-slate-400 font-normal">
-                            one-time payment
-                          </span>
+                        <div className="py-2 border-y border-white/10 space-y-2">
+                          <div className="flex items-baseline gap-1.5">
+                            <span className="text-4xl font-extrabold text-white font-sans tracking-tight">
+                              ₹{plan.priceRupees}
+                            </span>
+                            <span className="text-xs text-slate-400 font-normal">
+                              one-time payment
+                            </span>
+                          </div>
+
+                          {/* Validity Badge */}
+                          <div className="pt-0.5">
+                            {plan.isLifetime ? (
+                              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-200 text-[11px] font-bold shadow-sm">
+                                <span>✨</span> Live Forever (Lifetime Keepsake)
+                              </div>
+                            ) : (
+                              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-300 text-[11px] font-semibold shadow-sm">
+                                <span>⏳</span> Active for 30 Days (Extend for ₹69)
+                              </div>
+                            )}
+                          </div>
                         </div>
 
                         {/* Features Comparison List */}

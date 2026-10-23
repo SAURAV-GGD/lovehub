@@ -68,7 +68,7 @@ export const planLimits: Record<PlanType, {
   isUnlimited?: boolean;
 }> = {
   basic: {
-    maxPhotos: 3,
+    maxPhotos: 5,
     hasMusic: false,
     hasAnimatedButtons: false,
     hasConfetti: false,
@@ -77,7 +77,7 @@ export const planLimits: Record<PlanType, {
     isUnlimited: false,
   },
   starter: {
-    maxPhotos: 3,
+    maxPhotos: 5,
     hasMusic: false,
     hasAnimatedButtons: false,
     hasConfetti: false,
@@ -86,25 +86,25 @@ export const planLimits: Record<PlanType, {
     isUnlimited: false,
   },
   romantic: {
-    maxPhotos: 5,
+    maxPhotos: 10,
     hasMusic: true,
     hasAnimatedButtons: true,
     hasConfetti: true,
-    hasSlideshow: false,
+    hasSlideshow: true,
     hasCustomSlug: false,
     isUnlimited: false,
   },
   pro: {
-    maxPhotos: 5,
+    maxPhotos: 10,
     hasMusic: true,
     hasAnimatedButtons: true,
     hasConfetti: true,
-    hasSlideshow: false,
+    hasSlideshow: true,
     hasCustomSlug: true,
     isUnlimited: false,
   },
   premium: {
-    maxPhotos: 12,
+    maxPhotos: 20,
     hasMusic: true,
     hasAnimatedButtons: true,
     hasConfetti: true,
@@ -113,7 +113,7 @@ export const planLimits: Record<PlanType, {
     isUnlimited: false,
   },
   custom: {
-    maxPhotos: 50,
+    maxPhotos: 100,
     hasMusic: true,
     hasAnimatedButtons: true,
     hasConfetti: true,
@@ -131,24 +131,35 @@ export const RETENTION_CONSTANTS = {
 
 /**
  * Calculates authoritative retention and expiry rules:
- * - Admin users & VIP (Premium/Custom) plans: Permanent retention (no auto-delete restriction).
+ * - Admin users & VIP (Premium/Custom/Lifetime) plans: Permanent retention (no auto-delete restriction).
  * - Pro (Romantic/Starter) plan users: 30-day retention from payment date.
+ * - Extension: +30 days added to previous expiry.
  */
 export function getProposalRetentionConfig(
   plan?: string | null,
   isCreatedByAdmin?: boolean,
   baseTimestamp: number = Date.now()
 ) {
-  const normPlan = (plan || "romantic").toLowerCase();
+  const normPlan = (plan || "romantic").toLowerCase().trim();
   const isAdmin = Boolean(isCreatedByAdmin);
-  const isVip = normPlan === "premium" || normPlan === "vip" || normPlan === "custom";
+  const isVip = normPlan === "premium" || normPlan === "vip" || normPlan === "custom" || normPlan === "lifetime";
+  const isExtend = normPlan === "extend_30" || normPlan === "extend" || normPlan === "extension";
 
   if (isAdmin || isVip) {
     return {
       isPermanent: true,
       retentionDays: undefined,
-      label: isVip ? "VIP Lifetime Retention (No Auto-Delete)" : "Admin Permanent Retention",
+      label: isVip ? "VIP Lifetime Retention (Live Forever - No Auto-Delete)" : "Admin Permanent Retention",
       expiresAt: undefined,
+    };
+  }
+
+  if (isExtend) {
+    return {
+      isPermanent: false,
+      retentionDays: RETENTION_CONSTANTS.PRO_PLAN_RETENTION_DAYS,
+      label: "+30 Days Extended Storage",
+      expiresAt: baseTimestamp + RETENTION_CONSTANTS.PRO_PLAN_RETENTION_MS,
     };
   }
 

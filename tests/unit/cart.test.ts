@@ -54,9 +54,9 @@ describe("Cart & Ordered Items Tracking", () => {
     const romanticPlan = getPlanConfig("romantic");
     const premiumPlan = getPlanConfig("premium");
 
-    expect(starterPlan.priceInRupees).toBe(31);
-    expect(romanticPlan.priceInRupees).toBe(69);
-    expect(premiumPlan.priceInRupees).toBe(169);
+    expect(starterPlan.priceInRupees).toBe(69);
+    expect(romanticPlan.priceInRupees).toBe(169);
+    expect(premiumPlan.priceInRupees).toBe(669);
   });
 
   it("handles unauthenticated user cart with safe zero defaults", () => {

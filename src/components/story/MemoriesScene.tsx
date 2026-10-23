@@ -172,9 +172,12 @@ export function MemoriesScene({
                     <h3 className="text-xl font-serif font-bold text-white mb-2">
                       {currentItem.title}
                     </h3>
-                    <p className="text-sm text-pink-200/80 max-w-sm italic">
-                      &ldquo;{currentItem.caption}&rdquo;
-                    </p>
+                    {currentItem.caption &&
+                      currentItem.caption.trim().toLowerCase() !== currentItem.title.trim().toLowerCase() && (
+                        <p className="text-sm text-pink-200/80 max-w-sm italic">
+                          &ldquo;{currentItem.caption}&rdquo;
+                        </p>
+                      )}
                   </div>
                 )}
 
@@ -199,16 +202,28 @@ export function MemoriesScene({
                 </div>
               </div>
 
-              {/* Caption & Title Footer */}
+              {/* Caption & Title Footer - Display Caption Exactly Once */}
               {currentItem.photoUrl && (
                 <div className="p-5 text-left bg-gradient-to-t from-black/90 via-black/50 to-transparent">
-                  <h3 className="text-lg font-serif font-semibold text-white">
-                    {currentItem.title}
-                  </h3>
-                  {currentItem.caption && (
-                    <p className="text-xs sm:text-sm text-pink-100/80 mt-1 line-clamp-2">
-                      {currentItem.caption}
-                    </p>
+                  {currentItem.title &&
+                  currentItem.caption &&
+                  currentItem.title.trim().toLowerCase() !== currentItem.caption.trim().toLowerCase() &&
+                  !currentItem.title.toLowerCase().startsWith("memory #") &&
+                  !currentItem.title.toLowerCase().startsWith("memory ") ? (
+                    <>
+                      <h3 className="text-base sm:text-lg font-serif font-semibold text-white">
+                        {currentItem.title}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-pink-100/90 mt-1 line-clamp-2 italic">
+                        &ldquo;{currentItem.caption}&rdquo;
+                      </p>
+                    </>
+                  ) : (
+                    <h3 className="text-sm sm:text-base font-medium text-pink-100 line-clamp-2">
+                      {currentItem.caption && !currentItem.caption.toLowerCase().startsWith("memory #")
+                        ? currentItem.caption
+                        : currentItem.title || "A special moment together"}
+                    </h3>
                   )}
                 </div>
               )}
@@ -288,7 +303,9 @@ export function MemoriesScene({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2 mb-1">
                   <h4 className="font-serif font-semibold text-white text-sm sm:text-base truncate">
-                    {item.title}
+                    {item.caption && !item.caption.toLowerCase().startsWith("memory #")
+                      ? item.caption
+                      : item.title}
                   </h4>
                   {item.dateOrMonth && (
                     <span className="text-[11px] text-pink-300/80 shrink-0 font-medium">
@@ -296,11 +313,14 @@ export function MemoriesScene({
                     </span>
                   )}
                 </div>
-                {item.caption && (
-                  <p className="text-xs text-pink-100/70 line-clamp-2 leading-relaxed">
-                    {item.caption}
-                  </p>
-                )}
+                {item.title &&
+                  item.caption &&
+                  item.title.trim().toLowerCase() !== item.caption.trim().toLowerCase() &&
+                  !item.title.toLowerCase().startsWith("memory") && (
+                    <p className="text-xs text-pink-100/70 line-clamp-2 leading-relaxed italic">
+                      &ldquo;{item.caption}&rdquo;
+                    </p>
+                  )}
                 {item.type === "chat" && item.sender && (
                   <span className="inline-block mt-1 text-[10px] text-pink-400 font-medium">
                     💬 {item.sender} {item.timestamp ? `• ${item.timestamp}` : ""}
@@ -331,7 +351,7 @@ export function MemoriesScene({
             >
               <button
                 onClick={() => setActiveModalItem(null)}
-                className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-colors"
+                className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -341,7 +361,7 @@ export function MemoriesScene({
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={activeModalItem.photoUrl}
-                    alt={activeModalItem.title}
+                    alt={activeModalItem.caption || activeModalItem.title}
                     className="w-full h-full object-contain"
                   />
                 </div>
@@ -350,7 +370,9 @@ export function MemoriesScene({
               <div className="p-6 text-left space-y-2">
                 <div className="flex items-center justify-between">
                   <h3 className="font-serif font-bold text-lg text-white">
-                    {activeModalItem.title}
+                    {activeModalItem.caption && !activeModalItem.caption.toLowerCase().startsWith("memory #")
+                      ? activeModalItem.caption
+                      : activeModalItem.title}
                   </h3>
                   {activeModalItem.dateOrMonth && (
                     <span className="text-xs text-pink-300 bg-pink-500/20 px-2.5 py-0.5 rounded-full">
@@ -358,11 +380,14 @@ export function MemoriesScene({
                     </span>
                   )}
                 </div>
-                {activeModalItem.caption && (
-                  <p className="text-sm text-pink-100/80 leading-relaxed italic">
-                    &ldquo;{activeModalItem.caption}&rdquo;
-                  </p>
-                )}
+                {activeModalItem.title &&
+                  activeModalItem.caption &&
+                  activeModalItem.title.trim().toLowerCase() !== activeModalItem.caption.trim().toLowerCase() &&
+                  !activeModalItem.title.toLowerCase().startsWith("memory") && (
+                    <p className="text-sm text-pink-100/80 leading-relaxed italic">
+                      &ldquo;{activeModalItem.caption}&rdquo;
+                    </p>
+                  )}
               </div>
             </motion.div>
           </motion.div>

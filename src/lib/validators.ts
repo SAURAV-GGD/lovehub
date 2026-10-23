@@ -66,7 +66,20 @@ export const proposalSchema = z.object({
 export type ProposalInput = z.infer<typeof proposalSchema>;
 
 export const checkoutSchema = z.object({
-  plan: z.enum(["starter", "basic", "romantic", "premium"]).default("starter"),
+  plan: z
+    .enum([
+      "starter",
+      "basic",
+      "romantic",
+      "pro",
+      "premium",
+      "custom",
+      "vip",
+      "lifetime",
+      "extend_30",
+      "extend",
+    ])
+    .default("starter"),
   proposalId: z.string().optional().nullable(),
 });
 

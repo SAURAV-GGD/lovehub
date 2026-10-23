@@ -571,6 +571,49 @@ export function AdminProposalStudio({
   const removePhoto = (idx: number) => {
     setPhotos((prev) => prev.filter((_, i) => i !== idx));
     setPhotoCaptions((prev) => prev.filter((_, i) => i !== idx));
+    toast.success("Photo removed");
+  };
+
+  const handleReplacePhoto = async (idx: number, file: File) => {
+    setIsCompressingPhotos(true);
+    const toastId = toast.loading("Uploading replacement photo to Supabase storage...");
+    try {
+      const compressedDataUrl = await compressImageFile(file, 1400, 0.85);
+      if (!compressedDataUrl) {
+        toast.error("Could not process image", { id: toastId });
+        return;
+      }
+      let finalUrl = compressedDataUrl;
+      try {
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            image: compressedDataUrl,
+            filename: file.name,
+            folder: "proposals",
+          }),
+        });
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data?.url) {
+            finalUrl = json.data.url;
+          }
+        }
+      } catch {
+        // fallback
+      }
+      setPhotos((prev) => {
+        const next = [...prev];
+        next[idx] = finalUrl;
+        return next;
+      });
+      toast.success("Photo updated successfully!", { id: toastId });
+    } catch {
+      toast.error("Failed to replace photo", { id: toastId });
+    } finally {
+      setIsCompressingPhotos(false);
+    }
   };
 
   // Save / Update Proposal Handler
@@ -1320,25 +1363,62 @@ export function AdminProposalStudio({
                     {photos.length > 0 && (
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
                         {photos.map((photo, i) => (
-                          <div key={i} className="relative group rounded-xl overflow-hidden bg-slate-900 border border-slate-800 shadow-sm">
-                            <img src={photo} alt={`Memory ${i + 1}`} className="w-full h-24 object-cover" />
-                            <button
-                              type="button"
-                              onClick={() => removePhoto(i)}
-                              className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shadow-sm"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                            <Input
-                              placeholder="Caption..."
-                              value={photoCaptions[i] || ""}
-                              onChange={(e) => {
-                                const newCaps = [...photoCaptions];
-                                newCaps[i] = e.target.value;
-                                setPhotoCaptions(newCaps);
-                              }}
-                              className="h-6 text-[10px] bg-slate-950 border-0 rounded-none text-slate-200"
-                            />
+                          <div key={i} className="relative group rounded-xl overflow-hidden bg-slate-900 border border-slate-800 shadow-md flex flex-col">
+                            {/* Photo Preview & Controls Header */}
+                            <div className="relative w-full h-28 bg-slate-950">
+                              <img src={photo} alt={`Memory ${i + 1}`} className="w-full h-full object-cover" />
+                              
+                              {/* Top Bar with Badge & Action Buttons (Always accessible on touch & desktop) */}
+                              <div className="absolute top-1.5 inset-x-1.5 flex items-center justify-between pointer-events-none">
+                                <span className="px-1.5 py-0.5 rounded-md bg-black/70 backdrop-blur-md text-[10px] font-mono font-bold text-white border border-white/20">
+                                  #{i + 1}
+                                </span>
+                                
+                                <div className="flex items-center gap-1 pointer-events-auto">
+                                  {/* Replace / Edit Photo Button */}
+                                  <label
+                                    title="Replace photo"
+                                    className="w-6 h-6 rounded-full bg-slate-800/90 hover:bg-slate-700 text-white flex items-center justify-center cursor-pointer shadow-md border border-white/20 transition-all hover:scale-105"
+                                  >
+                                    <Pencil className="w-3 h-3 text-pink-300" />
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      className="hidden"
+                                      onChange={(e) => {
+                                        const f = e.target.files?.[0];
+                                        if (f) handleReplacePhoto(i, f);
+                                        e.target.value = "";
+                                      }}
+                                    />
+                                  </label>
+
+                                  {/* Delete / Remove Photo Button */}
+                                  <button
+                                    type="button"
+                                    onClick={() => removePhoto(i)}
+                                    title="Delete photo"
+                                    className="w-6 h-6 rounded-full bg-red-600/90 hover:bg-red-600 text-white flex items-center justify-center cursor-pointer shadow-md border border-white/20 transition-all hover:scale-105 active:scale-95"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Caption Input */}
+                            <div className="p-1.5 bg-slate-950 border-t border-slate-800">
+                              <Input
+                                placeholder={`Caption for Photo #${i + 1}...`}
+                                value={photoCaptions[i] || ""}
+                                onChange={(e) => {
+                                  const newCaps = [...photoCaptions];
+                                  newCaps[i] = e.target.value;
+                                  setPhotoCaptions(newCaps);
+                                }}
+                                className="h-7 text-[11px] bg-slate-900 border-slate-800 rounded-md text-slate-200 placeholder:text-slate-500 focus-visible:ring-1 focus-visible:ring-rose-500"
+                              />
+                            </div>
                           </div>
                         ))}
                       </div>

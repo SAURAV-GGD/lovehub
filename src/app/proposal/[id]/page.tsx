@@ -531,7 +531,7 @@ export default function ProposalPage() {
   // If preview has expired (120 seconds) or 30-day Pro storage has expired
   if (isExpired || (proposal && secondsRemaining !== null && secondsRemaining <= 0)) {
     const is30DayExpiry = (expiredInfo as any)?.code === "PROPOSAL_EXPIRED_30_DAYS";
-    const rawPlan = is30DayExpiry ? "premium" : (proposal?.plan || expiredInfo?.plan || "starter");
+    const rawPlan = proposal?.plan || expiredInfo?.plan || "romantic";
     const planConfig = getPlanConfig(rawPlan);
     const price = planConfig.priceRupees;
     const targetProposalId = proposal?.id || expiredInfo?.proposalId || id;
@@ -542,61 +542,102 @@ export default function ProposalPage() {
         <motion.div
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="max-w-md w-full glass border border-white/15 rounded-2xl p-8 text-center text-white shadow-2xl space-y-6"
+          className="max-w-md w-full glass border border-white/15 rounded-2xl p-7 text-center text-white shadow-2xl space-y-5"
         >
-          <div className="w-16 h-16 bg-rose-500/15 border border-rose-500/30 rounded-full flex items-center justify-center mx-auto">
-            <Lock className="w-8 h-8 text-rose-400" />
+          <div className="w-14 h-14 bg-rose-500/15 border border-rose-500/30 rounded-full flex items-center justify-center mx-auto">
+            <Lock className="w-7 h-7 text-rose-400" />
           </div>
 
           <div className="space-y-2">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-semibold">
               <Clock className="w-3.5 h-3.5" />
-              <span>{is30DayExpiry ? "30-Day Pro Storage Expired" : "120-Second Preview Expired"}</span>
+              <span>{is30DayExpiry ? "30-Day Storage Ended" : "120-Second Preview Expired"}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-              {is30DayExpiry ? "30-Day Storage Ended" : "Preview Link Expired"}
+              {is30DayExpiry ? "Proposal Link Has Ended" : "Live Preview Expired"}
             </h1>
-            <p className="text-sm text-slate-300 leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
               {is30DayExpiry ? (
                 <>
-                  The proposal page for <strong>{partner}</strong> was stored for 30 days under the Pro plan. Upgrade to the <strong>VIP Plan</strong> for permanent lifetime storage with zero auto-delete restrictions!
+                  The proposal page for <strong>{partner}</strong> was valid for 30 days. You can extend it for another 30 days or upgrade to <strong>VIP Keepsake</strong> to keep it live forever!
                 </>
               ) : (
                 <>
-                  The live preview for <strong>{partner}</strong> was active for 120 seconds. Your draft has been safely preserved.
+                  The live preview for <strong>{partner}</strong> was active for 120 seconds. All your photos and story draft are safely preserved.
                 </>
               )}
             </p>
           </div>
 
-          <div className="p-4 bg-white/5 rounded-xl border border-white/10 text-left space-y-2 text-xs">
-            <div className="flex items-center justify-between">
-              <span className="text-slate-400">Selected Plan:</span>
-              <span className="font-semibold text-rose-300 uppercase">{planConfig.name} Plan</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-slate-400">One-Time Activation:</span>
-              <span className="text-base font-bold text-white">₹{price}</span>
-            </div>
-            <p className="text-[11px] text-slate-400 pt-1.5 border-t border-white/10">
-              Unlocks your permanent, unguessable private link with lifetime hosting.
-            </p>
+          {/* Action Choice Cards */}
+          <div className="space-y-3 pt-1 text-left">
+            {is30DayExpiry ? (
+              <>
+                {/* Option 1: Extend 30 Days */}
+                <Link
+                  href={`/checkout?plan=extend_30&proposalId=${targetProposalId}`}
+                  className="block p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 transition-all group"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm font-bold text-white group-hover:text-rose-300 transition-colors">
+                        Extend for +30 Days
+                      </div>
+                      <div className="text-[11px] text-slate-400">Reactivate this proposal for another month</div>
+                    </div>
+                    <span className="text-base font-extrabold text-rose-400">₹69</span>
+                  </div>
+                </Link>
+
+                {/* Option 2: Live Forever VIP */}
+                <Link
+                  href={`/checkout?plan=premium&proposalId=${targetProposalId}`}
+                  className="block p-4 rounded-xl bg-gradient-to-r from-amber-500/20 to-rose-500/20 hover:from-amber-500/30 hover:to-rose-500/30 border-2 border-amber-400/40 transition-all group shadow-lg"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm font-bold text-amber-200 flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                        <span>Make It Live FOREVER</span>
+                      </div>
+                      <div className="text-[11px] text-slate-300">Permanent lifetime hosting • Zero auto-delete</div>
+                    </div>
+                    <span className="text-base font-extrabold text-amber-300">₹669</span>
+                  </div>
+                </Link>
+              </>
+            ) : (
+              <>
+                {/* Option 1: Unlock 30-Day Link */}
+                <Link
+                  href={`/checkout?plan=${planConfig.id}&proposalId=${targetProposalId}`}
+                  className="block"
+                >
+                  <Button
+                    size="lg"
+                    className="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm h-12 rounded-xl gap-2 shadow-lg cursor-pointer"
+                  >
+                    <Clock className="w-4 h-4" />
+                    <span>Unlock 30-Day Active Link (₹{price})</span>
+                  </Button>
+                </Link>
+
+                {/* Option 2: Make it Live Forever */}
+                <Link
+                  href={`/checkout?plan=premium&proposalId=${targetProposalId}`}
+                  className="block p-3.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-center transition-all group"
+                >
+                  <div className="text-xs font-bold text-amber-200 flex items-center justify-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                    <span>Make It Live FOREVER (Lifetime Keepsake) — ₹669</span>
+                  </div>
+                  <div className="text-[10px] text-slate-400 mt-0.5">Permanent web hosting • Never expires • Custom URL</div>
+                </Link>
+              </>
+            )}
           </div>
 
-          <div className="space-y-3 pt-2">
-            <Link
-              href={`/checkout?plan=${planConfig.id}&proposalId=${targetProposalId}`}
-              className="block w-full"
-            >
-              <Button
-                size="lg"
-                className="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm h-12 rounded-xl gap-2 shadow-lg cursor-pointer"
-              >
-                <Sparkles className="w-4 h-4" />
-                <span>Pay ₹{price} to Unlock Permanent Link</span>
-              </Button>
-            </Link>
-
+          <div className="pt-2 border-t border-white/10">
             <Link href="/" className="inline-block text-xs text-slate-400 hover:text-white transition-colors">
               Return to Home
             </Link>

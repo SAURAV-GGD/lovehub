@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Heart, ArrowLeft, Wand2, Camera, Music, X, Upload, ArrowRight, Sparkles, Shield, AlertTriangle, CheckCircle2, ExternalLink, Clock, Lock, ShoppingBag, User, Loader2, Eye, Smartphone, Gift } from "lucide-react";
+import { Heart, ArrowLeft, Wand2, Camera, Music, X, Upload, ArrowRight, Sparkles, Shield, AlertTriangle, CheckCircle2, ExternalLink, Clock, Lock, ShoppingBag, User, Loader2, Eye, Smartphone, Gift, Pencil, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -408,6 +408,45 @@ function CreateContent() {
     }
     setPhotos((prev) => prev.filter((_, i) => i !== index));
     setPhotoCaptions((prev) => prev.filter((_, i) => i !== index));
+    toast.success("Photo removed");
+  };
+
+  const handleReplacePhoto = async (index: number, file: File) => {
+    setIsCompressingPhotos(true);
+    const toastId = toast.loading("Uploading replacement photo to Supabase storage...");
+    try {
+      const compressed = await compressImageFile(file);
+      if (!compressed) {
+        toast.error("Could not process image", { id: toastId });
+        return;
+      }
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          image: compressed,
+          filename: file.name,
+          folder: "proposals",
+        }),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.data?.url) {
+          setPhotos((prev) => {
+            const next = [...prev];
+            next[index] = json.data.url;
+            return next;
+          });
+          toast.success("Photo updated successfully!", { id: toastId });
+          return;
+        }
+      }
+      toast.error("Failed to upload replacement", { id: toastId });
+    } catch {
+      toast.error("Error replacing photo", { id: toastId });
+    } finally {
+      setIsCompressingPhotos(false);
+    }
   };
 
   const updateCaption = (index: number, caption: string) => {
@@ -1061,9 +1100,9 @@ function CreateContent() {
             >
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs font-bold text-foreground">Starter</span>
-                <span className="text-xs font-extrabold text-rose-600">₹31</span>
+                <span className="text-xs font-extrabold text-rose-600">₹69</span>
               </div>
-              <p className="text-[10px] text-muted-foreground line-clamp-1">3 photos • AI Letter • Private Link</p>
+              <p className="text-[10px] text-muted-foreground line-clamp-1">30 Days • 5 photos • AI Letter</p>
             </button>
 
             <button
@@ -1080,26 +1119,33 @@ function CreateContent() {
               </span>
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs font-bold text-foreground">Romantic</span>
-                <span className="text-xs font-extrabold text-rose-600">₹69</span>
+                <span className="text-xs font-extrabold text-rose-600">₹169</span>
               </div>
-              <p className="text-[10px] text-muted-foreground line-clamp-1">Runaway NO • Music • Confetti • 5 photos</p>
+              <p className="text-[10px] text-muted-foreground line-clamp-1">30 Days • Runaway NO • Music • 10 photos</p>
             </button>
 
             <button
               type="button"
               onClick={() => setPlanKey("premium")}
-              className={`p-3 rounded-xl text-left transition-all border cursor-pointer ${
-                planKey === "premium"
+              className={`p-3 rounded-xl text-left transition-all border relative cursor-pointer ${
+                planKey === "premium" || planKey === "custom"
                   ? "bg-rose-50 dark:bg-rose-950/40 border-rose-500 shadow-sm ring-1 ring-rose-500"
                   : "bg-background border-border/70 hover:border-border"
               }`}
             >
+              <span className="absolute -top-2 right-2 px-1.5 py-0.2 rounded-full bg-amber-500 text-white text-[9px] font-bold">
+                LIFETIME
+              </span>
               <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-bold text-foreground">Premium</span>
-                <span className="text-xs font-extrabold text-rose-600">₹169</span>
+                <span className="text-xs font-bold text-foreground">VIP Keepsake</span>
+                <span className="text-xs font-extrabold text-amber-600 dark:text-amber-400">₹669</span>
               </div>
-              <p className="text-[10px] text-muted-foreground line-clamp-1">Custom Slug • 12 photos • 3D Flipbook</p>
+              <p className="text-[10px] text-muted-foreground line-clamp-1">✨ LIVE FOREVER • Custom Slug • 20 photos</p>
             </button>
+          </div>
+          <div className="mt-2.5 pt-2 border-t border-border/60 text-[11px] text-muted-foreground flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+            <span>⏳ Starter &amp; Romantic links are active for <strong>30 days</strong> (extend +30 days anytime for ₹69).</span>
+            <span className="text-rose-600 dark:text-rose-400 font-semibold">VIP Keepsake (₹669) = Live Forever ✨</span>
           </div>
         </div>
 
@@ -1513,25 +1559,51 @@ function CreateContent() {
                   {photos.length > 0 && (
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                       {photos.map((photo, index) => (
-                        <div key={index} className="relative group">
-                          <div className="aspect-square rounded-lg overflow-hidden bg-muted">
+                        <div key={index} className="relative group rounded-xl overflow-hidden border border-border/80 bg-muted/40 p-1 flex flex-col shadow-sm">
+                          <div className="relative aspect-square rounded-lg overflow-hidden bg-muted">
                             <img
                               src={photo}
                               alt={`Memory ${index + 1}`}
                               className="w-full h-full object-cover"
                             />
+                            {/* Always visible top bar with badge, replace & delete buttons */}
+                            <div className="absolute top-1.5 inset-x-1.5 flex items-center justify-between">
+                              <span className="px-1.5 py-0.5 rounded-md bg-black/75 backdrop-blur-md text-[10px] font-mono font-bold text-white border border-white/20">
+                                #{index + 1}
+                              </span>
+                              <div className="flex items-center gap-1">
+                                <label
+                                  title="Replace Photo"
+                                  className="w-7 h-7 bg-slate-900/85 hover:bg-slate-900 text-white rounded-full flex items-center justify-center cursor-pointer shadow-md transition-all hover:scale-105 border border-white/20"
+                                >
+                                  <Pencil className="w-3.5 h-3.5 text-pink-300" />
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                      const f = e.target.files?.[0];
+                                      if (f) handleReplacePhoto(index, f);
+                                      e.target.value = "";
+                                    }}
+                                  />
+                                </label>
+                                <button
+                                  type="button"
+                                  onClick={() => removePhoto(index)}
+                                  title="Remove Photo"
+                                  className="w-7 h-7 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center cursor-pointer shadow-md transition-all hover:scale-105 active:scale-95 border border-white/20"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
                           </div>
-                          <button
-                            onClick={() => removePhoto(index)}
-                            className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
                           <Input
-                            placeholder="Add caption..."
-                            value={photoCaptions[index]}
+                            placeholder={`Caption for Photo #${index + 1}...`}
+                            value={photoCaptions[index] || ""}
                             onChange={(e) => updateCaption(index, e.target.value)}
-                            className="mt-2 text-sm"
+                            className="mt-1.5 text-xs h-8 bg-background border-border"
                           />
                         </div>
                       ))}
