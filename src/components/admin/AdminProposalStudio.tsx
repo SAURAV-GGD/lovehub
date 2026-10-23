@@ -1323,7 +1323,7 @@ export function AdminProposalStudio({
                         <input
                           type="file"
                           multiple
-                          accept="image/*"
+                          accept="image/*,video/*,.heic,.heif,.HEIC,.HEIF,.mov,.MOV"
                           disabled={isCompressingPhotos}
                           onChange={handlePhotoUpload}
                           className="hidden"
@@ -1383,7 +1383,7 @@ export function AdminProposalStudio({
                                     <Pencil className="w-3 h-3 text-pink-300" />
                                     <input
                                       type="file"
-                                      accept="image/*"
+                                      accept="image/*,video/*,.heic,.heif,.HEIC,.HEIF,.mov,.MOV"
                                       className="hidden"
                                       onChange={(e) => {
                                         const f = e.target.files?.[0];

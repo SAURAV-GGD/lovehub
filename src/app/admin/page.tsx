@@ -174,6 +174,30 @@ export default function AdminDashboardPage() {
   const [createdProposalModal, setCreatedProposalModal] = useState<ProposalItem | null>(null);
   const [createdBirthdayModal, setCreatedBirthdayModal] = useState<BirthdayRecord | null>(null);
   const [editingProposalForStudio, setEditingProposalForStudio] = useState<ProposalItem | null>(null);
+  const [photoInspectorProposal, setPhotoInspectorProposal] = useState<ProposalItem | null>(null);
+  const [responseInspectorProposal, setResponseInspectorProposal] = useState<ProposalItem | null>(null);
+  const [responseInspectorData, setResponseInspectorData] = useState<any[]>([]);
+  const [isLoadingResponses, setIsLoadingResponses] = useState(false);
+
+  // Load responses when opening Response Inspector Modal
+  const openResponseInspector = async (proposal: ProposalItem) => {
+    setResponseInspectorProposal(proposal);
+    setIsLoadingResponses(true);
+    setResponseInspectorData([]);
+    try {
+      const res = await fetch(`/api/proposals/${encodeURIComponent(proposal.id)}/response`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          setResponseInspectorData(json.data);
+        }
+      }
+    } catch {
+      toast.error("Failed to fetch partner responses");
+    } finally {
+      setIsLoadingResponses(false);
+    }
+  };
 
   // Proposal Creator States
   const [creatorPlan, setCreatorPlan] = useState<PlanType>("custom");
@@ -1396,6 +1420,24 @@ export default function AdminDashboardPage() {
                                 <Button
                                   variant="outline"
                                   size="sm"
+                                  onClick={() => setPhotoInspectorProposal(item)}
+                                  className="border-slate-800 bg-slate-950 text-rose-300 hover:text-white text-xs h-7 px-2"
+                                  title="View Uploaded Photos in Gallery"
+                                >
+                                  <Camera className="w-3 h-3 mr-1" /> Photos ({photosCount})
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => openResponseInspector(item)}
+                                  className="border-slate-800 bg-slate-950 text-purple-300 hover:text-white text-xs h-7 px-2"
+                                  title="View Partner Quiz Answers"
+                                >
+                                  <Sparkles className="w-3 h-3 mr-1" /> Answers
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
                                   onClick={() => {
                                     setEditingProposalForStudio(item);
                                     setActiveTab("creator");
@@ -2087,6 +2129,299 @@ export default function AdminDashboardPage() {
           </DialogContent>
         </Dialog>
       )}
+
+{/* Global Admin Photo Gallery Inspector Modal */}
+        {photoInspectorProposal && (
+          <Dialog open={!!photoInspectorProposal} onOpenChange={() => setPhotoInspectorProposal(null)}>
+            <DialogContent className="bg-slate-950 border border-slate-800 text-slate-100 max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-2xl">
+              <DialogHeader className="space-y-2 border-b border-white/10 pb-4">
+                <div className="flex items-center justify-between">
+                  <span className="px-3 py-1 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-semibold">
+                    <Camera className="w-3.5 h-3.5 inline mr-1" /> Admin Media Vault
+                  </span>
+                  <Badge className="bg-slate-800 text-slate-300 uppercase text-[11px]">
+                    Plan: {photoInspectorProposal.plan}
+                  </Badge>
+                </div>
+                <DialogTitle className="text-xl sm:text-2xl font-[family-name:var(--font-playfair)] italic font-bold text-white">
+                  Uploaded Photos: {photoInspectorProposal.title}
+                </DialogTitle>
+                <DialogDescription className="text-xs text-slate-400 flex flex-wrap gap-x-4 gap-y-1">
+                  <span>Creator: <strong className="text-slate-200">{photoInspectorProposal.userName || "Client"}</strong> ({photoInspectorProposal.userEmail || "No Email"})</span>
+                  <span>Recipient: <strong className="text-rose-300">{photoInspectorProposal.clientName || "Partner"}</strong></span>
+                  <span>User ID: <code className="text-slate-300 font-mono text-[10px]">{photoInspectorProposal.userId}</code></span>
+                </DialogDescription>
+              </DialogHeader>
+
+              {(() => {
+                const contentObj = (photoInspectorProposal.content || {}) as any;
+                // Gather photos from content.photos or storyConfig
+                let photoItems: Array<{ url: string; caption?: string; title?: string }> = [];
+                
+                if (Array.isArray(contentObj.photos)) {
+                  contentObj.photos.forEach((p: any, idx: number) => {
+                    if (typeof p === "string") {
+                      const caption = Array.isArray(contentObj.photoCaptions) ? contentObj.photoCaptions[idx] : "";
+                      photoItems.push({ url: p, caption });
+                    } else if (p && typeof p === "object") {
+                      photoItems.push({
+                        url: p.photoUrl || p.url || "",
+                        caption: p.caption || "",
+                        title: p.title || "",
+                      });
+                    }
+                  });
+                }
+
+                const memoriesList = contentObj.storyConfig?.scenes?.memories?.memories;
+                if (Array.isArray(memoriesList) && photoItems.length === 0) {
+                  memoriesList.forEach((m: any) => {
+                    if (m?.photoUrl) {
+                      photoItems.push({
+                        url: m.photoUrl,
+                        caption: m.caption || "",
+                        title: m.title || "",
+                      });
+                    }
+                  });
+                }
+
+                if (photoItems.length === 0) {
+                  return (
+                    <div className="py-16 text-center space-y-3">
+                      <div className="w-16 h-16 mx-auto rounded-3xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-500">
+                        <Camera className="w-8 h-8" />
+                      </div>
+                      <p className="text-sm font-medium text-slate-300">No photos uploaded for this proposal</p>
+                      <p className="text-xs text-slate-500">The user has not added milestone photos to this creation yet.</p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="space-y-4 pt-4">
+                    <div className="flex items-center justify-between text-xs text-slate-400">
+                      <span>Total Photos Uploaded: <strong>{photoItems.length}</strong></span>
+                      <span className="text-emerald-400 flex items-center gap-1 font-mono text-[11px]">
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Supabase Storage CDN Active
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                      {photoItems.map((p, pIdx) => (
+                        <div
+                          key={pIdx}
+                          className="group relative rounded-2xl overflow-hidden bg-slate-900 border border-slate-800 flex flex-col justify-between shadow-lg hover:border-rose-500/30 transition-all"
+                        >
+                          <div className="relative aspect-4/3 w-full bg-black/60 overflow-hidden">
+                            <img
+                              src={p.url}
+                              alt={p.caption || `Photo ${pIdx + 1}`}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            <div className="absolute top-2 left-2">
+                              <span className="px-2 py-0.5 rounded-md bg-black/80 backdrop-blur-md text-[10px] font-mono font-bold text-white border border-white/20">
+                                #{pIdx + 1}
+                              </span>
+                            </div>
+                            <a
+                              href={p.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/80 text-slate-200 hover:text-white border border-white/20 opacity-0 group-hover:opacity-100 transition-opacity"
+                              title="Open original high-res cloud image"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
+                          </div>
+
+                          <div className="p-3 bg-slate-900/90 space-y-1">
+                            {p.title && <p className="text-xs font-semibold text-white truncate">{p.title}</p>}
+                            <p className="text-[11px] text-slate-400 line-clamp-2 leading-relaxed">
+                              {p.caption || <em className="text-slate-600">No caption provided</em>}
+                            </p>
+                            <a
+                              href={p.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-[10px] text-rose-400 hover:underline truncate block pt-1 font-mono"
+                            >
+                              {p.url}
+                            </a>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              <div className="pt-4 mt-6 border-t border-slate-800 flex justify-end">
+                <Button
+                  type="button"
+                  onClick={() => setPhotoInspectorProposal(null)}
+                  className="rounded-full bg-slate-800 hover:bg-slate-700 text-white text-xs px-6 py-2"
+                >
+                  Close Photo Gallery
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+
+        {/* Global Admin Partner Responses Inspector Modal */}
+        {responseInspectorProposal && (
+          <Dialog open={!!responseInspectorProposal} onOpenChange={() => setResponseInspectorProposal(null)}>
+            <DialogContent className="bg-slate-950 border border-slate-800 text-slate-100 max-w-2xl max-h-[85vh] overflow-y-auto rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-2xl">
+              <DialogHeader className="space-y-2 border-b border-white/10 pb-4">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-300 text-xs font-semibold w-fit">
+                  <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                  <span>Partner Interaction Audit</span>
+                </div>
+                <DialogTitle className="text-xl sm:text-2xl font-[family-name:var(--font-playfair)] italic font-bold text-white">
+                  Partner Responses: {responseInspectorProposal.title}
+                </DialogTitle>
+                <DialogDescription className="text-xs text-slate-400">
+                  Creator: <strong className="text-slate-200">{responseInspectorProposal.userName || "Client"}</strong> ({responseInspectorProposal.userEmail || "No Email"}) • Recipient: <strong className="text-rose-300">{responseInspectorProposal.clientName || "Partner"}</strong>
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-5 pt-4">
+                {isLoadingResponses ? (
+                  <div className="py-12 text-center text-xs text-slate-400 animate-pulse">
+                    Fetching latest partner response records...
+                  </div>
+                ) : (
+                  <>
+                    {/* Acceptance banner */}
+                    {(() => {
+                      const acceptEvent = responseInspectorData.find((e) => e.eventType === "accepted");
+                      if (acceptEvent) {
+                        return (
+                          <div className="p-4 rounded-2xl bg-gradient-to-r from-pink-500/20 to-purple-500/20 border border-pink-500/40 text-center space-y-1">
+                            <span className="text-base font-bold text-white font-[family-name:var(--font-playfair)] italic">
+                              She/He Said YES! 🤍✨
+                            </span>
+                            <p className="text-xs text-pink-200">
+                              Accepted on: {new Date(acceptEvent.createdAt || acceptEvent.payload?.timestamp).toLocaleString()}
+                            </p>
+                          </div>
+                        );
+                      }
+                      return (
+                        <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 text-center text-xs text-slate-400">
+                          Proposal response status: <span className="text-amber-400 font-semibold">Pending (Partner has not accepted yet)</span>
+                        </div>
+                      );
+                    })()}
+
+                    {/* Quiz Questions & Options Breakdown */}
+                    <div className="space-y-4">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-2">
+                        Quiz Questions &amp; Partner Selected Options
+                      </h4>
+
+                      {(() => {
+                        const contentObj = (responseInspectorProposal.content || {}) as any;
+                        const questions = contentObj.storyConfig?.scenes?.quiz?.questions || contentObj.questions || [];
+                        const quizEvents = responseInspectorData.filter((r) => r.eventType === "quiz_answered");
+
+                        if (questions.length === 0 && quizEvents.length === 0) {
+                          return (
+                            <p className="text-xs text-slate-500 py-4 text-center">
+                              No quiz questions configured or answered for this proposal.
+                            </p>
+                          );
+                        }
+
+                        // Combine questions
+                        const qList: Array<{ id: string; question: string; options: string[] }> = [];
+                        questions.forEach((q: any) => {
+                          qList.push({ id: q.id, question: q.question, options: q.options || [] });
+                        });
+                        quizEvents.forEach((ev: any) => {
+                          const qId = ev.payload?.questionId || ev.id;
+                          const qText = ev.payload?.questionText || "Relationship Question";
+                          const opts = ev.payload?.options || [];
+                          if (!qList.some((q) => q.id === qId || q.question === qText)) {
+                            qList.push({ id: qId, question: qText, options: opts });
+                          }
+                        });
+
+                        return (
+                          <div className="space-y-4">
+                            {qList.map((q, idx) => {
+                              const answerEvent = quizEvents.find(
+                                (e: any) => e.payload?.questionId === q.id || e.payload?.questionText === q.question
+                              );
+                              const partnerChoice = answerEvent?.payload?.answer;
+
+                              return (
+                                <div key={idx} className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div>
+                                      <span className="text-[10px] font-mono text-purple-400 uppercase font-bold">
+                                        Question #{idx + 1}
+                                      </span>
+                                      <p className="text-xs font-semibold text-white">{q.question}</p>
+                                    </div>
+                                    {partnerChoice ? (
+                                      <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/40 text-[10px] shrink-0">
+                                        Answered
+                                      </Badge>
+                                    ) : (
+                                      <Badge className="bg-slate-800 text-slate-500 text-[10px] shrink-0">
+                                        No answer
+                                      </Badge>
+                                    )}
+                                  </div>
+
+                                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+                                    {(q.options.length > 0 ? q.options : [partnerChoice || "Option 1"]).map((opt, optIdx) => {
+                                      const isChosen = opt === partnerChoice;
+                                      return (
+                                        <div
+                                          key={optIdx}
+                                          className={`p-2.5 rounded-xl text-xs flex flex-col justify-between ${
+                                            isChosen
+                                              ? "bg-emerald-500/20 border-2 border-emerald-500/60 text-white font-bold"
+                                              : "bg-slate-950 border border-slate-800 text-slate-400 opacity-60"
+                                          }`}
+                                        >
+                                          <span>{opt}</span>
+                                          {isChosen && (
+                                            <span className="text-[10px] text-emerald-300 flex items-center gap-1 font-semibold mt-1">
+                                              <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                                              Selected Option ✨
+                                            </span>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="pt-4 mt-6 border-t border-slate-800 flex justify-end">
+                <Button
+                  type="button"
+                  onClick={() => setResponseInspectorProposal(null)}
+                  className="rounded-full bg-slate-800 hover:bg-slate-700 text-white text-xs px-6 py-2"
+                >
+                  Close
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
 
       {/* ========================================================
           MODAL: INSPECT PROPOSAL SAVED DATA

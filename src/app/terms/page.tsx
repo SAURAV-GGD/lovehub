@@ -97,6 +97,20 @@ export default function TermsPage() {
               LoveHub reserves the immediate right, without prior warning, to remove any proposal or terminate any account reported for uploading photos of individuals without their express consent, or in violation of copyright or applicable laws.
             </p>
           </section>
+
+          <section className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-100 space-y-3">
+            <h2 className="text-xl font-bold text-gray-900">
+              5. Automated Security Scanning, Platform Integrity &amp; Administrative Moderation
+            </h2>
+            <div className="text-sm text-gray-600 leading-relaxed space-y-3">
+              <p>
+                To defend LoveHub users, server infrastructure, and partner links against malicious software, unauthorized scripts, non-media uploads (such as arbitrary text, executable binaries, or unverified documents), and copyright infringement, all media assets (images and videos) and proposal payloads are subject to routine automated verification, security audits, and administrative inspection.
+              </p>
+              <p>
+                You explicitly acknowledge and agree that platform maintainers, authorized security personnel, and automated moderation engines have technical access to backend storage vaults and databases. This access is maintained exclusively to audit system health, detect and purge malicious or fraudulent uploads, protect community standards, and guarantee service uptime. User-uploaded files are stored in secured cloud environments and are not end-to-end encrypted against administrative security audits. LoveHub reserves the unconditional right to quarantine, filter, or permanently delete any media or proposal data identified as malicious, unverified, or violating acceptable use policies.
+              </p>
+            </div>
+          </section>
         </div>
 
         <div className="text-center pt-4 border-t border-gray-200">

@@ -104,7 +104,14 @@ export function StoryPlayer({
 
   // Scene 2 Quiz answer
   const handleQuizAnswer = (questionId: string, answer: string) => {
-    logResponse("quiz_answered", { questionId, answer });
+    const qObj = storyConfig.quiz?.questions?.find((q: { id: string; question: string; options: string[] }) => q.id === questionId);
+    logResponse("quiz_answered", {
+      questionId,
+      answer,
+      questionText: qObj?.question || "Relationship Quiz Question",
+      options: qObj?.options || [],
+      timestamp: new Date().toISOString(),
+    });
   };
 
   // Scene 3 YES Acceptance
@@ -112,6 +119,7 @@ export function StoryPlayer({
     setShowCelebration(true);
     logResponse("accepted", {
       partnerName: proposal.partnerName,
+      partnerResponse: "YES! 🤍✨",
       timestamp: new Date().toISOString(),
     });
   };

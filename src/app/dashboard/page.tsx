@@ -30,7 +30,21 @@ import {
   Receipt,
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { BirthdayRecord } from "@/lib/admin-store";
+
+interface ResponseEvent {
+  id: string;
+  eventType: string;
+  payload: any;
+  createdAt: string;
+}
 
 interface ProposalItem {
   id: string;
@@ -42,6 +56,15 @@ interface ProposalItem {
   createdAt: string;
   hasSaidYes?: boolean;
   quizAnswerCount?: number;
+  acceptedAt?: string;
+  responses?: ResponseEvent[];
+  questions?: Array<{
+    id: string;
+    question: string;
+    options: string[];
+    preferredAnswer?: string;
+  }>;
+  content?: Record<string, any>;
 }
 
 interface OrderItem {
@@ -63,6 +86,7 @@ export default function DashboardPage() {
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [activeTab, setActiveTab] = useState<"proposals" | "birthdays" | "orders">("proposals");
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedProposalForAnswers, setSelectedProposalForAnswers] = useState<ProposalItem | null>(null);
 
   useEffect(() => {
     if (!isSessionLoading && !session?.user) {
@@ -85,20 +109,41 @@ export default function DashboardPage() {
             const rawItems = json.data as ProposalItem[];
             const itemsWithStats = await Promise.all(
               rawItems.map(async (item) => {
+                let responses: ResponseEvent[] = [];
+                let hasYes = false;
+                let acceptedAt = "";
+                let quizCount = 0;
                 try {
                   const rRes = await fetch(`/api/proposals/${encodeURIComponent(item.id)}/response`);
                   if (rRes.ok) {
                     const rJson = await rRes.json();
                     if (rJson.success && Array.isArray(rJson.data)) {
-                      const hasYes = rJson.data.some((e: any) => e.eventType === "accepted");
-                      const quizCount = rJson.data.filter((e: any) => e.eventType === "quiz_answered").length;
-                      return { ...item, hasSaidYes: hasYes, quizAnswerCount: quizCount };
+                      responses = rJson.data as ResponseEvent[];
+                      const acceptEvent = responses.find((e) => e.eventType === "accepted");
+                      if (acceptEvent) {
+                        hasYes = true;
+                        acceptedAt = acceptEvent.createdAt || (acceptEvent.payload?.timestamp as string) || "";
+                      }
+                      quizCount = responses.filter((e) => e.eventType === "quiz_answered").length;
                     }
                   }
                 } catch {
                   // Fallback
                 }
-                return item;
+
+                // Extract questions from storyConfig or content
+                const contentObj = (item.content || {}) as any;
+                const storyConfig = contentObj?.storyConfig || {};
+                const questions = storyConfig?.scenes?.quiz?.questions || contentObj?.questions || [];
+
+                return {
+                  ...item,
+                  hasSaidYes: hasYes,
+                  acceptedAt,
+                  quizAnswerCount: quizCount,
+                  responses,
+                  questions,
+                };
               })
             );
             setProposals(itemsWithStats);
@@ -553,6 +598,23 @@ export default function DashboardPage() {
                     <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 font-mono text-[11px] text-slate-400 truncate">
                       lovehub.site/proposal/{item.slug || item.id}
                     </div>
+
+                    {/* View Partner Responses / Quiz Choices Button */}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedProposalForAnswers(item)}
+                      className="w-full rounded-2xl bg-white/[0.06] hover:bg-white/[0.12] border-white/15 text-xs text-rose-300 hover:text-white font-semibold py-2.5 flex items-center justify-center gap-2 transition-all hover:scale-[1.01] shadow-sm cursor-pointer"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                      <span>View Partner Answers ({item.quizAnswerCount || 0})</span>
+                      {item.hasSaidYes && (
+                        <span className="ml-1 px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 text-[10px] font-bold border border-pink-500/30">
+                          YES! 🤍
+                        </span>
+                      )}
+                    </Button>
                   </div>
 
                   <div className="pt-4 border-t border-white/10 flex items-center gap-2">
@@ -802,6 +864,225 @@ export default function DashboardPage() {
             </Link>
           </Button>
         </div>
+
+        {/* Partner Quiz Responses & Choices Modal */}
+        {selectedProposalForAnswers && (
+          <Dialog
+            open={!!selectedProposalForAnswers}
+            onOpenChange={(open) => {
+              if (!open) setSelectedProposalForAnswers(null);
+            }}
+          >
+            <DialogContent className="bg-slate-950 border border-white/15 text-slate-100 max-w-2xl max-h-[85vh] overflow-y-auto rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-2xl">
+              <DialogHeader className="space-y-2">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-semibold w-fit">
+                  <Heart className="w-3.5 h-3.5 fill-rose-400 text-rose-400" />
+                  <span>Partner Interaction Ledger</span>
+                </div>
+                <DialogTitle className="text-xl sm:text-2xl font-[family-name:var(--font-playfair)] italic font-bold text-white tracking-tight">
+                  Partner Responses &amp; Selected Answers
+                </DialogTitle>
+                <DialogDescription className="text-xs text-slate-400">
+                  Detailed inspection of questions and choices selected by{" "}
+                  <strong className="text-rose-300">
+                    {selectedProposalForAnswers.clientName || "Your Partner"}
+                  </strong>{" "}
+                  for &ldquo;{selectedProposalForAnswers.title}&rdquo;.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-6 pt-4">
+                {/* 1. Proposal Acceptance Celebration Card */}
+                {selectedProposalForAnswers.hasSaidYes ? (
+                  <div className="p-5 rounded-2xl bg-gradient-to-r from-pink-500/20 via-rose-500/15 to-purple-500/20 border-2 border-pink-500/40 text-center space-y-2 shadow-lg shadow-pink-500/10">
+                    <div className="w-12 h-12 mx-auto rounded-full bg-pink-500/30 border border-pink-500/50 flex items-center justify-center">
+                      <Heart className="w-6 h-6 text-pink-300 fill-pink-400 animate-bounce" />
+                    </div>
+                    <h4 className="text-lg font-bold text-white font-[family-name:var(--font-playfair)] italic">
+                      She/He Said YES! 🤍✨
+                    </h4>
+                    <p className="text-xs text-pink-200">
+                      Your partner confirmed acceptance
+                      {selectedProposalForAnswers.acceptedAt
+                        ? ` on ${new Date(selectedProposalForAnswers.acceptedAt).toLocaleString()}`
+                        : "!"}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-2xl bg-white/5 border border-white/10 text-center space-y-1 text-xs text-slate-400">
+                    <p className="font-semibold text-slate-300">
+                      ⏳ Final Proposal Decision: Pending
+                    </p>
+                    <p className="text-[11px]">
+                      Your partner has not clicked &ldquo;YES&rdquo; yet. Once they open the link, their acceptance will be logged here.
+                    </p>
+                  </div>
+                )}
+
+                {/* 2. Questions & Which of the 3 Options Was Picked */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                    <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-rose-400" />
+                      <span>Quiz Questions &amp; Partner Choices</span>
+                    </h4>
+                    <span className="text-xs font-mono text-slate-400">
+                      {selectedProposalForAnswers.quizAnswerCount || 0} answered
+                    </span>
+                  </div>
+
+                  {(() => {
+                    // Extract answers from responses
+                    const quizEvents = (selectedProposalForAnswers.responses || []).filter(
+                      (r) => r.eventType === "quiz_answered"
+                    );
+
+                    // Reconcile question list from proposal configuration or quiz events
+                    const questionsList: Array<{
+                      id: string;
+                      question: string;
+                      options: string[];
+                    }> = [];
+
+                    if (selectedProposalForAnswers.questions && selectedProposalForAnswers.questions.length > 0) {
+                      selectedProposalForAnswers.questions.forEach((q) => {
+                        questionsList.push({
+                          id: q.id,
+                          question: q.question,
+                          options: q.options || [],
+                        });
+                      });
+                    }
+
+                    // Also include any questions recorded in quizEvents that might not be in template
+                    quizEvents.forEach((ev) => {
+                      const qId = ev.payload?.questionId || ev.id;
+                      const qText = ev.payload?.questionText || "Relationship Milestone Question";
+                      const opts = ev.payload?.options || [];
+                      if (!questionsList.some((q) => q.id === qId || q.question === qText)) {
+                        questionsList.push({
+                          id: qId,
+                          question: qText,
+                          options: opts.length > 0 ? opts : [ev.payload?.answer || "Option 1"],
+                        });
+                      }
+                    });
+
+                    if (questionsList.length === 0 && quizEvents.length === 0) {
+                      return (
+                        <div className="p-8 text-center rounded-2xl bg-white/[0.02] border border-white/10 space-y-2">
+                          <p className="text-sm font-medium text-slate-300">
+                            No quiz questions were configured for this proposal.
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            Standard proposal flow with runaway &ldquo;No&rdquo; button, romantic letter, and photo slideshow was used.
+                          </p>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="space-y-4">
+                        {questionsList.map((q, qIdx) => {
+                          // Find partner's answered event
+                          const answerRecord = quizEvents.find(
+                            (e) =>
+                              e.payload?.questionId === q.id ||
+                              e.payload?.questionText === q.question
+                          );
+                          const chosenAnswer = answerRecord?.payload?.answer;
+
+                          return (
+                            <div
+                              key={q.id || qIdx}
+                              className="p-4 sm:p-5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-3"
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="space-y-1">
+                                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-rose-400">
+                                    Question {qIdx + 1}
+                                  </span>
+                                  <h5 className="text-sm sm:text-base font-semibold text-white">
+                                    {q.question}
+                                  </h5>
+                                </div>
+                                {chosenAnswer ? (
+                                  <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-bold shrink-0 flex items-center gap-1">
+                                    <CheckCircle2 className="w-3 h-3" /> Answered
+                                  </span>
+                                ) : (
+                                  <span className="px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 text-[10px] font-medium shrink-0">
+                                    Waiting for answer
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* 3 Options with Highlight for Picked Answer */}
+                              <div className="space-y-2 pt-1">
+                                <span className="text-[11px] text-slate-400 font-medium">
+                                  Options &amp; Partner Selection:
+                                </span>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                  {(q.options.length > 0 ? q.options : [chosenAnswer || "Option A"]).map(
+                                    (opt, optIdx) => {
+                                      const isChosen = opt === chosenAnswer;
+                                      return (
+                                        <div
+                                          key={optIdx}
+                                          className={`p-3 rounded-xl text-xs transition-all flex flex-col justify-between ${
+                                            isChosen
+                                              ? "bg-emerald-500/20 border-2 border-emerald-500/60 text-white font-bold shadow-md shadow-emerald-500/10"
+                                              : "bg-white/[0.04] border border-white/10 text-slate-400 opacity-60"
+                                          }`}
+                                        >
+                                          <div className="flex items-center gap-1.5 mb-1">
+                                            <span className="w-4 h-4 rounded-full bg-white/10 text-[10px] flex items-center justify-center font-mono shrink-0">
+                                              {optIdx + 1}
+                                            </span>
+                                            <span className="truncate">{opt}</span>
+                                          </div>
+                                          {isChosen && (
+                                            <span className="mt-1 text-[10px] text-emerald-300 flex items-center gap-1 font-semibold">
+                                              <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                                              Partner picked this! ✨
+                                            </span>
+                                          )}
+                                        </div>
+                                      );
+                                    }
+                                  )}
+                                </div>
+                              </div>
+
+                              {answerRecord && (
+                                <p className="text-[10px] text-slate-500 pt-1">
+                                  Answered on:{" "}
+                                  {new Date(
+                                    answerRecord.createdAt || answerRecord.payload?.timestamp || Date.now()
+                                  ).toLocaleString()}
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+
+              <div className="pt-4 mt-4 border-t border-white/10 flex justify-end">
+                <Button
+                  type="button"
+                  onClick={() => setSelectedProposalForAnswers(null)}
+                  className="rounded-full bg-white/10 hover:bg-white/20 text-white text-xs px-6 py-2"
+                >
+                  Close
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
       </main>
     </div>
   );

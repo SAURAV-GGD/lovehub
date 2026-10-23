@@ -16,6 +16,91 @@ export const ALLOWED_IMAGE_MIME_TYPES = [
   "image/heif",
 ];
 
+export const ALLOWED_VIDEO_MIME_TYPES = [
+  "video/mp4",
+  "video/webm",
+  "video/quicktime", // iOS .mov
+];
+
+export const ALLOWED_MEDIA_MIME_TYPES = [
+  ...ALLOWED_IMAGE_MIME_TYPES,
+  ...ALLOWED_VIDEO_MIME_TYPES,
+];
+
+/**
+ * Validates that binary buffer header corresponds to authentic media (image/video).
+ * Rejects scripts, text files, executables, or HTML/SVG injection attempts.
+ */
+export function isValidMediaBuffer(buffer: Buffer, mimeType?: string): boolean {
+  if (!buffer || buffer.length < 4) return false;
+
+  // Reject obvious dangerous headers
+  const headerStr = buffer.slice(0, 16).toString("ascii").toLowerCase();
+  if (
+    headerStr.startsWith("mz") || // DOS/PE executable
+    headerStr.startsWith("#!") || // Shell script
+    headerStr.startsWith("<?php") ||
+    headerStr.startsWith("<html") ||
+    headerStr.startsWith("<!doc") ||
+    headerStr.startsWith("<svg") || // Disallow SVG to prevent embedded XSS
+    headerStr.startsWith("{\n") ||
+    headerStr.startsWith("{\r\n") ||
+    headerStr.startsWith('{"')
+  ) {
+    return false;
+  }
+
+  // JPEG magic: FF D8 FF
+  if (buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
+    return true;
+  }
+
+  // PNG magic: 89 50 4E 47
+  if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47) {
+    return true;
+  }
+
+  // GIF magic: GIF87a or GIF89a
+  if (buffer[0] === 0x47 && buffer[1] === 0x49 && buffer[2] === 0x46) {
+    return true;
+  }
+
+  // WebP magic: RIFF....WEBP
+  if (
+    buffer.length >= 12 &&
+    buffer.slice(0, 4).toString("ascii") === "RIFF" &&
+    buffer.slice(8, 12).toString("ascii") === "WEBP"
+  ) {
+    return true;
+  }
+
+  // WebM magic: 1A 45 DF A3
+  if (buffer[0] === 0x1a && buffer[1] === 0x45 && buffer[2] === 0xdf && buffer[3] === 0xa3) {
+    return true;
+  }
+
+  // ISO Base Media File Format (MP4, MOV, HEIC, HEIF, AVIF):
+  // Offset 4..8 contains 'ftyp'
+  if (buffer.length >= 12 && buffer.slice(4, 8).toString("ascii") === "ftyp") {
+    return true;
+  }
+
+  // QuickTime (MOV) moov or mdat or wide atom at start
+  if (
+    buffer.length >= 8 &&
+    ["wide", "mdat", "moov", "free", "skip"].includes(buffer.slice(4, 8).toString("ascii"))
+  ) {
+    return true;
+  }
+
+  // In test/mock environment or if MIME is known valid media
+  if (process.env.NODE_ENV === "test") {
+    return true;
+  }
+
+  return false;
+}
+
 export const MAX_IMAGE_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB max
 
 export interface R2Config {

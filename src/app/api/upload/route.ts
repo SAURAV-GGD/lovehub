@@ -9,7 +9,9 @@ import {
   isR2Configured,
   getR2Config,
   ALLOWED_IMAGE_MIME_TYPES,
+  ALLOWED_MEDIA_MIME_TYPES,
   MAX_IMAGE_FILE_SIZE_BYTES,
+  isValidMediaBuffer,
 } from "@/lib/cloudflare-r2";
 import { uploadToImgBB } from "@/lib/imgbb";
 import {
@@ -205,10 +207,23 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        const mime = file.type.toLowerCase();
-        if (!ALLOWED_IMAGE_MIME_TYPES.includes(mime)) {
+        let mime = file.type.toLowerCase();
+        // Resolve iOS camera roll / AirDrop file extensions where mime may be empty
+        const ext = file.name.split(".").pop()?.toLowerCase() || "";
+        if (!mime || mime === "application/octet-stream") {
+          if (["heic", "heif"].includes(ext)) mime = "image/heic";
+          else if (["jpg", "jpeg"].includes(ext)) mime = "image/jpeg";
+          else if (ext === "png") mime = "image/png";
+          else if (ext === "webp") mime = "image/webp";
+          else if (ext === "gif") mime = "image/gif";
+          else if (ext === "mov") mime = "video/quicktime";
+          else if (ext === "mp4") mime = "video/mp4";
+          else if (ext === "webm") mime = "video/webm";
+        }
+
+        if (!ALLOWED_MEDIA_MIME_TYPES.includes(mime)) {
           return apiError(
-            `Unsupported file type "${file.type}". Allowed types: JPEG, PNG, WebP, GIF, AVIF, HEIC`,
+            `Unsupported file format "${file.name}". LoveHub strictly accepts image (JPEG, PNG, WebP, GIF, AVIF, HEIC) and video (MP4, WebM, MOV) media only. Text files, documents, and scripts are strictly prohibited.`,
             "UNSUPPORTED_MEDIA_TYPE",
             415
           );
@@ -216,6 +231,15 @@ export async function POST(request: NextRequest) {
 
         const arrayBuf = await file.arrayBuffer();
         const buffer = Buffer.from(arrayBuf);
+
+        // Security inspection: binary content must match real image/video headers
+        if (!isValidMediaBuffer(buffer, mime)) {
+          return apiError(
+            `Malicious or invalid media detected for file "${file.name}". The file header does not correspond to authentic image or video data.`,
+            "INVALID_MEDIA",
+            400
+          );
+        }
 
         const uploaded = await uploadMedia({
           buffer,
@@ -275,11 +299,30 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        if (!ALLOWED_IMAGE_MIME_TYPES.includes(mimeType)) {
+        // Check for extension if filename provided
+        if (filename && (mimeType === "image/jpeg" || mimeType === "application/octet-stream")) {
+          const ext = filename.split(".").pop()?.toLowerCase();
+          if (ext === "heic" || ext === "heif") mimeType = "image/heic";
+          else if (ext === "png") mimeType = "image/png";
+          else if (ext === "webp") mimeType = "image/webp";
+          else if (ext === "mov") mimeType = "video/quicktime";
+          else if (ext === "mp4") mimeType = "video/mp4";
+        }
+
+        if (!ALLOWED_MEDIA_MIME_TYPES.includes(mimeType)) {
           return apiError(
-            `Unsupported file type "${mimeType}". Allowed types: JPEG, PNG, WebP, GIF, AVIF, HEIC`,
+            `Unsupported file format "${mimeType}". LoveHub strictly accepts image and video media. Text files and documents are not permitted.`,
             "UNSUPPORTED_MEDIA_TYPE",
             415
+          );
+        }
+
+        // Security inspection: binary content must match real image/video headers
+        if (!isValidMediaBuffer(buffer, mimeType)) {
+          return apiError(
+            "Uploaded file failed media verification. Plaintext files, scripts, and executables cannot be uploaded as media.",
+            "INVALID_MEDIA",
+            400
           );
         }
 

@@ -395,7 +395,8 @@ function CreateContent() {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      "image/*": [".jpeg", ".jpg", ".png", ".gif", ".webp"],
+      "image/*": [".jpeg", ".jpg", ".png", ".gif", ".webp", ".heic", ".heif", ".HEIC", ".HEIF"],
+      "video/*": [".mp4", ".webm", ".mov", ".MOV"],
     },
     maxFiles: limits.maxPhotos - photos.length,
     disabled: photos.length >= limits.maxPhotos,
@@ -1579,7 +1580,7 @@ function CreateContent() {
                                   <Pencil className="w-3.5 h-3.5 text-pink-300" />
                                   <input
                                     type="file"
-                                    accept="image/*"
+                                    accept="image/*,video/*,.heic,.heif,.HEIC,.HEIF,.mov,.MOV"
                                     className="hidden"
                                     onChange={(e) => {
                                       const f = e.target.files?.[0];
