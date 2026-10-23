@@ -508,12 +508,13 @@ export function AdminProposalStudio({
     }
   };
 
-  // Photo Upload & Compression
+  // Photo Upload & Cloud Storage (with Supabase Storage integration)
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
     setIsCompressingPhotos(true);
+    const toastId = toast.loading(`Uploading ${files.length} photo(s) to cloud storage...`);
     try {
       const newUrls: string[] = [];
       const newCaptions: string[] = [];
@@ -521,15 +522,38 @@ export function AdminProposalStudio({
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         const compressedDataUrl = await compressImageFile(file, 1400, 0.85);
-        newUrls.push(compressedDataUrl);
+        if (!compressedDataUrl) continue;
+
+        let finalUrl = compressedDataUrl;
+        try {
+          const res = await fetch("/api/upload", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              image: compressedDataUrl,
+              filename: file.name,
+              folder: "proposals",
+            }),
+          });
+          if (res.ok) {
+            const json = await res.json();
+            if (json.success && json.data?.url) {
+              finalUrl = json.data.url;
+            }
+          }
+        } catch {
+          // fallback to data url if offline
+        }
+
+        newUrls.push(finalUrl);
         newCaptions.push(`Memory ${photos.length + i + 1}`);
       }
 
       setPhotos((prev) => [...prev, ...newUrls]);
       setPhotoCaptions((prev) => [...prev, ...newCaptions]);
-      toast.success(`Added ${newUrls.length} memory photo(s)`);
+      toast.success(`Successfully uploaded ${newUrls.length} memory photo(s) to cloud storage!`, { id: toastId });
     } catch {
-      toast.error("Failed to optimize some images");
+      toast.error("Failed to process some images", { id: toastId });
     } finally {
       setIsCompressingPhotos(false);
       e.target.value = "";
@@ -563,6 +587,45 @@ export function AdminProposalStudio({
     }
 
     setIsSubmitting(true);
+
+    // Pre-upload any raw base64 data URLs to Supabase Storage before sending payload
+    // to strictly prevent exceeding Vercel's 4.5MB request payload limit
+    let sanitizedPhotos = [...photos];
+    const base64Indices = sanitizedPhotos
+      .map((p, idx) => (p.startsWith("data:image/") ? idx : -1))
+      .filter((idx) => idx !== -1);
+
+    if (base64Indices.length > 0) {
+      const uploadToast = toast.loading(
+        `Uploading ${base64Indices.length} photo(s) to Supabase Storage...`
+      );
+      try {
+        for (let b = 0; b < base64Indices.length; b++) {
+          const idx = base64Indices[b];
+          const base64Data = sanitizedPhotos[idx];
+          const res = await fetch("/api/upload", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              image: base64Data,
+              filename: `admin-photo-${Date.now()}-${b + 1}.jpg`,
+              folder: "proposals",
+            }),
+          });
+          if (res.ok) {
+            const json = await res.json();
+            if (json.success && json.data?.url) {
+              sanitizedPhotos[idx] = json.data.url;
+            }
+          }
+        }
+        setPhotos(sanitizedPhotos);
+        toast.success("Photos stored in cloud storage!", { id: uploadToast });
+      } catch (uploadErr) {
+        toast.dismiss(uploadToast);
+        console.warn("Could not pre-upload some photos to cloud storage:", uploadErr);
+      }
+    }
 
     let targetClientId: string | undefined = undefined;
     let targetClientEmail: string | undefined = undefined;
@@ -601,7 +664,7 @@ export function AdminProposalStudio({
       tone,
       language,
       message,
-      photos,
+      photos: sanitizedPhotos,
       photoCaptions,
       backgroundMusic:
         musicSelection.type === "none"
@@ -625,7 +688,18 @@ export function AdminProposalStudio({
         startTimestampSeconds: audioStartSec > 0 ? audioStartSec : undefined,
         endTimestampSeconds: audioEndSec,
       },
-      storyConfig: previewProposal.storyConfig,
+      storyConfig: previewProposal.storyConfig
+        ? {
+            ...previewProposal.storyConfig,
+            memories: {
+              ...previewProposal.storyConfig.memories,
+              items: (previewProposal.storyConfig.memories?.items || []).map((item, idx) => ({
+                ...item,
+                photoUrl: sanitizedPhotos[idx] || item.photoUrl,
+              })),
+            },
+          }
+        : undefined,
       status: "final" as const,
       isPublic: true,
     };
@@ -679,8 +753,10 @@ export function AdminProposalStudio({
       } else {
         toast.error(data.error?.message || "Failed to save proposal");
       }
-    } catch {
-      toast.error("Network error while saving proposal");
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : "Network error";
+      console.error("Proposal save error:", err);
+      toast.error(`Network error while saving proposal: ${errMsg}`);
     } finally {
       setIsSubmitting(false);
     }
