@@ -528,9 +528,10 @@ export default function ProposalPage() {
     );
   }
 
-  // If temporary preview has expired (120 seconds) and proposal is unpaid
+  // If preview has expired (120 seconds) or 30-day Pro storage has expired
   if (isExpired || (proposal && secondsRemaining !== null && secondsRemaining <= 0)) {
-    const rawPlan = proposal?.plan || expiredInfo?.plan || "starter";
+    const is30DayExpiry = (expiredInfo as any)?.code === "PROPOSAL_EXPIRED_30_DAYS";
+    const rawPlan = is30DayExpiry ? "premium" : (proposal?.plan || expiredInfo?.plan || "starter");
     const planConfig = getPlanConfig(rawPlan);
     const price = planConfig.priceRupees;
     const targetProposalId = proposal?.id || expiredInfo?.proposalId || id;
@@ -550,13 +551,21 @@ export default function ProposalPage() {
           <div className="space-y-2">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-semibold">
               <Clock className="w-3.5 h-3.5" />
-              <span>120-Second Preview Expired</span>
+              <span>{is30DayExpiry ? "30-Day Pro Storage Expired" : "120-Second Preview Expired"}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-              Preview Link Expired
+              {is30DayExpiry ? "30-Day Storage Ended" : "Preview Link Expired"}
             </h1>
             <p className="text-sm text-slate-300 leading-relaxed">
-              The live preview for <strong>{partner}</strong> was active for 120 seconds. Your draft has been safely preserved.
+              {is30DayExpiry ? (
+                <>
+                  The proposal page for <strong>{partner}</strong> was stored for 30 days under the Pro plan. Upgrade to the <strong>VIP Plan</strong> for permanent lifetime storage with zero auto-delete restrictions!
+                </>
+              ) : (
+                <>
+                  The live preview for <strong>{partner}</strong> was active for 120 seconds. Your draft has been safely preserved.
+                </>
+              )}
             </p>
           </div>
 

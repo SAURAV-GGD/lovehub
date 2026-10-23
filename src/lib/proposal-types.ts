@@ -32,7 +32,10 @@ export interface ProposalData {
   plan: PlanType;
   createdAt: Date;
   isPaid?: boolean;
-  expiresAt?: number; // timestamp in ms when temporary preview expires (e.g. 4 minutes)
+  expiresAt?: number; // timestamp in ms when temporary preview (120s) or 30-day Pro storage expires
+  isPermanent?: boolean; // true for VIP and Admin proposals (no auto-delete restriction)
+  retentionDays?: number; // 30 for Pro/Starter plans, undefined for VIP/Admin
+  paidAt?: number;
   createdByAdmin?: boolean;
   assignedClientEmail?: string;
   customConfig?: {
@@ -119,6 +122,43 @@ export const planLimits: Record<PlanType, {
     isUnlimited: true,
   },
 };
+
+export const RETENTION_CONSTANTS = {
+  PREVIEW_DURATION_MS: 120 * 1000, // 120 seconds (2 minutes) temporary preview window
+  PRO_PLAN_RETENTION_DAYS: 30, // 30-day storage for Pro plan users
+  PRO_PLAN_RETENTION_MS: 30 * 24 * 60 * 60 * 1000, // 30 days in ms
+};
+
+/**
+ * Calculates authoritative retention and expiry rules:
+ * - Admin users & VIP (Premium/Custom) plans: Permanent retention (no auto-delete restriction).
+ * - Pro (Romantic/Starter) plan users: 30-day retention from payment date.
+ */
+export function getProposalRetentionConfig(
+  plan?: string | null,
+  isCreatedByAdmin?: boolean,
+  baseTimestamp: number = Date.now()
+) {
+  const normPlan = (plan || "romantic").toLowerCase();
+  const isAdmin = Boolean(isCreatedByAdmin);
+  const isVip = normPlan === "premium" || normPlan === "vip" || normPlan === "custom";
+
+  if (isAdmin || isVip) {
+    return {
+      isPermanent: true,
+      retentionDays: undefined,
+      label: isVip ? "VIP Lifetime Retention (No Auto-Delete)" : "Admin Permanent Retention",
+      expiresAt: undefined,
+    };
+  }
+
+  return {
+    isPermanent: false,
+    retentionDays: RETENTION_CONSTANTS.PRO_PLAN_RETENTION_DAYS,
+    label: "30-Day Storage (Pro Plan)",
+    expiresAt: baseTimestamp + RETENTION_CONSTANTS.PRO_PLAN_RETENTION_MS,
+  };
+}
 
 export const relationshipLabels: Record<RelationshipType, string> = {
   girlfriend: "Girlfriend 🌸",

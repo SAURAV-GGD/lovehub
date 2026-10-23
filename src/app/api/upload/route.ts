@@ -18,12 +18,20 @@ import {
   isCloudinaryConfigured,
   getCloudinaryConfig,
 } from "@/lib/cloudinary";
+import {
+  uploadToSupabaseStorage,
+  deleteFromSupabaseStorage,
+  isSupabaseStorageConfigured,
+  getSupabaseStorageConfig,
+} from "@/lib/supabase-storage";
 
 /**
  * GET /api/upload
  * Returns status and configuration parameters of storage providers.
  */
 export async function GET() {
+  const supabaseCfg = getSupabaseStorageConfig();
+  const supabaseConfigured = isSupabaseStorageConfigured();
   const r2Cfg = getR2Config();
   const cldCfg = getCloudinaryConfig();
   const r2Configured = isR2Configured();
@@ -31,7 +39,9 @@ export async function GET() {
   const imgbbConfigured = Boolean(process.env.IMGBB_API_KEY);
 
   let activeProvider = "In-App Database Storage";
-  if (cldConfigured) {
+  if (supabaseConfigured) {
+    activeProvider = "Supabase Storage";
+  } else if (cldConfigured) {
     activeProvider = "Cloudinary";
   } else if (r2Configured) {
     activeProvider = "Cloudflare R2";
@@ -41,6 +51,11 @@ export async function GET() {
 
   return apiSuccess({
     provider: activeProvider,
+    supabase: {
+      isConfigured: supabaseConfigured,
+      bucket: supabaseCfg.bucket,
+      hasProjectUrl: Boolean(supabaseCfg.url),
+    },
     cloudinary: {
       isConfigured: cldConfigured,
       cloudName: cldCfg.cloudName || null,
@@ -67,7 +82,17 @@ async function uploadMedia(params: {
   userId?: string;
   proposalId?: string;
 }) {
-  // 1. Cloudinary (Enterprise Free 25GB CDN)
+  // 1. Supabase Storage (Preferred Cloud CDN & Bucket)
+  if (isSupabaseStorageConfigured()) {
+    try {
+      const supabaseResult = await uploadToSupabaseStorage(params);
+      return supabaseResult;
+    } catch (supabaseErr) {
+      console.warn("Supabase Storage upload failed, trying next provider:", supabaseErr);
+    }
+  }
+
+  // 2. Cloudinary (Enterprise Free 25GB CDN)
   if (isCloudinaryConfigured()) {
     try {
       const cldResult = await uploadToCloudinary(
@@ -88,12 +113,12 @@ async function uploadMedia(params: {
     }
   }
 
-  // 2. Cloudflare R2 if credentials provided
+  // 3. Cloudflare R2 if credentials provided
   if (isR2Configured()) {
     return await uploadToR2(params);
   }
 
-  // 3. ImgBB if API key provided
+  // 4. ImgBB if API key provided
   if (process.env.IMGBB_API_KEY) {
     try {
       const imgbbResult = await uploadToImgBB(params.buffer, params.originalName);
@@ -344,6 +369,11 @@ export async function DELETE(request: NextRequest) {
       if (!ownsKey) {
         return apiError("You do not have permission to delete this media asset", "FORBIDDEN", 403);
       }
+    }
+
+    if (keyOrUrl.includes("supabase.co") || (isSupabaseStorageConfigured() && !keyOrUrl.includes("cloudinary.com") && !keyOrUrl.includes("r2.dev"))) {
+      await deleteFromSupabaseStorage(keyOrUrl);
+      return apiSuccess({ deleted: true, key: keyOrUrl, provider: "supabase" });
     }
 
     if (keyOrUrl.includes("cloudinary.com") || (isCloudinaryConfigured() && !keyOrUrl.includes("r2.dev") && !keyOrUrl.includes("r2.cloudflarestorage"))) {

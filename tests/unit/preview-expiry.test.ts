@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { PREVIEW_DURATION_MS, isProposalExpired } from "@/lib/proposal-storage";
+import { getProposalRetentionConfig, RETENTION_CONSTANTS } from "@/lib/proposal-types";
 
 describe("Part 3: 2-Minute Preview Expiry & Server Enforcement", () => {
   it("defines PREVIEW_DURATION_MS as exactly 120,000ms (120 seconds / 2 minutes)", () => {
@@ -65,5 +66,64 @@ describe("Part 3: 2-Minute Preview Expiry & Server Enforcement", () => {
 
     expect(responseHeaders.get("Cache-Control")).toBe("no-store, no-cache, must-revalidate, max-age=0");
     expect(responseHeaders.get("Pragma")).toBe("no-cache");
+  });
+
+  describe("Retention Rules: 30-Day Storage for Pro vs Permanent Lifetime for VIP & Admin", () => {
+    it("configures 30-day retention for Pro and Romantic plans", () => {
+      const now = Date.now();
+      const retention = getProposalRetentionConfig("pro", false, now);
+
+      expect(retention.isPermanent).toBe(false);
+      expect(retention.retentionDays).toBe(30);
+      expect(retention.expiresAt).toBe(now + RETENTION_CONSTANTS.PRO_PLAN_RETENTION_MS);
+    });
+
+    it("keeps Pro plan proposal active within 30 days and marks expired after 30 days", () => {
+      const activeProProposal = {
+        id: "prop_pro_active",
+        isPaid: true,
+        plan: "pro",
+        retentionDays: 30,
+        expiresAt: Date.now() + 5 * 24 * 60 * 60 * 1000, // 5 days remaining
+      };
+      expect(isProposalExpired(activeProProposal)).toBe(false);
+
+      const expiredProProposal = {
+        id: "prop_pro_expired",
+        isPaid: true,
+        plan: "pro",
+        retentionDays: 30,
+        expiresAt: Date.now() - 1000, // expired 1s ago
+      };
+      expect(isProposalExpired(expiredProProposal)).toBe(true);
+    });
+
+    it("has zero auto-delete restrictions for VIP / Premium users (lifetime storage)", () => {
+      const vipRetention = getProposalRetentionConfig("premium", false);
+      expect(vipRetention.isPermanent).toBe(true);
+      expect(vipRetention.expiresAt).toBeUndefined();
+
+      const vipProposal = {
+        id: "prop_vip_1",
+        isPaid: true,
+        plan: "premium",
+        expiresAt: Date.now() - 100_000_000, // Old timestamp should never expire VIP
+      };
+      expect(isProposalExpired(vipProposal)).toBe(false);
+    });
+
+    it("has zero auto-delete restrictions for Admin users", () => {
+      const adminRetention = getProposalRetentionConfig("starter", true);
+      expect(adminRetention.isPermanent).toBe(true);
+      expect(adminRetention.expiresAt).toBeUndefined();
+
+      const adminProposal = {
+        id: "prop_admin_1",
+        isPaid: true,
+        createdByAdmin: true,
+        expiresAt: Date.now() - 100_000_000,
+      };
+      expect(isProposalExpired(adminProposal)).toBe(false);
+    });
   });
 });

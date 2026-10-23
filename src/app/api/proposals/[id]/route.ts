@@ -36,9 +36,12 @@ export async function GET(request: NextRequest, { params }: Params) {
       }
     }
 
-    // Check payment status and 120-second preview expiry
+    // Check payment status, 120-second preview expiry, and 30-day Pro storage retention
     const content = (proposal.content as Record<string, unknown>) || {};
-    const isPaid = Boolean(proposal.status === "final" || content.isPaid || (proposal as any).createdByAdmin);
+    const isAdmin = Boolean((proposal as any).createdByAdmin || content.createdByAdmin);
+    const plan = String(proposal.plan || content.plan || "romantic").toLowerCase();
+    const isVip = plan === "premium" || plan === "vip" || plan === "custom";
+    const isPaid = Boolean(proposal.status === "final" || content.isPaid || isAdmin);
 
     if (!isPaid) {
       const expiresAt = content.expiresAt
@@ -51,10 +54,35 @@ export async function GET(request: NextRequest, { params }: Params) {
             success: false,
             error: {
               code: "PREVIEW_EXPIRED",
-              message: "Preview link expired after 120 seconds. Please unlock to activate your permanent link.",
+              message: "Preview link expired after 120 seconds. Please unlock to activate your proposal link.",
               proposalId: proposal.id,
               slug: proposal.slug,
               plan: proposal.plan || content.plan || "starter",
+              partnerName: proposal.clientName || content.partnerName || "Partner",
+            },
+          }),
+          {
+            status: 410,
+            headers: {
+              "Content-Type": "application/json",
+              "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+            },
+          }
+        );
+      }
+    } else if (!isAdmin && !isVip) {
+      // Pro Plan: Stored for 30 days from creation/payment date
+      const expiresAt = content.expiresAt ? Number(content.expiresAt) : undefined;
+      if (expiresAt && Date.now() > expiresAt) {
+        return new NextResponse(
+          JSON.stringify({
+            success: false,
+            error: {
+              code: "PROPOSAL_EXPIRED_30_DAYS",
+              message: "This proposal page was stored for 30 days under the Pro plan and has expired. Upgrade to VIP for lifetime retention with zero auto-delete restrictions.",
+              proposalId: proposal.id,
+              slug: proposal.slug,
+              plan: proposal.plan || content.plan || "romantic",
               partnerName: proposal.clientName || content.partnerName || "Partner",
             },
           }),

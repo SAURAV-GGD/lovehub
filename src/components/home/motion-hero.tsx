@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { Heart, ArrowUpRight, Play, ArrowDown } from "lucide-react";
 import JourneyVideo from "@/components/immersive/JourneyVideo";
-import { Hero3DKeepsake } from "@/components/3d/Hero3DKeepsake";
 
 export function MotionHero() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -149,15 +148,12 @@ export function MotionHero() {
         </h1>
 
         {/* Clean Sans Subtitle */}
-        <p className="font-sans text-sm sm:text-base md:text-lg text-white/90 drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)] max-w-[65ch] mx-auto leading-relaxed mb-4 sm:mb-5 font-normal">
+        <p className="font-sans text-sm sm:text-base md:text-lg text-white/90 drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)] max-w-[65ch] mx-auto leading-relaxed mb-6 sm:mb-8 font-normal">
           Build a personal proposal website with your own photos, background music, a custom note in English or Hinglish, and an interactive runaway &ldquo;No&rdquo; button.
         </p>
 
-        {/* Interactive 3D Keepsake Love Crystal (Hero 3D Highlight) */}
-        <Hero3DKeepsake />
-
         {/* Authentic Social Proof & Trust Strip */}
-        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-white/80 mb-5 sm:mb-6 font-sans">
+        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-white/80 mb-6 sm:mb-8 font-sans">
           <div className="flex items-center gap-2">
             <span className="flex -space-x-1.5">
               <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-rose-500/90 text-[10px] font-bold text-white ring-1 ring-black/40">R</span>

@@ -97,8 +97,26 @@ export async function POST(request: NextRequest) {
 
           if (existing) {
             const currentContent = (existing.content as Record<string, unknown>) || {};
-            const updatedContent: Record<string, unknown> = { ...currentContent, isPaid: true };
-            delete updatedContent.expiresAt;
+            const plan = (updatedOrder?.planId || (existing.plan as string) || "romantic").toLowerCase();
+            const isAdmin = Boolean((existing as any).createdByAdmin || currentContent.createdByAdmin);
+            const isVip = plan === "premium" || plan === "vip" || plan === "custom";
+
+            const updatedContent: Record<string, unknown> = {
+              ...currentContent,
+              isPaid: true,
+              paidAt: Date.now(),
+            };
+
+            if (isAdmin || isVip) {
+              updatedContent.isPermanent = true;
+              delete updatedContent.expiresAt;
+              delete updatedContent.retentionDays;
+            } else {
+              // Pro Plan: Stored for 30 days
+              updatedContent.isPermanent = false;
+              updatedContent.retentionDays = 30;
+              updatedContent.expiresAt = Date.now() + 30 * 24 * 60 * 60 * 1000;
+            }
 
             await db
               .update(proposals)
